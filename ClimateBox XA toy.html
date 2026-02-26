@@ -1,0 +1,625 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClimateBox Simulator</title>
+    
+    <!-- Google Fonts: Space Grotesk for a technical/architectural feel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['ui-sans-serif', 'system-ui', 'sans-serif'],
+                        tech: ['"Space Grotesk"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Styles for Blueprint Grid & Native Sliders -->
+    <style>
+        body {
+            background-color: #f5f5f4; /* stone-100 */
+            background-image: 
+                linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        
+        /* Let the browser handle the slider track natively for maximum visibility, just inject color */
+        input[type=range] {
+            width: 100%;
+            cursor: pointer;
+            /* accent-color is applied inline in React to match the module (red or cyan) */
+        }
+    </style>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for in-browser JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- html2canvas for screenshots -->
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    
+    <!-- Recharts and its dependencies -->
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+</head>
+<body class="text-stone-900 font-sans antialiased">
+    
+    <!-- Root element for React to render into -->
+    <div id="root"></div>
+
+    <!-- The React Application -->
+    <script type="text/babel">
+        // --- 1. Extract Hooks & Components from Globals ---
+        const { useState, useMemo, useRef } = React;
+        const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea } = Recharts;
+
+        // --- 2. Inline SVG Icons ---
+        const Icon = ({ children, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {children}
+            </svg>
+        );
+        const Wind = ({ className }) => <Icon className={className}><path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/></Icon>;
+        const LayoutTemplate = ({ className }) => <Icon className={className}><rect width="18" height="7" x="3" y="3" rx="1"/><rect width="9" height="7" x="3" y="14" rx="1"/><rect width="5" height="7" x="16" y="14" rx="1"/></Icon>;
+        const MapPin = ({ className }) => <Icon className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></Icon>;
+        const ArrowDown = ({ className }) => <Icon className={className}><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></Icon>;
+        const Shield = ({ className }) => <Icon className={className}><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2-1 4-2 7-2 2.5 0 4.5 1 6.5 2a1 1 0 0 1 1 1z"/></Icon>;
+        const Box = ({ className }) => <Icon className={className}><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></Icon>;
+        const Zap = ({ className }) => <Icon className={className}><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></Icon>;
+        const Home = ({ className }) => <Icon className={className}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Icon>;
+        const Flame = ({ className }) => <Icon className={className}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></Icon>;
+        const Activity = ({ className }) => <Icon className={className}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></Icon>;
+        const InfoIcon = ({ className }) => <Icon className={className}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></Icon>;
+        const XIcon = ({ className }) => <Icon className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></Icon>;
+        const Camera = ({ className }) => <Icon className={className}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></Icon>;
+
+        // --- 3. Constants & Physics Configuration ---
+        const COMFORT_MIN = 19;
+        const COMFORT_MAX = 25;
+
+        const GLASS_TYPES = {
+            'single': { name: 'Single Clear', shgc: 0.85, uValue: 5.8 },
+            'double': { name: 'Double Glazed', shgc: 0.70, uValue: 2.8 },
+            'lowe':   { name: 'Low-E', shgc: 0.50, uValue: 2.2 }
+        };
+
+        const CLIMATIC_DATA = {
+            '1': {
+                name: "Zone 1 (Highveld/JHB)",
+                temps: [5, 4, 4, 5, 6, 8, 11, 14, 17, 19, 21, 22, 23, 23, 22, 20, 18, 15, 12, 10, 9, 7, 6, 5],
+                sun: [0, 0, 0, 0, 0, 0, 0.2, 0.5, 0.8, 0.95, 1.0, 1.0, 0.95, 0.8, 0.5, 0.2, 0, 0, 0, 0, 0, 0, 0, 0]
+            },
+            '3': {
+                name: "Zone 3 (Hot Arid/Upington)",
+                temps: [8, 7, 7, 8, 10, 14, 19, 24, 28, 30, 31, 32, 32, 31, 29, 26, 22, 18, 15, 13, 11, 10, 9, 8],
+                sun: [0, 0, 0, 0, 0, 0, 0.3, 0.6, 0.9, 1.0, 1.0, 1.0, 1.0, 1.0, 0.9, 0.6, 0.3, 0, 0, 0, 0, 0, 0, 0]
+            },
+            '4': {
+                name: "Zone 4 (Coastal/Cape Town)",
+                temps: [9, 8, 8, 8, 9, 10, 11, 12, 14, 15, 16, 17, 17, 16, 15, 14, 13, 12, 11, 10, 10, 9, 9, 9],
+                sun: [0, 0, 0, 0, 0, 0, 0.1, 0.3, 0.5, 0.6, 0.7, 0.7, 0.6, 0.5, 0.3, 0.1, 0, 0, 0, 0, 0, 0, 0, 0]
+            },
+            '5': {
+                name: "Zone 5 (Sub-Tropical/Durban)",
+                temps: [16, 15, 15, 16, 17, 18, 20, 22, 23, 24, 24, 25, 25, 25, 24, 23, 22, 21, 20, 19, 18, 17, 17, 16],
+                sun: [0, 0, 0, 0, 0, 0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 0.9, 0.8, 0.7, 0.5, 0.3, 0.1, 0.05, 0, 0, 0, 0, 0, 0]
+            }
+        };
+
+        // --- Core Simulation Function ---
+        const runSimulation = (climateId, params) => {
+            const climate = CLIMATIC_DATA[climateId];
+            const glassProps = GLASS_TYPES[params.glassType];
+            
+            // TWEAK: Boosted heavy thermal mass factor (from 0.15 to 0.10) for better flywheel effect in hot zones
+            const massFactor = params.thermalMass === 1 ? 0.8 : params.thermalMass === 2 ? 0.4 : 0.10; 
+            const wRatioDec = params.windowRatio / 100;
+            
+            const envelopeUValue = 1 / Math.max(0.3, params.insulationR);
+            const glassUFactor = glassProps.uValue * 0.2; 
+
+            let currentInternalTemp = climate.temps[0]; 
+            let finalDayData = [];
+            const daysToRun = 5;
+
+            for (let d = 0; d < daysToRun; d++) {
+                if (d === daysToRun - 1) finalDayData = [];
+                for (let hour = 0; hour < 24; hour++) {
+                    const extTemp = climate.temps[hour];
+                    const sunStrength = climate.sun[hour];
+                    
+                    let orientationModifier = sunStrength > 0 ? 1.0 : 0; 
+                    
+                    const shadingFactor = Math.max(0.3, 1 - (params.shadingDepth * 0.2));
+                    const solarGain = 28 * wRatioDec * sunStrength * orientationModifier * shadingFactor * glassProps.shgc;
+                    
+                    const deltaT = extTemp - currentInternalTemp;
+                    const envelopeLoss = deltaT * (1 - wRatioDec) * envelopeUValue * 0.5;
+                    const glassLoss = deltaT * wRatioDec * glassUFactor;
+                    
+                    let ventilationLoss = 0;
+                    if (params.ventilation && currentInternalTemp > extTemp) {
+                        // TWEAK: Supercharged night flushing (from 0.6 to 1.2) for arid climate purging
+                        ventilationLoss = (extTemp - currentInternalTemp) * 1.2; 
+                    }
+
+                    // Supplementary Heating Logic (Target 22C)
+                    let heatingGain = 0;
+                    let isHeatingActive = false;
+                    if (params.heating && currentInternalTemp < 22) {
+                        heatingGain = (22 - currentInternalTemp) * 0.8; 
+                        isHeatingActive = true;
+                    }
+                    
+                    const internalLoads = 1.2; 
+                    const totalHeatFlow = solarGain + envelopeLoss + glassLoss + ventilationLoss + heatingGain + internalLoads;
+                    
+                    currentInternalTemp += totalHeatFlow * massFactor;
+
+                    if (d === daysToRun - 1) {
+                        finalDayData.push({
+                            temp: parseFloat(currentInternalTemp.toFixed(1)),
+                            isHeating: isHeatingActive
+                        });
+                    }
+                }
+            }
+            return finalDayData;
+        };
+
+        // --- Reusable Control Panel Component ---
+        const HousePanel = ({ title, subtitle, colorClass, borderClass, accentColor, params, setParams }) => {
+            const update = (key, value) => setParams({ ...params, [key]: value });
+
+            return (
+                <div className={`flex-1 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-2 border-stone-200 border-t-8 ${borderClass} p-5 lg:p-6 flex flex-col gap-6 relative overflow-hidden`}>
+                    
+                    {/* Faint background icon for aesthetic */}
+                    <Home className="absolute -right-6 -top-6 w-32 h-32 opacity-[0.03] text-stone-900 pointer-events-none" />
+
+                    <div>
+                        <h2 className={`text-xl font-tech font-bold flex items-center gap-2 ${colorClass}`}>
+                            {title}
+                        </h2>
+                        <p className="text-xs font-tech text-stone-400 uppercase tracking-widest mt-1">{subtitle}</p>
+                    </div>
+
+                    {/* Insulation & Glazing */}
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-sm font-tech font-bold text-stone-600">
+                                <span className="flex items-center gap-2"><Shield className="w-4 h-4 text-stone-400"/> Envelope Insulation</span>
+                                <span className="px-2 py-0.5 rounded-md bg-stone-100 border border-stone-200" style={{ color: accentColor }}>R {params.insulationR.toFixed(1)}</span>
+                            </div>
+                            <input 
+                                type="range" min="0.3" max="10.0" step="0.1" value={params.insulationR} 
+                                onChange={(e) => update('insulationR', Number(e.target.value))}
+                                className="w-full" style={{ accentColor: accentColor }}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-tech font-bold text-stone-600 flex items-center gap-2">
+                                <LayoutTemplate className="w-4 h-4 text-stone-400"/> Glazing Spec
+                            </label>
+                            <div className="flex gap-2">
+                                {Object.entries(GLASS_TYPES).map(([key, props]) => (
+                                    <button key={key} onClick={() => update('glassType', key)}
+                                        className={`flex-1 py-2 rounded-lg text-xs font-tech font-bold uppercase transition-all border-2 border-b-4 active:border-b-2 active:translate-y-[2px] ${params.glassType === key ? 'text-white' : 'bg-white text-stone-500 hover:bg-stone-50 border-stone-200'}`}
+                                        style={{ 
+                                            backgroundColor: params.glassType === key ? accentColor : undefined, 
+                                            borderColor: params.glassType === key ? accentColor : undefined 
+                                        }}
+                                    >
+                                        {props.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr className="border-stone-100" />
+
+                    {/* Sun & Shade */}
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-sm font-tech font-bold text-stone-600">
+                                <span className="flex items-center gap-2"><Zap className="w-4 h-4 text-stone-400"/> North Window Ratio</span>
+                                <span className="px-2 py-0.5 rounded-md bg-stone-100 border border-stone-200" style={{ color: accentColor }}>{params.windowRatio}%</span>
+                            </div>
+                            <input 
+                                type="range" min="10" max="80" step="5" value={params.windowRatio} 
+                                onChange={(e) => update('windowRatio', Number(e.target.value))}
+                                className="w-full" style={{ accentColor: accentColor }}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-sm font-tech font-bold text-stone-600">
+                                <span className="flex items-center gap-2"><ArrowDown className="w-4 h-4 text-stone-400"/> Overhang Depth</span>
+                                <span className="px-2 py-0.5 rounded-md bg-stone-100 border border-stone-200" style={{ color: accentColor }}>{params.shadingDepth.toFixed(1)}m</span>
+                            </div>
+                            <input 
+                                type="range" min="0" max="2.0" step="0.1" value={params.shadingDepth} 
+                                onChange={(e) => update('shadingDepth', Number(e.target.value))}
+                                className="w-full" style={{ accentColor: accentColor }}
+                            />
+                        </div>
+                    </div>
+
+                    <hr className="border-stone-100" />
+
+                    {/* Mass & Active Controls */}
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-sm font-tech font-bold text-stone-600 flex items-center gap-2">
+                                <Box className="w-4 h-4 text-stone-400"/> Thermal Mass
+                            </label>
+                            <div className="flex gap-2">
+                                {[1, 2, 3].map((val) => (
+                                    <button key={val} onClick={() => update('thermalMass', val)}
+                                        className={`flex-1 py-2 rounded-lg text-xs font-tech font-bold uppercase transition-all border-2 border-b-4 active:border-b-2 active:translate-y-[2px] ${params.thermalMass === val ? 'text-white' : 'bg-white text-stone-500 hover:bg-stone-50 border-stone-200'}`}
+                                        style={{ 
+                                            backgroundColor: params.thermalMass === val ? accentColor : undefined, 
+                                            borderColor: params.thermalMass === val ? accentColor : undefined 
+                                        }}
+                                    >
+                                        {val === 1 ? 'Light' : val === 2 ? 'Medium' : 'Heavy'}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-stone-50 border border-stone-200">
+                            <span className="text-sm font-tech font-bold text-stone-700 flex items-center gap-2">
+                                <Wind className="w-4 h-4 text-stone-400" /> Night Flush
+                            </span>
+                            <button 
+                                onClick={() => update('ventilation', !params.ventilation)} 
+                                className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors border-2 border-transparent`}
+                                style={{ backgroundColor: params.ventilation ? accentColor : '#d6d3d1' }}
+                            >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${params.ventilation ? 'translate-x-7' : 'translate-x-1'}`} />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-stone-50 border border-stone-200">
+                            <div className="flex flex-col">
+                                <span className="text-sm font-tech font-bold text-stone-700 flex items-center gap-2">
+                                    <Flame className="w-4 h-4 text-stone-400" /> Active Heat
+                                </span>
+                                <span className="text-[10px] font-tech text-stone-400 ml-6">Target: 22°C</span>
+                            </div>
+                            <button 
+                                onClick={() => update('heating', !params.heating)} 
+                                className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors border-2 border-transparent`}
+                                style={{ backgroundColor: params.heating ? accentColor : '#d6d3d1' }}
+                            >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${params.heating ? 'translate-x-7' : 'translate-x-1'}`} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [zone, setZone] = useState('1');
+            const [showAbout, setShowAbout] = useState(false);
+            const [isCapturing, setIsCapturing] = useState(false);
+            const captureRef = useRef(null);
+
+            // Baseline House (Poor Performance)
+            const [houseA, setHouseA] = useState({
+                windowRatio: 50, shadingDepth: 0.1, insulationR: 0.5, thermalMass: 1, glassType: 'single', ventilation: false, heating: false
+            });
+
+            // Optimized House (Good Performance)
+            const [houseB, setHouseB] = useState({
+                windowRatio: 30, shadingDepth: 1.2, insulationR: 3.5, thermalMass: 3, glassType: 'double', ventilation: true, heating: false
+            });
+
+            const chartData = useMemo(() => {
+                const climate = CLIMATIC_DATA[zone];
+                const dataA = runSimulation(zone, houseA);
+                const dataB = runSimulation(zone, houseB);
+                
+                return climate.temps.map((extTemp, hour) => ({
+                    hour: `${hour}:00`,
+                    external: extTemp,
+                    internalA: dataA[hour].temp,
+                    heatingA: dataA[hour].isHeating ? dataA[hour].temp : null,
+                    internalB: dataB[hour].temp,
+                    heatingB: dataB[hour].isHeating ? dataB[hour].temp : null
+                }));
+            }, [zone, houseA, houseB]);
+
+            const stats = useMemo(() => {
+                const getStats = (key) => {
+                    const temps = chartData.map(d => d[key]);
+                    const max = Math.max(...temps);
+                    const min = Math.min(...temps);
+                    const discomfort = chartData.filter(d => d[key] < COMFORT_MIN || d[key] > COMFORT_MAX).length;
+                    return { max, min, discomfort };
+                };
+                return { a: getStats('internalA'), b: getStats('internalB') };
+            }, [chartData]);
+
+            // Screenshot Function
+            const handleCapture = async () => {
+                if (!captureRef.current) return;
+                setIsCapturing(true);
+                try {
+                    // Bit-pack House B settings into a short alphanumeric code
+                    const packSettings = (params) => {
+                        const r = Math.round(params.insulationR * 10) & 0x7F; // 7 bits (0-127)
+                        const g = Math.max(0, Object.keys(GLASS_TYPES).indexOf(params.glassType)) & 0x3; // 2 bits (0-3)
+                        const w = Math.round(params.windowRatio / 5) & 0x1F; // 5 bits (0-31)
+                        const s = Math.round(params.shadingDepth * 10) & 0x1F; // 5 bits (0-31)
+                        const m = params.thermalMass & 0x3; // 2 bits (0-3)
+                        const v = params.ventilation ? 1 : 0; // 1 bit
+                        const h = params.heating ? 1 : 0; // 1 bit
+                        
+                        // Combine into a single integer and convert to Base36
+                        const packed = (h << 22) | (v << 21) | (m << 19) | (s << 14) | (w << 9) | (g << 7) | r;
+                        return packed.toString(36).toUpperCase().padStart(5, '0');
+                    };
+                    
+                    const configCode = packSettings(houseB);
+
+                    // Small delay to ensure React state is settled
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    const canvas = await html2canvas(captureRef.current, {
+                        scale: 2, // High resolution
+                        useCORS: true,
+                        backgroundColor: '#f5f5f4' // Matches body background
+                    });
+                    
+                    // Use Blob instead of Data URL for Firefox and mobile compatibility
+                    canvas.toBlob((blob) => {
+                        if (!blob) {
+                            console.error("Canvas to Blob conversion failed");
+                            return;
+                        }
+                        const blobUrl = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = blobUrl;
+                        link.download = `ClimateBox-Z${zone}-${configCode}.jpg`;
+                        
+                        // Firefox requires the link to be in the body to trigger a click
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // Clean up memory
+                        URL.revokeObjectURL(blobUrl);
+                    }, "image/jpeg", 0.9);
+                } catch (err) {
+                    console.error("Screenshot failed:", err);
+                    alert("Could not generate screenshot.");
+                } finally {
+                    setIsCapturing(false);
+                }
+            };
+
+            return (
+                <div className="min-h-screen p-4 md:p-6 lg:p-8 flex flex-col gap-6 relative">
+                    
+                    {/* ABOUT MODAL */}
+                    {showAbout && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm">
+                            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 md:p-8 relative border-2 border-stone-200 overflow-y-auto max-h-[90vh]">
+                                <button onClick={() => setShowAbout(false)} className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-700 transition-colors bg-stone-100 rounded-full hover:bg-stone-200">
+                                    <XIcon className="w-5 h-5" />
+                                </button>
+                                
+                                <div className="flex items-end gap-3 mb-6">
+                                    <h2 className="text-2xl font-tech font-bold text-stone-800 flex items-center gap-3">
+                                        <InfoIcon className="w-7 h-7 text-stone-400" /> About ClimateBox
+                                    </h2>
+                                    <span className="text-xs font-tech font-bold text-stone-400 mb-1">Build 1.0.2</span>
+                                </div>
+
+                                <div className="bg-red-50 border border-red-200 p-4 rounded-xl mb-6">
+                                    <p className="text-xs md:text-sm font-tech font-bold text-red-700 uppercase tracking-wide leading-relaxed">
+                                        ⚠️ DISCLAIMER: THIS IS NOT AN ACCURATE SIMULATION TOOL BUT A "TOY" TO HELP YOU GAIN AN UNDERSTANDING OF HOW ENERGY EFFICIENCY IS MODELLED IN SANS 10400-XA.
+                                    </p>
+                                </div>
+                                
+                                <div className="space-y-6 font-sans text-stone-600 text-sm md:text-base leading-relaxed">
+                                    <p>
+                                        ClimateBox allows you to compare a baseline building (Module A) against an optimized design (Module B). By tweaking the inputs, you can observe the direct impact of passive solar design on the internal temperature curve.
+                                    </p>
+                                    
+                                    <div>
+                                        <h3 className="font-tech font-bold text-stone-800 text-lg mb-3 border-b border-stone-100 pb-2">Interface Controls Guide</h3>
+                                        <ul className="space-y-3">
+                                            <li><strong><Shield className="w-4 h-4 inline text-stone-400 mb-1"/> Envelope Insulation (R-Value):</strong> Increases the thermal resistance of the walls and roof, slowing the transfer of heat between the inside and outside.</li>
+                                            <li><strong><LayoutTemplate className="w-4 h-4 inline text-stone-400 mb-1"/> Glazing Spec:</strong> Upgrading from Single Clear glass to Double or Low-E glass reduces the amount of unwanted heat gained in summer and lost in winter.</li>
+                                            <li><strong><Zap className="w-4 h-4 inline text-stone-400 mb-1"/> North Window Ratio:</strong> The percentage of your north-facing facade that is glass. Larger windows capture more free solar heating during the day.</li>
+                                            <li><strong><ArrowDown className="w-4 h-4 inline text-stone-400 mb-1"/> Overhang Depth:</strong> Roof eaves block the high, hot summer sun, but allow the low, warm winter sun to pass through the windows.</li>
+                                            <li><strong><Box className="w-4 h-4 inline text-stone-400 mb-1"/> Thermal Mass:</strong> Heavy materials (like concrete floors or brick walls) act as a thermal flywheel. They absorb excess heat during the day and release it slowly at night, flattening the temperature curve.</li>
+                                            <li><strong><Wind className="w-4 h-4 inline text-stone-400 mb-1"/> Night Flush:</strong> Simulates opening windows at night. Highly effective in climates with cool nights to purge heat built up during the day.</li>
+                                            <li><strong><Flame className="w-4 h-4 inline text-stone-400 mb-1"/> Active Heat:</strong> Turns on a supplementary heating system that automatically injects energy whenever the internal temperature drops below 22°C.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CAPTURE WRAPPER: Everything inside here will be in the screenshot */}
+                    <div ref={captureRef} className="max-w-7xl mx-auto w-full flex flex-col gap-6 p-2 -m-2">
+                        
+                        {/* HEADER */}
+                        <header className="w-full flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 lg:px-8 lg:py-5 rounded-xl shadow-sm border-2 border-stone-200">
+                            <div>
+                                <h1 className="text-3xl font-tech font-bold text-stone-900 flex items-center gap-3 tracking-tight">
+                                    <Activity className="w-8 h-8 text-stone-700" />
+                                    ClimateBox
+                                </h1>
+                                <p className="text-sm font-tech text-stone-500 mt-1 uppercase tracking-widest">Comparative Building Physics</p>
+                            </div>
+                            
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 bg-stone-100 pl-3 pr-2 py-2 rounded-lg border-2 border-stone-200">
+                                    <MapPin className="w-5 h-5 text-stone-500" />
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-tech uppercase font-bold text-stone-400 leading-none">Location Data</span>
+                                        <select 
+                                            value={zone} onChange={(e) => setZone(e.target.value)}
+                                            className="bg-transparent text-sm font-tech font-bold text-stone-800 outline-none cursor-pointer -ml-1 mt-0.5"
+                                        >
+                                            {Object.entries(CLIMATIC_DATA).map(([key, data]) => (
+                                                <option key={key} value={key}>{data.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={handleCapture}
+                                    disabled={isCapturing}
+                                    className={`w-11 h-11 flex items-center justify-center rounded-lg border-2 border-stone-200 bg-white text-stone-500 hover:bg-stone-50 hover:text-stone-800 transition-all shadow-sm ${isCapturing ? 'opacity-50 cursor-wait' : ''}`}
+                                    title="Download Screenshot"
+                                >
+                                    <Camera className="w-5 h-5" />
+                                </button>
+                                <button 
+                                    onClick={() => setShowAbout(true)}
+                                    className="w-11 h-11 flex items-center justify-center rounded-lg border-2 border-stone-200 bg-white text-stone-500 hover:bg-stone-50 hover:text-stone-800 transition-all shadow-sm"
+                                    title="About ClimateBox"
+                                >
+                                    <InfoIcon className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </header>
+
+                        <div className="w-full flex flex-col gap-6">
+                            
+                            {/* CHART SECTION */}
+                            <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border-2 border-stone-200">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                                    <div>
+                                        <h3 className="text-xl font-tech font-bold text-stone-800">24-Hour Thermal Overlay</h3>
+                                        <p className="text-xs font-tech text-stone-500 uppercase tracking-widest mt-1">Comfort target: 19°C - 25°C</p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-5 font-tech">
+                                        <div className="flex items-center gap-2 text-sm font-bold text-stone-500"><div className="w-3 h-3 rounded bg-stone-300"></div> Ambient</div>
+                                        <div className="flex items-center gap-2 text-sm font-bold text-red-600"><div className="w-3 h-3 rounded bg-red-500"></div> House A</div>
+                                        <div className="flex items-center gap-2 text-sm font-bold text-cyan-600"><div className="w-3 h-3 rounded bg-cyan-500"></div> House B</div>
+                                    </div>
+                                </div>
+
+                                <div className="h-80 w-full mb-8">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e7e5e4" />
+                                            <XAxis dataKey="hour" tick={{fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: 600}} stroke="#a8a29e" interval={3} />
+                                            <YAxis domain={[0, 45]} tick={{fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: 600}} stroke="#a8a29e" />
+                                            <Tooltip 
+                                                contentStyle={{ borderRadius: '8px', border: '2px solid #e7e5e4', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontFamily: 'Space Grotesk', fontWeight: 'bold' }}
+                                                formatter={(value, name) => {
+                                                    if (name === 'heatingA' || name === 'heatingB') return ['Active', 'Heating Status'];
+                                                    return [`${value}°C`];
+                                                }}
+                                            />
+                                            
+                                            {/* Comfort Zone Band - Deepened */}
+                                            <ReferenceArea y1={COMFORT_MIN} y2={COMFORT_MAX} fill="#22c55e" fillOpacity={0.15} stroke="#22c55e" strokeOpacity={0.3} strokeDasharray="3 3" />
+                                            
+                                            <Line type="monotone" dataKey="external" stroke="#a8a29e" strokeWidth={2} dot={false} strokeDasharray="5 5" name="External Ambient" />
+                                            
+                                            <Line type="monotone" dataKey="internalA" stroke="#ef4444" strokeWidth={3} dot={false} name="House A" />
+                                            <Line type="monotone" dataKey="internalB" stroke="#06b6d4" strokeWidth={3} dot={false} name="House B" />
+
+                                            {/* Active Heating Highlights */}
+                                            <Line type="monotone" dataKey="heatingA" stroke="#ef4444" strokeWidth={7} dot={{ r: 4, strokeWidth: 0, fill: '#ef4444' }} activeDot={false} name="heatingA" legendType="none" />
+                                            <Line type="monotone" dataKey="heatingB" stroke="#06b6d4" strokeWidth={7} dot={{ r: 4, strokeWidth: 0, fill: '#06b6d4' }} activeDot={false} name="heatingB" legendType="none" />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+
+                                {/* Quick Stats Comparison */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-stone-50 p-6 rounded-xl border-2 border-stone-200">
+                                    <div className="text-center">
+                                        <div className="text-xs font-tech font-bold text-stone-500 uppercase tracking-widest mb-2">Peak Temp</div>
+                                        <div className="flex justify-center items-end gap-4 font-tech">
+                                            <div className="text-2xl font-bold text-red-500">{stats.a.max.toFixed(1)}°</div>
+                                            <div className="text-stone-300 font-bold text-sm mb-1">VS</div>
+                                            <div className="text-2xl font-bold text-cyan-500">{stats.b.max.toFixed(1)}°</div>
+                                        </div>
+                                    </div>
+                                    <div className="text-center border-t-2 md:border-t-0 md:border-l-2 border-stone-200 pt-6 md:pt-0">
+                                        <div className="text-xs font-tech font-bold text-stone-500 uppercase tracking-widest mb-2">Temp Swing (ΔT)</div>
+                                        <div className="flex justify-center items-end gap-4 font-tech">
+                                            <div className="text-2xl font-bold text-red-500">{(stats.a.max - stats.a.min).toFixed(1)}°</div>
+                                            <div className="text-stone-300 font-bold text-sm mb-1">VS</div>
+                                            <div className="text-2xl font-bold text-cyan-500">{(stats.b.max - stats.b.min).toFixed(1)}°</div>
+                                        </div>
+                                    </div>
+                                    <div className="text-center border-t-2 md:border-t-0 md:border-l-2 border-stone-200 pt-6 md:pt-0">
+                                        <div className="text-xs font-tech font-bold text-stone-500 uppercase tracking-widest mb-2">Uncomfortable Hrs</div>
+                                        <div className="flex justify-center items-end gap-4 font-tech">
+                                            <div className="text-2xl font-bold text-red-500">{stats.a.discomfort}h</div>
+                                            <div className="text-stone-300 font-bold text-sm mb-1">VS</div>
+                                            <div className="text-2xl font-bold text-cyan-500">{stats.b.discomfort}h</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* CONTROLS SPLIT VIEW */}
+                            <div className="flex flex-col md:flex-row gap-6">
+                                <HousePanel 
+                                    title="Module A" 
+                                    subtitle="Baseline Build"
+                                    colorClass="text-red-500" 
+                                    borderClass="border-t-red-500" 
+                                    accentColor="#ef4444"
+                                    params={houseA} 
+                                    setParams={setHouseA} 
+                                />
+                                <HousePanel 
+                                    title="Module B"
+                                    subtitle="Optimized Spec"
+                                    colorClass="text-cyan-600" 
+                                    borderClass="border-t-cyan-500" 
+                                    accentColor="#06b6d4"
+                                    params={houseB} 
+                                    setParams={setHouseB} 
+                                />
+                            </div>
+
+                        </div>
+                    </div>
+                    {/* END CAPTURE WRAPPER */}
+
+                    {/* FOOTER CREDIT */}
+                    <footer className="max-w-7xl mx-auto w-full text-center pt-2 pb-4 text-sm font-tech text-stone-400">
+                        &copy; 2026 <a href="https://peterleroux.co.za" target="_blank" rel="noopener noreferrer" className="hover:text-stone-600 transition-colors underline decoration-stone-300 hover:decoration-stone-500 underline-offset-4">peterleroux.co.za</a>
+                    </footer>
+
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
