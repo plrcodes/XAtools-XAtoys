@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SANS 10400-XA DTS Simplifications Explorer</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --bg: #f4f6f8;
+            --tab-active: #2980b9;
+            --tab-inactive: #e0e6ed;
+            --assumption-bg: #fdf3f2;
+            --assumption-border: #e74c3c;
+            --reality-bg: #f0f9f4;
+            --reality-border: #2ecc71;
+            --text-color: #2c3e50;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-color);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 15px;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+        .description {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #5a6c7d;
+            font-size: 1.1em;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 0;
+        }
+        .tab-btn {
+            padding: 15px 25px;
+            border: none;
+            background-color: var(--tab-inactive);
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
+            font-size: 1em;
+            transition: all 0.2s ease;
+        }
+        .tab-btn:hover {
+            background-color: #cbd3db;
+        }
+        .tab-btn.active {
+            background-color: white;
+            color: var(--tab-active);
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+            border-bottom: 3px solid white;
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Content Areas */
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-top: -1px;
+            position: relative;
+            z-index: 1;
+            min-height: 400px;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Accordions */
+        details {
+            margin-bottom: 15px;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+            transition: box-shadow 0.2s ease;
+        }
+        details:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        summary {
+            font-weight: 600;
+            padding: 18px 20px;
+            background-color: #fafbfa;
+            color: var(--primary);
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.05em;
+            border-bottom: 1px solid transparent;
+        }
+        details[open] summary {
+            border-bottom: 1px solid #eaeaea;
+            background-color: white;
+        }
+        summary::-webkit-details-marker {
+            display: none; /* Hide default arrow */
+        }
+        summary::after {
+            content: '+';
+            font-size: 1.5em;
+            color: #888;
+            font-weight: 300;
+            transition: transform 0.2s;
+        }
+        details[open] summary::after {
+            content: '−';
+            transform: rotate(90deg);
+            color: var(--primary);
+        }
+        
+        /* Comparison Grid */
+        .comparison-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+            background-color: white;
+        }
+        @media (min-width: 650px) {
+            .comparison-container {
+                flex-direction: row;
+            }
+        }
+        .comparison-box {
+            flex: 1;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 5px solid;
+            font-size: 0.95em;
+        }
+        .assumption {
+            background-color: var(--assumption-bg);
+            border-left-color: var(--assumption-border);
+        }
+        .reality {
+            background-color: var(--reality-bg);
+            border-left-color: var(--reality-border);
+        }
+        .box-title {
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-size: 0.8em;
+            letter-spacing: 1.2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .assumption .box-title { color: var(--assumption-border); }
+        .reality .box-title { color: var(--reality-border); }
+        
+        .box-title::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .assumption .box-title::before { background-color: var(--assumption-border); }
+        .reality .box-title::before { background-color: var(--reality-border); }
+
+    </style>
+</head>
+<body>
+
+    <h1>SANS 10400-XA Simplifications</h1>
+    <p class="description">Explore how the Deemed-to-Satisfy (DTS) rules translate complex thermodynamic principles into rigid, prescriptive checklists.</p>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab(event, 'global')">Global Rules</button>
+        <button class="tab-btn" onclick="openTab(event, 'envelope')">The Envelope</button>
+        <button class="tab-btn" onclick="openTab(event, 'services')">Building Services</button>
+    </div>
+
+    <!-- Global Rules -->
+    <div id="global" class="tab-content active">
+        <details>
+            <summary>Solar Orientation Categories</summary>
+            <div class="comparison-container">
+                <div class="comparison-box assumption">
+                    <div class="box-title">The Code's Assumption</div>
+                    <p>Groups multiple compass directions into broad buckets for vertical fenestration (e.g. grouping West, North-West, North, North-East, and East orientations into one single category).</p>
+                </div>
+                <div class="comparison-box reality">
+                    <div class="box-title">Thermodynamic Reality</div>
+                    <p>Facades experience vastly different thermal loads degree-by-degree. The harsh, low-angle afternoon sun of a West-facing window is treated the same as the mild morning sun of an East-facing window.</p>
+                </div>
+            </div>
+        </details>
+        <details>
+            <summary>The Silo Approach (No Trade-offs)</summary>
+            <div class="comparison-container">
+                <div class="comparison-box assumption">
+                    <div class="box-title">The Code's Assumption</div>
+                    <p>Elements must satisfy requirements independently. If fenestration performance exceeds requirements on one storey, it cannot be traded off against a poorer performing second storey.</p>
+                </div>
+                <div class="comparison-box reality">
+                    <div class="box-title">Thermodynamic Reality</div>
+                    <p>Building physics relies on a holistic energy balance. Over-insulating a roof naturally requires less wall insulation to achieve the same overall thermal efficiency for the entire envelope.</p>
+                </div>
+            </div>
+        </details>
+        <details>
+            <summary>Generic Occupancy Profiles</summary>
+            <div class="comparison-container">
+                <div class="comparison-box assumption">
+                    <div class="box-title">The Code's Assumption</div>
+                    <p>Standardizes internal heat gains (people, lights, plug loads) into rigid weekday schedules. For example, assuming office lighting operates at exactly 80% from 08:00 to 11:00.</p>
+                </div>
+                <div class="comparison-box reality">
+                    <div class="box-title">Thermodynamic Reality</div>
+                    <p>Modern buildings have dynamic, varied uses. These tables cannot account for modern realities like hybrid work schedules, varied lunch hours, or specific energy-intensive tenant operations.</p>
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <!-- The Envelope -->
+    <div id="envelope" class="tab-content">
+        <details>
+            <summary>Ignoring Internal Blinds</summary>
+            <div class="comparison-container">
+                <div class="comparison-box assumption">
+                    <div class="box-title">The Code's Assumption</div>
+                    <p>Mandates permanent external features (like eaves or fixed canopies) to block 80% of summer solar radiation. Internal curtains and blinds are given absolutely no insulation or shading value.</p>
+                </div>
+                <div class="comparison-box reality">
+                    <div class="box-title">Thermodynamic Reality</div>
+                    <p>While internal blinds reflect some light, once radiation passes through glass it becomes trapped inside as heat (the greenhouse effect). Furthermore, they rely entirely on unpredictable occupant behavior.</p>
+                </div>
+            </div>
+        </details>
+        <details>
+            <summary>Window Condensation Bans</summary>
+            <div class="comparison-container">
+                <div class="comparison-box assumption">
+                    <div class="box-title">The Code's Assumption</div>
+                    <p>Outright prohibits using single low-emissivity glass in the Southern Cape Condensation Problem Area to achieve required thermal U-values.</p>
+                </div>
+                <div class="comparison-box reality">
+                    <div class="box-title">Thermodynamic Reality</div>
+                    <p>Condensation is dynamic and depends heavily on indoor humidity, internal temperature, and ventilation rates. The model uses a blanket ban instead of requiring localized dew-point calculations.</p>
+                </div>
+            </div>
+        </details>
+        <details>
+            <summary>Thermal Mass Thresholds</summary>
+            <div class="comparison-container">
+                <div class="comparison-box assumption">
+                    <div class="box-title">The Code's Assumption</div>
+                    <p>Splits external wall requirements into two rigid categories based on a hard cutoff: surface density of ≥ 270 kg/m² versus < 270 kg/m².</p>
+                </div>
+                <div class="comparison-box reality">
+                    <div class="box-title">Thermodynamic Reality</div>
+                    <p>Ignores the nuanced thermal lag variations between materials. A heavy masonry wall behaves entirely differently than a lightweight timber-frame wall throughout a day-night temperature cycle.</p>
+                </div>
+            </div>
+        </details>
+        <details>
+            <summary>Prescriptive Airtightness</summary>
+            <div class="comparison-container">
+                <div class="comparison-box assumption">
+                    <div class="box-title">The Code's Assumption</div>
+                    <p>Assumes the building is adequately sealed by basic methods: caulking joints, adding skirting, installing tile underlays, and fitting compressible strips to external doors.</p>
+                </div>
+                <div class="comparison-box reality">
+                    <div class="box-title">Thermodynamic Reality</div>
+                    <p>Specifying weather stripping does not guarantee a truly airtight envelope. The model requires no physical validation (like a Blower Door test) to prove the building is actually sealed.</p>
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <!-- Building Services -->
+    <div id="services" class="tab-content">
+        <details>
+            <summary>Hot Water (The 50% Volume Rule)</summary>
+            <div class="comparison-container">
+                <div class="comparison-box assumption">
+                    <div class="box-title">The Code's Assumption</div>
+                    <p>Mandates that at least 50% (by volume fraction) of the annual average hot water requirement must be provided by alternative means like solar arrays or heat pumps.</p>
+                </div>
+                <div class="comparison-box reality">
+                    <div class="box-title">Thermodynamic Reality</div>
+                    <p>Assumes that replacing 50% of the volume equates to a 50% reduction in energy usage. It ignores that system efficiency fluctuates wildly; a solar system's EER can drop to 20% if not maintained.</p>
+                </div>
+            </div>
+        </details>
+        <details>
+            <summary>Commercial Lighting Thresholds</summary>
+            <div class="comparison-container">
+                <div class="comparison-box assumption">
+                    <div class="box-title">The Code's Assumption</div>
+                    <p>Restricts lighting energy by imposing a flat Watt per square meter (W/m²) limit averaged across the net floor area (e.g., 8 W/m² for Offices).</p>
+                </div>
+                <div class="comparison-box reality">
+                    <div class="box-title">Thermodynamic Reality</div>
+                    <p>Averages out the load across the entire floorplate. It fails to distinguish between areas requiring high-intensity task lighting and areas needing only low-level ambient lighting.</p>
+                </div>
+            </div>
+        </details>
+        <details>
+            <summary>HVAC Efficiency Ratings</summary>
+            <div class="comparison-container">
+                <div class="comparison-box assumption">
+                    <div class="box-title">The Code's Assumption</div>
+                    <p>Air conditioning compliance is achieved strictly by ensuring the unit meets a minimum Coefficient of Performance (COP) under specific, static laboratory test conditions.</p>
+                </div>
+                <div class="comparison-box reality">
+                    <div class="box-title">Thermodynamic Reality</div>
+                    <p>Evaluates the machine in isolation, not the system. It completely ignores real-world efficiency losses caused by leaky ductwork, part-load inefficiencies, or suboptimal thermostat placement.</p>
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <script>
+        function openTab(evt, tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            // Remove active class from all buttons
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // Show current tab and set button as active
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>
