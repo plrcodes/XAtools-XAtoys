@@ -3,19 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XA Compliance Route Navigator</title>
+    <title>XA Compliance Route Navigator - Edition 3</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     
-    <!-- Babel for in-browser JSX transpilation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Animation Polyfills for Tailwind-Animate classes -->
     <style>
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideInBottom4 { from { transform: translateY(1rem); } to { transform: translateY(0); } }
@@ -152,7 +148,9 @@
           const [showInfo, setShowInfo] = useState(false);
           const [formData, setFormData] = useState({
             occupancy: '', garageStorage: null, greenCert: null, floorArea: '', storeys: '',
-            highGlazing: null, tradeOffs: null, zone: '1', hotWater: null, roofs: null, walls: null, floors: null, fenestration: null, services: null
+            tradeOffs: null, sccpLowE: null, 
+            hotWater: null, roofs: null, walls: null, floors: null, 
+            fenestration: null, shadingMultiplier: null, roofLights: null, services: null
           });
 
           const handleChange = (name, value) => {
@@ -165,12 +163,13 @@
           
           const isGreenCertBypass = formData.greenCert === 'yes';
           const isStrategyComplete = formData.greenCert === 'yes' || 
-            (formData.greenCert === 'no' && formData.floorArea !== '' && formData.storeys !== '' && formData.highGlazing !== null && formData.tradeOffs !== null);
+            (formData.greenCert === 'no' && formData.floorArea !== '' && formData.storeys !== '' && formData.tradeOffs !== null && formData.sccpLowE !== null);
           
-          const isDealbreakerRational = formData.highGlazing === 'yes' || formData.tradeOffs === 'yes';
+          const isDealbreakerRational = formData.tradeOffs === 'yes' || formData.sccpLowE === 'yes';
           
-          const isDtsRational = formData.hotWater === 'no' || formData.roofs === 'no' || formData.walls === 'no' || formData.floors === 'no' || formData.fenestration === 'no' || formData.services === 'no';
-          const isDtsComplete = formData.hotWater !== null && formData.roofs !== null && formData.walls !== null && formData.floors !== null && formData.fenestration !== null && formData.services !== null;
+          const isDtsRational = formData.hotWater === 'no' || formData.roofs === 'no' || formData.walls === 'no' || formData.floors === 'no' || formData.fenestration === 'no' || formData.shadingMultiplier === 'no' || formData.roofLights === 'no' || formData.services === 'no';
+          
+          const isDtsComplete = formData.hotWater !== null && formData.roofs !== null && formData.walls !== null && formData.floors !== null && formData.fenestration !== null && formData.shadingMultiplier !== null && formData.roofLights !== null && formData.services !== null;
 
           const showOptimizationTip = formData.greenCert === 'no' && 
             (Number(formData.storeys) > 3 || Number(formData.floorArea) >= 1000) && 
@@ -184,8 +183,8 @@
 
           const resetForm = () => {
             setFormData({
-              occupancy: '', garageStorage: null, greenCert: null, floorArea: '', storeys: '', highGlazing: null, tradeOffs: null,
-              zone: '1', hotWater: null, roofs: null, walls: null, floors: null, fenestration: null, services: null
+              occupancy: '', garageStorage: null, greenCert: null, floorArea: '', storeys: '', tradeOffs: null, sccpLowE: null,
+              hotWater: null, roofs: null, walls: null, floors: null, fenestration: null, shadingMultiplier: null, roofLights: null, services: null
             });
             window.scrollTo({ top: 0, behavior: 'smooth' });
           };
@@ -200,7 +199,7 @@
                 icon={IconCheckCircle} title="Exempt" subtitle="SANS 10400-XA Applicability" colorClass="border-emerald-500"
                 content={
                   <>
-                    <p>Based on the criteria provided, this building or structure is <strong>exempt</strong> and does not require compliance with the energy usage regulations outlined in SANS 10400-XA (Edition 2).</p>
+                    <p>Based on the criteria provided, this building or structure is <strong>exempt</strong> and does not require compliance with the energy usage regulations outlined in SANS 10400-XA (Edition 3, 2026).</p>
                     <p className="pt-3 border-t border-zinc-100 text-xs font-mono text-zinc-500">REASON: {exemptReason}</p>
                   </>
                 }
@@ -219,17 +218,17 @@
               />;
             }
 
-            if (formData.highGlazing === 'yes') {
-              return <ResultCard 
-                icon={IconAlertTriangle} title="Rational Design Required" subtitle="Failure Point: 60% Fenestration Limit" colorClass="border-red-500"
-                content={<p>The Deemed-to-Satisfy fenestration tables mathematically cap out at a 60% glazing-to-floor-area ratio. Exceeding this limit requires a full Rational Design simulation by a Competent Person (Energy).</p>}
-              />;
-            }
-
             if (formData.tradeOffs === 'yes') {
               return <ResultCard 
                 icon={IconAlertTriangle} title="Rational Design Required" subtitle="Failure Point: Architectural Trade-Offs" colorClass="border-red-500"
                 content={<p>The Deemed-to-Satisfy route requires strict adherence to all prescriptive values. Omitting insulation or deviating from standard envelope requirements mandates a Rational Design simulation to prove overall energy equivalence.</p>}
+              />;
+            }
+            
+            if (formData.sccpLowE === 'yes') {
+              return <ResultCard 
+                icon={IconAlertTriangle} title="Rational Design Required" subtitle="Failure Point: SCCP & Low-E Glass" colorClass="border-red-500"
+                content={<p>Clause 5.3.7 strictly prohibits the use of single low-emissivity (low-e) glass to achieve fenestration U-values in the Southern Cape Condensation Problem Area (SCCP) due to condensation risks. You must either upgrade the glazing specification or proceed with a Rational Design simulation.</p>}
               />;
             }
 
@@ -243,13 +242,13 @@
             if (isDtsRational) {
               return <ResultCard 
                 icon={IconAlertTriangle} title="Rational Design Required" subtitle="Failure Point: Prescriptive Envelope or Services" colorClass="border-red-500"
-                content={<p>Because one or more prescriptive requirements cannot be met using the standard tables, a full building energy simulation by a Competent Person (Energy) is required to prove compliance via the performance route.</p>}
+                content={<p>Because one or more prescriptive requirements cannot be met using the standard tables (including limits on shading projection and roof lights), a full building energy simulation by a Competent Person (Energy) is required to prove compliance via the performance route.</p>}
               />;
             }
 
             return <ResultCard 
               icon={IconListChecks} title="Deemed-to-Satisfy Valid" subtitle="Compliance Route" colorClass="border-blue-500"
-              content={<p>Project parameters indicate the prescriptive Deemed-to-Satisfy route is viable. Ensure all specifications (R-values, fenestration conductance) exactly match Edition 2 tables and are documented on the municipal submission.</p>}
+              content={<p>Project parameters indicate the prescriptive Deemed-to-Satisfy route is viable. Ensure all specifications (R-values, fenestration conductance, and shading/roof light limits) exactly match the Edition 3 (2026) tables and are documented on the municipal submission.</p>}
             />;
           };
 
@@ -272,7 +271,7 @@
                       ?
                     </button>
                   </div>
-                  <p className="text-zinc-500 text-sm font-mono uppercase tracking-widest pl-11">Edition 2 (2021) Route Assessor</p>
+                  <p className="text-zinc-500 text-sm font-mono uppercase tracking-widest pl-11">Edition 3 (2026) Route Assessor</p>
                 </div>
 
                 {/* Main Form Content */}
@@ -382,17 +381,17 @@
                             </div>
 
                             <RadioSelect 
-                              value={formData.highGlazing}
-                              onChange={(val) => handleChange('highGlazing', val)}
-                              label="Will the total fenestration (glass) area on any storey exceed 60% of the net floor area?" 
-                              reference="Clause 4.2.5"
-                            />
-
-                            <RadioSelect 
                               value={formData.tradeOffs}
                               onChange={(val) => handleChange('tradeOffs', val)}
                               label="Do you intend to deliberately omit prescriptive elements to achieve an architectural aesthetic (e.g., exposed off-shutter concrete roofs, uninsulated feature walls)?" 
                               reference="DtS Prohibited"
+                            />
+                            
+                            <RadioSelect 
+                              value={formData.sccpLowE}
+                              onChange={(val) => handleChange('sccpLowE', val)}
+                              label="Is this project located in the Southern Cape Condensation Problem Area (SCCP) AND intending to use single low-emissivity (low-e) glass?" 
+                              reference="Clause 5.3.7"
                             />
                           </div>
                         )}
@@ -402,47 +401,18 @@
                   {/* Show bypass/dealbreaker results instantly */}
                   {(isGreenCertBypass || (formData.greenCert === 'no' && isDealbreakerRational)) && renderResult()}
 
-                  {/* Sections 3 & 4 */}
+                  {/* Sections 3 */}
                   {showDtsSection && (
                     <div className="bg-white border border-zinc-200 p-6 sm:p-10 shadow-sm animate-in fade-in slide-in-from-top-8 duration-500">
-                      <h2 className="text-xs sm:text-sm font-mono text-zinc-500 uppercase tracking-widest mb-6 pb-4 border-b border-zinc-200">03 / Energy Zone</h2>
-                      
-                      <div className="mb-10">
-                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-4">
-                          <div className="font-semibold text-zinc-900 leading-snug text-sm sm:text-base">Select the designated Energy Zone for the project location.</div>
-                          <div className="text-[10px] sm:text-xs text-zinc-500 flex items-center gap-1.5 font-mono uppercase tracking-wider bg-zinc-100 px-2 py-1 shrink-0">
-                            <IconInfo size={12} className="text-zinc-700"/>
-                            <a href="https://csir.maps.arcgis.com/apps/webappviewer/index.html?id=79602766e2b54ede82625c939ac1814b" target="_blank" rel="noopener noreferrer" className="underline hover:text-black">CSIR Map</a>
-                          </div>
-                        </div>
-                        <div className="relative">
-                          <select 
-                            value={formData.zone}
-                            onChange={(e) => handleChange('zone', e.target.value)}
-                            className="w-full p-3 sm:p-4 pl-4 pr-10 border border-zinc-300 bg-white text-black font-semibold text-sm sm:text-base focus:border-black focus:ring-1 focus:ring-black outline-none appearance-none cursor-pointer rounded-none"
-                          >
-                            <option value="1">Zone 1 — Cold Interior</option>
-                            <option value="2">Zone 2 — Temperate Interior</option>
-                            <option value="3">Zone 3 — Hot Interior</option>
-                            <option value="4">Zone 4 — Temperate Coastal</option>
-                            <option value="5">Zone 5 — Sub-tropical Coastal</option>
-                            <option value="5b">Zone 5b — High Humidity (Coast)</option>
-                            <option value="6">Zone 6 — Arid Interior</option>
-                            <option value="7">Zone 7 — Equatorial</option>
-                          </select>
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-black">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                          </div>
-                        </div>
-                      </div>
-
-                      <h2 className="text-xs sm:text-sm font-mono text-zinc-500 uppercase tracking-widest mb-6 pb-4 border-b border-zinc-200">04 / Prescriptive (Deemed-to-Satisfy)</h2>
+                      <h2 className="text-xs sm:text-sm font-mono text-zinc-500 uppercase tracking-widest mb-6 pb-4 border-b border-zinc-200">03 / Prescriptive (Deemed-to-Satisfy)</h2>
                       
                       <RadioSelect value={formData.hotWater} onChange={(val) => handleChange('hotWater', val)} label="Can you provide at least 50% of the annual hot water heating requirement via alternative means (e.g., solar, heat pump, waste heat)?" reference="Clause 4.1.1" options={YES_NO_NA} />
-                      <RadioSelect value={formData.roofs} onChange={(val) => handleChange('roofs', val)} label="Will the roof assembly meet the minimum prescriptive Total R-value for your chosen Energy Zone?" reference="Clause 4.2.2" />
-                      <RadioSelect value={formData.walls} onChange={(val) => handleChange('walls', val)} label="Will the external walls meet the minimum prescriptive thermal performance (CR-values or mass) for your Energy Zone?" reference="Clause 4.2.3" />
+                      <RadioSelect value={formData.roofs} onChange={(val) => handleChange('roofs', val)} label="Will the roof assembly meet the minimum prescriptive Total R-value for the site's specific Energy Zone?" reference="Table 8" />
+                      <RadioSelect value={formData.walls} onChange={(val) => handleChange('walls', val)} label="Will the external walls meet the minimum prescriptive thermal performance (CR-values or mass) for the site's specific Energy Zone?" reference="Clause 4.2.3" />
                       <RadioSelect value={formData.floors} onChange={(val) => handleChange('floors', val)} label="If the building has exposed/suspended concrete floors, or underfloor heating, will they be insulated to the prescriptive R-value?" reference="Clause 4.2.4" options={YES_NO_NA} />
+                      <RadioSelect value={formData.shadingMultiplier} onChange={(val) => handleChange('shadingMultiplier', val)} label="If using external shading devices to meet fenestration limits on Northern/Eastern/Western facades, does the projection-to-height ratio meet the strict latitude multipliers?" reference="Table 3" options={YES_NO_NA} />
                       <RadioSelect value={formData.fenestration} onChange={(val) => handleChange('fenestration', val)} label="Can the design meet the prescribed Total Conductance and Solar Heat Gain limits for the specific window sizes, glass types, and shading used?" reference="Clause 4.2.5" />
+                      <RadioSelect value={formData.roofLights} onChange={(val) => handleChange('roofLights', val)} label="If the design includes roof lights (skylights), do they comply with the specific area limits and thermal performance thresholds?" reference="Clause 5.3.9" options={YES_NO_NA} />
                       <RadioSelect value={formData.services} onChange={(val) => handleChange('services', val)} label="Will the building services (lighting power density, HVAC efficiency) comply with the prescriptive limits?" reference="Clause 4.2.6" options={YES_NO_NA} />
 
                     </div>
@@ -459,7 +429,8 @@
                           <IconInfo className="text-amber-600 mt-0.5 shrink-0" size={20} />
                           <div>
                             <h4 className="text-sm font-bold text-amber-900 uppercase tracking-widest mb-2">Optimization Tip</h4>
-                            <p className="text-sm text-amber-800 leading-relaxed">For buildings of this scale and height, the Rational Design (Simulation) route is highly recommended. While Deemed-to-Satisfy is possible, an energy model allows you to trade off insulation and fenestration values, optimizing facade material costs.</p>
+                            <p className="text-sm text-amber-800 leading-relaxed mb-3">For buildings of this scale and height, the Rational Design (Simulation) route is highly recommended. While Deemed-to-Satisfy is possible, an energy model allows you to trade off insulation and fenestration values, optimizing facade material costs.</p>
+                            <p className="text-xs text-amber-900/70 font-mono">NOTE: Edition 3 (2026) tightens the maximum theoretical energy targets to 78% of the 2021 baseline.</p>
                           </div>
                         </div>
                       )}
@@ -469,7 +440,8 @@
                           <IconAlertTriangle className="text-amber-600 mt-0.5 shrink-0" size={20} />
                           <div>
                             <h4 className="text-sm font-bold text-amber-900 uppercase tracking-widest mb-2">Energy Performance Certificate Required</h4>
-                            <p className="text-sm text-amber-800 leading-relaxed">By law, specific buildings (including Class {formData.occupancy} &gt; 1,000m² for gov or &gt; 2,000m² for private) require a mandatory Energy Performance Certificate (EPC) once operational. Undertaking a Rational Design energy model now will establish a highly accurate baseline for your future EPC rating.</p>
+                            <p className="text-sm text-amber-800 leading-relaxed mb-3">By law, specific buildings (including Class {formData.occupancy} &gt; 1,000m² for gov or &gt; 2,000m² for private) require a mandatory Energy Performance Certificate (EPC) once operational. Undertaking a Rational Design energy model now will establish a highly accurate baseline for your future EPC rating.</p>
+                            <p className="text-xs text-amber-900/70 font-mono">NOTE: Edition 3 (2026) tightens the maximum theoretical energy targets to 78% of the 2021 baseline.</p>
                           </div>
                         </div>
                       )}
@@ -503,11 +475,11 @@
                       <IconX size={24} />
                     </button>
                     <h3 className="text-lg font-black mb-4 uppercase tracking-tight text-black">About this tool</h3>
-                    <p className="text-zinc-600 mb-8 text-sm leading-relaxed">
-                      This navigator helps architects and building professionals quickly determine the required energy compliance route (Exempt, Deemed-to-Satisfy, or Rational Design) according to South Africa's SANS 10400-XA (Edition 2, 2021) energy usage in buildings regulations.
+                    <p className="text-zinc-600 mb-6 text-sm leading-relaxed">
+                      This navigator helps architects and building professionals quickly determine the required energy compliance route (Exempt, Deemed-to-Satisfy, or Rational Design) according to South Africa's SANS 10400-XA (Edition 3, 2026) energy usage in buildings regulations.
                     </p>
-                      <a href="https://www.cpdcentral.co.za/courses/mastering-sans-10400-XA" target="_blank" rel="noopener noreferrer" className="inline-block mb-8 text-sm font-bold text-black border-b-2 border-black hover:text-zinc-600 hover:border-zinc-600 transition-colors pb-0.5">
-                      Sign up for the CPD CENTRAL deemed-to-satisfy XA course here
+                    <a href="https://www.cpdcentral.co.za/courses/mastering-sans-10400-XA" target="_blank" rel="noopener noreferrer" className="inline-block mb-8 text-sm font-bold text-black border-b-2 border-black hover:text-zinc-600 hover:border-zinc-600 transition-colors pb-0.5">
+                      Sign up for the deemed-to-satisfy XA course here
                     </a>
                     <div className="text-[11px] font-mono uppercase tracking-widest text-zinc-500 border-t border-zinc-200 pt-5">
                       Created by <a href="https://peterleroux.co.za" target="_blank" rel="noopener noreferrer" className="text-black hover:underline font-bold">peterleroux.co.za 2026</a>
