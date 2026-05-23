@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SANS 10400-XA Compliance Suite</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel for in-browser JSX compilation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body { background-color: #f8fafc; }
+    /* Small tweaks for print dialog */
+    @media print {
+      body { background-color: white; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // --- ICON COMPONENTS (Replaces external lucide-react imports for offline stability) ---
+    const Plus = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
+    const GripVertical = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>;
+    const Trash2 = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>;
+    const ArrowUp = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>;
+    const ArrowDown = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>;
+    const Info = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>;
+    const CheckCircle = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>;
+    const XCircle = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>;
+    const FileText = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>;
+    const HelpCircle = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>;
+    const X = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
+    const Layers = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>;
+    const Home = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
+    const Grid = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>;
+    const Sun = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>;
+    const Snowflake = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="2" y1="12" x2="22" y2="12"></line><line x1="12" y1="2" x2="12" y2="22"></line><path d="M20 16l-4-4 4-4"></path><path d="M4 8l4 4-4 4"></path><path d="M16 4l-4 4-4-4"></path><path d="M8 20l4-4 4 4"></path></svg>;
+    const Thermometer = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path></svg>;
+    const Wand2 = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.64 3.64l-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72z"></path><line x1="14" y1="7" x2="17" y2="10"></line></svg>;
+    const MapPin = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>;
+    const Building = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M12 6h.01"></path><path d="M12 10h.01"></path><path d="M12 14h.01"></path><path d="M16 10h.01"></path><path d="M16 14h.01"></path><path d="M8 10h.01"></path><path d="M8 14h.01"></path></svg>;
+    const Maximize = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>;
+    const Calculator = ({className}) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M8 18h.01"></path><path d="M12 18h.01"></path></svg>;
+
+    // Common South African building materials
+    const MATERIAL_PRESETS = [
+      { name: 'Custom Material', type: 'material', kValue: 0.1, density: 1000, specificHeat: 1000 },
+      { name: 'Custom Resistance / Air Gap', type: 'resistance', rValue: 0.18, density: 1.2, specificHeat: 1000 },
+      // Walls
+      { name: 'Clay Brick (Solid)', type: 'material', kValue: 0.77, density: 1700, specificHeat: 800, defaultThickness: 110 },
+      { name: 'Concrete Plaster / Render', type: 'material', kValue: 1.20, density: 1800, specificHeat: 1000, defaultThickness: 15 },
+      { name: 'Perlite Plaster (Insulating)', type: 'material', kValue: 0.11, density: 450, specificHeat: 1000, defaultThickness: 15 },
+      { name: 'Concrete Block (Hollow, standard)', type: 'resistance', rValue: 0.17, density: 1214, specificHeat: 1000, defaultThickness: 140 }, 
+      { name: 'Concrete (Dense)', type: 'material', kValue: 1.40, density: 2400, specificHeat: 1000, defaultThickness: 100 },
+      { name: 'Fibre Cement Board', type: 'material', kValue: 0.30, density: 1300, specificHeat: 1000, defaultThickness: 9 },
+      { name: 'Gypsum Plasterboard (RhinoBoard)', type: 'material', kValue: 0.25, density: 800, specificHeat: 1090, defaultThickness: 12 },
+      // Insulation
+      { name: 'EPS Insulation (Standard 15kg/m³)', type: 'material', kValue: 0.038, density: 15, specificHeat: 1450, defaultThickness: 40 },
+      { name: 'XPS Insulation', type: 'material', kValue: 0.030, density: 30, specificHeat: 1450, defaultThickness: 30 },
+      { name: 'Glasswool Insulation', type: 'material', kValue: 0.040, density: 12, specificHeat: 840, defaultThickness: 50 },
+      // Roofs
+      { name: 'Corrugated Steel Sheeting', type: 'resistance', rValue: 0.01, density: 7850, specificHeat: 450, defaultThickness: 1 },
+      { name: 'Concrete Roof Tile', type: 'material', kValue: 1.50, density: 2100, specificHeat: 1000, defaultThickness: 15 },
+      { name: 'Reflective Foil Laminate (facing air gap)', type: 'resistance', rValue: 1.00, rValueUp: 0.55, rValueDown: 1.53, rValueUpPitched: 0.85, rValueDownPitched: 1.30, density: 5, specificHeat: 1000, defaultThickness: 1 },
+      { name: 'Unventilated Air Gap / Cavity', type: 'resistance', rValue: 0.18, rValueUp: 0.16, rValueDown: 0.21, rValueUpPitched: 0.18, rValueDownPitched: 0.25, density: 1.2, specificHeat: 1000, defaultThickness: 25 },
+      // Floors
+      { name: 'Ceramic Floor Tiles', type: 'material', kValue: 1.30, density: 2000, specificHeat: 800, defaultThickness: 10 },
+      { name: 'Timber Floorboards', type: 'material', kValue: 0.14, density: 600, specificHeat: 1600, defaultThickness: 18 },
+      { name: 'Vinyl Flooring', type: 'material', kValue: 0.23, density: 1200, specificHeat: 1000, defaultThickness: 4 },
+      { name: 'Floor Screed', type: 'material', kValue: 1.20, density: 1800, specificHeat: 1000, defaultThickness: 30 },
+      { name: 'XPS Insulation (High Density 35kg/m³)', type: 'material', kValue: 0.030, density: 35, specificHeat: 1450, defaultThickness: 30 },
+      { name: 'Damp Proof Membrane (DPM)', type: 'resistance', rValue: 0.0, density: 950, specificHeat: 1500, defaultThickness: 0.25 },
+      { name: 'Compacted Fill / Hardcore', type: 'material', kValue: 1.30, density: 1900, specificHeat: 1000, defaultThickness: 150 },
+      { name: 'Soil / Earth', type: 'material', kValue: 1.50, density: 1500, specificHeat: 1000, defaultThickness: 100 },
+    ];
+
+    // Fenestration / Glazing Presets
+    const WINDOW_PRESETS = [
+      { name: 'Standard Clear (Aluminium Frame)', uValue: 7.90, shgc: 0.81 },
+      { name: 'Standard Clear (Timber/uPVC Frame)', uValue: 5.60, shgc: 0.76 },
+      { name: 'Low-E Glass (Aluminium Frame)', uValue: 5.50, shgc: 0.65 },
+      { name: 'Double Glazed Clear (Aluminium Frame)', uValue: 4.50, shgc: 0.70 },
+      { name: 'Double Glazed Low-E (uPVC Frame)', uValue: 2.80, shgc: 0.55 },
+    ];
+
+    const CLIMATE_ZONES = [
+      { id: '1', name: 'Zone 1: Cold Interior (e.g. Johannesburg, Bloemfontein)' },
+      { id: '2', name: 'Zone 2: Temperate Interior (e.g. Pretoria, Polokwane)' },
+      { id: '3', name: 'Zone 3: Hot Interior (e.g. Makhado, Nelspruit)' },
+      { id: '4', name: 'Zone 4: Temperate Coastal (e.g. Cape Town, Gqeberha)' },
+      { id: '5', name: 'Zone 5: Sub-Tropical Coastal (e.g. Durban, Richards Bay)' },
+      { id: '6', name: 'Zone 6: Hot Arid (e.g. Upington)' },
+      { id: '7', name: 'Zone 7: Warm Temperate (e.g. George, Knysna)' }
+    ];
+
+    // Complete SANS 10400 Occupancy Classes
+    const OCCUPANCY_CLASSES = [
+      { id: 'A1', name: 'A1 - Entertainment & public assembly' },
+      { id: 'A2', name: 'A2 - Theatrical & indoor sport' },
+      { id: 'A3', name: 'A3 - Places of instruction' },
+      { id: 'A4', name: 'A4 - Worship' },
+      { id: 'A5', name: 'A5 - Outdoor sport' },
+      { id: 'B1', name: 'B1 - High risk commercial service' },
+      { id: 'B2', name: 'B2 - Moderate risk commercial service' },
+      { id: 'B3', name: 'B3 - Low risk commercial service' },
+      { id: 'C1', name: 'C1 - Exhibition hall' },
+      { id: 'C2', name: 'C2 - Museum' },
+      { id: 'D1', name: 'D1 - High risk industrial' },
+      { id: 'D2', name: 'D2 - Moderate risk industrial' },
+      { id: 'D3', name: 'D3 - Low risk industrial' },
+      { id: 'D4', name: 'D4 - Plant room' },
+      { id: 'E1', name: 'E1 - Place of detention' },
+      { id: 'E2', name: 'E2 - Hospital' },
+      { id: 'E3', name: 'E3 - Other institutional (residential)' },
+      { id: 'E4', name: 'E4 - Health care' },
+      { id: 'F1', name: 'F1 - Large shop' },
+      { id: 'F2', name: 'F2 - Small shop' },
+      { id: 'F3', name: 'F3 - Wholesalers store' },
+      { id: 'G1', name: 'G1 - Offices' },
+      { id: 'H1', name: 'H1 - Hotel' },
+      { id: 'H2', name: 'H2 - Dormitory' },
+      { id: 'H3', name: 'H3 - Domestic residence' },
+      { id: 'H4', name: 'H4 - Dwelling house' },
+      { id: 'H5', name: 'H5 - Hospitality work' },
+      { id: 'J1', name: 'J1 - High risk storage' },
+      { id: 'J2', name: 'J2 - Moderate risk storage' },
+      { id: 'J3', name: 'J3 - Low risk storage' },
+      { id: 'J4', name: 'J4 - Parking garage' },
+    ];
+
+    const SA_TOWNS = [
+      { name: 'Beaufort West', zone: '6' }, { name: 'Bloemfontein', zone: '1' }, { name: 'Cape Town', zone: '4' },
+      { name: 'Durban', zone: '5' }, { name: 'East London', zone: '4' }, { name: 'George', zone: '7' },
+      { name: 'Gqeberha (Port Elizabeth)', zone: '4' }, { name: 'Johannesburg', zone: '1' }, { name: 'Kimberley', zone: '6' },
+      { name: 'Klerksdorp', zone: '1' }, { name: 'Knysna', zone: '7' }, { name: 'Mahikeng', zone: '2' },
+      { name: 'Makhanda (Grahamstown)', zone: '4' }, { name: 'Mbombela (Nelspruit)', zone: '3' }, { name: 'Mossel Bay', zone: '7' },
+      { name: 'Mthatha', zone: '4' }, { name: 'Pietermaritzburg', zone: '2' }, { name: 'Polokwane', zone: '2' },
+      { name: 'Potchefstroom', zone: '1' }, { name: 'Pretoria', zone: '2' }, { name: 'Richards Bay', zone: '5' },
+      { name: 'Rustenburg', zone: '2' }, { name: 'Upington', zone: '6' }, { name: 'Vereeniging', zone: '1' },
+      { name: 'Welkom', zone: '1' }
+    ];
+
+    function App() {
+      // GLOBAL STATE
+      const [activeTab, setActiveTab] = useState('project');
+      const [showHelp, setShowHelp] = useState(false);
+
+      // PROJECT INFORMATION STATE
+      const [projectInfo, setProjectInfo] = useState({
+        projectName: '',
+        projectType: 'new', // 'new' | 'alteration'
+        standNumber: '',
+        township: '',
+        location: '',
+        storeys: 1,
+        floorAreas: [150], // Array holding areas for each storey
+        zone: '1',
+        occupancy: 'H4'
+      });
+
+      const totalFloorArea = projectInfo.floorAreas.reduce((a, b) => a + (parseFloat(b) || 0), 0);
+
+      const handleProjectUpdate = (field, value) => {
+        setProjectInfo(prev => ({ ...prev, [field]: value }));
+      };
+
+      const handleLocationChange = (e) => {
+        const val = e.target.value;
+        setProjectInfo(prev => {
+          const next = { ...prev, location: val };
+          const matched = SA_TOWNS.find(t => t.name.toLowerCase() === val.toLowerCase());
+          if (matched) next.zone = matched.zone;
+          return next;
+        });
+      };
+
+      const handleStoreysChange = (val) => {
+        const count = Math.max(1, parseInt(val) || 1);
+        setProjectInfo(prev => {
+          const newAreas = [...prev.floorAreas];
+          while (newAreas.length < count) newAreas.push(100); // Default new storeys to 100m²
+          newAreas.length = count; // Trim if reduced
+          return { ...prev, storeys: count, floorAreas: newAreas };
+        });
+        // Ensure windows aren't left assigned to non-existent storeys if storeys are reduced
+        setFenestration(prev => ({
+          ...prev,
+          windows: prev.windows.map(w => w.storey >= count ? { ...w, storey: count - 1 } : w)
+        }));
+      };
+
+      const handleFloorAreaChange = (idx, val) => {
+        setProjectInfo(prev => {
+          const newAreas = [...prev.floorAreas];
+          newAreas[idx] = parseFloat(val) || 0;
+          return { ...prev, floorAreas: newAreas };
+        });
+      };
+
+      // Extract frequently used global parameters
+      const zone = projectInfo.zone;
+      const occupancy = projectInfo.occupancy;
+
+      // SPECIFIC ELEMENT SETTINGS
+      const [floorType, setFloorType] = useState('ground'); 
+      const [floorHeating, setFloorHeating] = useState(false);
+      const [isPitchedRoof, setIsPitchedRoof] = useState(true);
+
+      // TAB-SPECIFIC ASSEMBLIES STATE
+      const [assemblies, setAssemblies] = useState({
+        walls: {
+          includeSurfaces: true,
+          layers: [
+            { id: 'w1', name: 'Clay Brick (Solid)', type: 'material', thickness: 110, kValue: 0.77, rValue: 0, density: 1700, specificHeat: 800 },
+            { id: 'w2', name: 'Unventilated Air Gap / Cavity', type: 'resistance', thickness: 50, kValue: 0, rValue: 0.18, rValueUp: 0.16, rValueDown: 0.21, density: 1.2, specificHeat: 1000 },
+            { id: 'w3', name: 'Clay Brick (Solid)', type: 'material', thickness: 110, kValue: 0.77, rValue: 0, density: 1700, specificHeat: 800 },
+            { id: 'w4', name: 'Concrete Plaster / Render', type: 'material', thickness: 15, kValue: 1.20, rValue: 0, density: 1800, specificHeat: 1000 },
+          ]
+        },
+        roofs: {
+          includeSurfaces: true,
+          layers: [
+            { id: 'r1', name: 'Corrugated Steel Sheeting', type: 'resistance', thickness: 1, kValue: 0, rValue: 0.01, density: 7850, specificHeat: 450 },
+            { id: 'r2', name: 'Unventilated Air Gap / Cavity', type: 'resistance', thickness: 300, kValue: 0, rValue: 0.18, rValueUp: 0.16, rValueDown: 0.21, rValueUpPitched: 0.18, rValueDownPitched: 0.25, density: 1.2, specificHeat: 1000 },
+            { id: 'r3', name: 'Reflective Foil Laminate (facing air gap)', type: 'resistance', thickness: 1, kValue: 0, rValue: 1.00, rValueUp: 0.55, rValueDown: 1.53, rValueUpPitched: 0.85, rValueDownPitched: 1.30, density: 5, specificHeat: 1000 },
+            { id: 'r4', name: 'Gypsum Plasterboard (RhinoBoard)', type: 'material', thickness: 6.4, kValue: 0.25, rValue: 0, density: 800, specificHeat: 1090 },
+          ]
+        },
+        floors: {
+          includeSurfaces: true,
+          layers: [
+            { id: 'f1', name: 'Ceramic Floor Tiles', type: 'material', thickness: 10, kValue: 1.30, rValue: 0, density: 2000, specificHeat: 800 },
+            { id: 'f2', name: 'Floor Screed', type: 'material', thickness: 30, kValue: 1.20, rValue: 0, density: 1800, specificHeat: 1000 },
+            { id: 'f3', name: 'Concrete (Dense)', type: 'material', thickness: 150, kValue: 1.40, rValue: 0, density: 2400, specificHeat: 1000 },
+            { id: 'f4', name: 'Damp Proof Membrane (DPM)', type: 'resistance', thickness: 0.25, kValue: 0, rValue: 0.0, density: 950, specificHeat: 1500 },
+            { id: 'f5', name: 'Compacted Fill / Hardcore', type: 'material', thickness: 150, kValue: 1.30, rValue: 0, density: 1900, specificHeat: 1000 },
+          ]
+        }
+      });
+
+      // FENESTRATION STATE
+      const [fenestration, setFenestration] = useState({
+        windows: [
+          { id: 'win1', reference: 'W1', storey: 0, name: 'Lounge Double Door', qty: 1, width: 2.4, height: 2.1, uValue: 7.90, shgc: 0.81, shading: 0.80, orientation: 'N' },
+          { id: 'win2', reference: 'W2', storey: 0, name: 'Bedroom Windows', qty: 3, width: 1.2, height: 1.2, uValue: 7.90, shgc: 0.81, shading: 1.00, orientation: 'S' },
+        ]
+      });
+
+      // Shading Calculator Modal State
+      const [shadingModal, setShadingModal] = useState({ isOpen: false, windowId: null, projection: 0.5, height: 1.5, winOrient: 'N' });
+
+      const currentAssembly = activeTab !== 'project' && activeTab !== 'fenestration' ? assemblies[activeTab] : null;
+      const layers = currentAssembly ? currentAssembly.layers : [];
+      const includeSurfaces = currentAssembly ? currentAssembly.includeSurfaces : true;
+
+      // PHYSICS PARAMS
+      const getPhysicsParams = () => {
+        switch (activeTab) {
+          case 'roofs': 
+            return { flow: 'Upward (Winter) & Downward (Summer)', outLabel: 'OUTSIDE (ROOF)', inLabel: 'INSIDE (CEILING)', isVertical: false, rSe: 0.04, rSiUp: 0.10, rSiDown: 0.16 };
+          case 'floors': 
+            const floorDownward = !floorHeating && floorType === 'ground';
+            const floorRse = floorType === 'ground' ? 0.00 : 0.04; 
+            const bottomLabel = floorType === 'ground' ? 'OUTSIDE (GROUND CONTACT)' : 'OUTSIDE (AIR CRAWLSPACE)';
+            return { flow: floorDownward ? 'Downward (Heat loss to ground)' : 'Upward (Heated/Suspended)', outLabel: 'INSIDE (TOP)', inLabel: bottomLabel, isVertical: false, rSe: floorRse, rSi: floorDownward ? 0.17 : 0.10 };
+          default: 
+            return { flow: 'Horizontal', outLabel: 'OUTSIDE', inLabel: 'INSIDE', isVertical: true, rSe: 0.04, rSi: 0.13 };
+        }
+      };
+      const params = getPhysicsParams();
+
+      // CALCULATED METRICS STATE
+      const [totals, setTotals] = useState({ R: 0, R_up: 0, R_down: 0, mass: 0, surfaceMass: 0, lag: 0 });
+
+      // ENVELOPE PHYSICS LOOP
+      useEffect(() => {
+        if (activeTab === 'project' || activeTab === 'fenestration') return; 
+        
+        let sumR = 0, sumR_up = 0, sumR_down = 0;
+        let sumMass = 0, sumSurfaceMass = 0, sumLag = 0;
+
+        if (includeSurfaces) {
+          if (activeTab === 'roofs') {
+            sumR_up += params.rSe + params.rSiUp; 
+            sumR_down += params.rSe + params.rSiDown;
+          } else {
+            sumR += params.rSe + params.rSi;
+          }
+        }
+        
+        layers.forEach(layer => {
+          const thicknessM = layer.thickness / 1000;
+          
+          if (layer.type === 'material') {
+            const r = layer.kValue > 0 ? thicknessM / layer.kValue : 0;
+            sumR += r; sumR_up += r; sumR_down += r;
+          } else {
+            const rStd = parseFloat(layer.rValue) || 0;
+            let rUp = layer.rValueUp !== undefined ? layer.rValueUp : rStd;
+            let rDown = layer.rValueDown !== undefined ? layer.rValueDown : rStd;
+            
+            if (activeTab === 'roofs' && isPitchedRoof) {
+               if (layer.rValueUpPitched !== undefined) rUp = layer.rValueUpPitched;
+               if (layer.rValueDownPitched !== undefined) rDown = layer.rValueDownPitched;
+            }
+
+            sumR += rStd;
+            sumR_up += rUp;
+            sumR_down += rDown;
+          }
+          
+          sumMass += (thicknessM * (layer.density || 0) * (layer.specificHeat || 0)) / 1000;
+          sumSurfaceMass += thicknessM * (layer.density || 0);
+          
+          if (layer.type === 'material' && layer.kValue > 0 && layer.density > 0 && layer.specificHeat > 0) {
+             sumLag += 0.02303 * thicknessM * Math.sqrt((layer.density * layer.specificHeat) / layer.kValue);
+          }
+        });
+
+        setTotals({ R: sumR, R_up: sumR_up, R_down: sumR_down, mass: sumMass, surfaceMass: sumSurfaceMass, lag: sumLag });
+      }, [layers, includeSurfaces, activeTab, floorType, floorHeating, isPitchedRoof, params.rSe, params.rSi, params.rSiUp, params.rSiDown]);
+
+      // FENESTRATION DATA PROCESSING (Per Storey + Global)
+      const fenestrationData = useMemo(() => {
+        let globalWinArea = 0;
+        let globalUA = 0;
+        let globalSHGCA = 0;
+
+        const storeys = projectInfo.floorAreas.map((floorArea, index) => {
+          const storeyWindows = fenestration.windows.filter(w => w.storey === index);
+          let totalWinArea = 0;
+          let sumUA = 0;
+          let sumSHGCA = 0;
+
+          storeyWindows.forEach(win => {
+            const winArea = (win.width * win.height) * win.qty;
+            totalWinArea += winArea;
+            sumUA += winArea * win.uValue;
+            const effectiveSHGC = win.orientation === 'S' ? 0 : win.shgc;
+            sumSHGCA += winArea * effectiveSHGC * win.shading; 
+          });
+
+          const ratio = floorArea > 0 ? (totalWinArea / floorArea) * 100 : 0;
+          const aggU = totalWinArea > 0 ? sumUA / totalWinArea : 0;
+          const aggSHGC = totalWinArea > 0 ? sumSHGCA / totalWinArea : 0;
+
+          // Stepped Targets
+          let maxU = null, maxSHGC = null, exempt = false, overLimit = false;
+          if (ratio <= 20) exempt = true;
+          else if (ratio > 60) overLimit = true;
+          else if (ratio <= 30) { maxU = 5.60; maxSHGC = 0.60; }
+          else if (ratio <= 40) { maxU = 4.50; maxSHGC = 0.50; }
+          else if (ratio <= 50) { maxU = 3.50; maxSHGC = 0.40; }
+          else { maxU = 2.80; maxSHGC = 0.30; }
+
+          const isCompliant = exempt ? true : overLimit ? false : (aggU <= maxU && aggSHGC <= maxSHGC);
+
+          globalWinArea += totalWinArea;
+          globalUA += sumUA;
+          globalSHGCA += sumSHGCA;
+
+          return {
+            storeyIndex: index,
+            floorArea,
+            windows: storeyWindows,
+            totalWinArea,
+            ratio,
+            aggU,
+            aggSHGC,
+            maxU,
+            maxSHGC,
+            exempt,
+            overLimit,
+            isCompliant
+          };
+        });
+
+        const globalRatio = totalFloorArea > 0 ? (globalWinArea / totalFloorArea) * 100 : 0;
+        const globalAggU = globalWinArea > 0 ? globalUA / globalWinArea : 0;
+        const globalAggSHGC = globalWinArea > 0 ? globalSHGCA / globalWinArea : 0;
+
+        let globalMaxU = null, globalMaxSHGC = null, globalExempt = false, globalOverLimit = false;
+        if (globalRatio <= 20) globalExempt = true;
+        else if (globalRatio > 60) globalOverLimit = true;
+        else if (globalRatio <= 30) { globalMaxU = 5.60; globalMaxSHGC = 0.60; }
+        else if (globalRatio <= 40) { globalMaxU = 4.50; globalMaxSHGC = 0.50; }
+        else if (globalRatio <= 50) { globalMaxU = 3.50; globalMaxSHGC = 0.40; }
+        else { globalMaxU = 2.80; globalMaxSHGC = 0.30; }
+
+        const globalCompliant = globalExempt ? true : globalOverLimit ? false : (globalAggU <= globalMaxU && globalAggSHGC <= globalMaxSHGC);
+
+        return {
+          storeys,
+          global: {
+            totalWinArea: globalWinArea,
+            ratio: globalRatio,
+            aggU: globalAggU,
+            aggSHGC: globalAggSHGC,
+            maxU: globalMaxU,
+            maxSHGC: globalMaxSHGC,
+            exempt: globalExempt,
+            overLimit: globalOverLimit,
+            isCompliant: globalCompliant
+          }
+        };
+      }, [fenestration.windows, projectInfo.floorAreas, totalFloorArea]);
+
+      // SANS 10400-XA Table 5 Inline Shading Calculator Logic
+      const openShadingCalc = (win) => {
+        setShadingModal({ isOpen: true, windowId: win.id, projection: 0.5, height: win.height, winOrient: win.orientation });
+      };
+
+      const applyShadingCalc = () => {
+        const win = fenestration.windows.find(w => w.id === shadingModal.windowId);
+        if (!win) return;
+        
+        const ph = shadingModal.projection / shadingModal.height;
+        const clampedPh = Math.max(0, Math.min(1.0, ph));
+        
+        // SANS 10400-XA 2021 Table 5 (Approximate linear interpolation)
+        const lookup = [
+          { ph: 0.0, N: 1.00, EW: 1.00 }, { ph: 0.1, N: 0.91, EW: 0.93 }, { ph: 0.2, N: 0.83, EW: 0.86 },
+          { ph: 0.3, N: 0.76, EW: 0.80 }, { ph: 0.4, N: 0.70, EW: 0.76 }, { ph: 0.5, N: 0.64, EW: 0.72 },
+          { ph: 0.6, N: 0.59, EW: 0.69 }, { ph: 0.7, N: 0.55, EW: 0.66 }, { ph: 0.8, N: 0.51, EW: 0.63 },
+          { ph: 0.9, N: 0.48, EW: 0.61 }, { ph: 1.0, N: 0.45, EW: 0.59 }
+        ];
+        
+        let calculatedFs = 1.0;
+        if (win.orientation !== 'S') {
+          const lowerIndex = Math.floor(clampedPh * 10);
+          const upperIndex = Math.min(10, lowerIndex + 1);
+          
+          const valLower = win.orientation === 'E/W' ? lookup[lowerIndex].EW : lookup[lowerIndex].N;
+          const valUpper = win.orientation === 'E/W' ? lookup[upperIndex].EW : lookup[upperIndex].N;
+          
+          if (lowerIndex === upperIndex) {
+            calculatedFs = valLower;
+          } else {
+            const weight = (clampedPh - lookup[lowerIndex].ph) * 10;
+            calculatedFs = valLower + weight * (valUpper - valLower);
+          }
+        }
+        
+        updateWindow(win.id, 'shading', parseFloat(calculatedFs.toFixed(2)));
+        setShadingModal({ isOpen: false, windowId: null, projection: 0.5, height: 1.5, winOrient: 'N' });
+      };
+
+      // TARGET METRICS STATE
+      const targets = useMemo(() => {
+        if (activeTab === 'walls') {
+          const isHeavy = totals.surfaceMass >= 270;
+          const isResidentialGroup = ['E1', 'E2', 'E3', 'H1', 'H2', 'H3', 'H4', 'H5'].includes(occupancy);
+          
+          let r = 1.9;
+          if (isHeavy) r = ['1', '2', '4', '6', '7'].includes(zone) ? 0.6 : 0.4;
+          else if (isResidentialGroup) r = ['1', '2', '6', '7'].includes(zone) ? 2.2 : 1.9;
+          return { R: r, R_up: r, R_down: r };
+        } 
+        else if (activeTab === 'roofs') {
+          const roofTargets = {
+            '1': { up: 3.7, down: 3.2 }, '2': { up: 3.2, down: 3.2 }, '3': { up: 2.7, down: 2.7 },
+            '4': { up: 3.7, down: 3.2 }, '5': { up: 2.7, down: 2.7 }, '6': { up: 3.5, down: 3.2 },
+            '7': { up: 3.2, down: 3.2 }
+          };
+          return { R: 0, R_up: roofTargets[zone].up, R_down: roofTargets[zone].down };
+        }
+        else if (activeTab === 'floors') {
+          let r = 0;
+          if (floorHeating) r = 1.0;
+          else if (floorType === 'suspended') r = ['1', '2', '4', '6', '7'].includes(zone) ? 1.0 : 0.0;
+          return { R: r, R_up: r, R_down: r };
+        }
+        return { R: 0, R_up: 0, R_down: 0 };
+      }, [activeTab, totals.surfaceMass, zone, occupancy, floorType, floorHeating]);
+
+      const isCompliant = activeTab === 'roofs' 
+        ? (totals.R_up >= targets.R_up && totals.R_down >= targets.R_down)
+        : activeTab === 'fenestration' 
+          ? fenestrationData.global.isCompliant
+          : (totals.R >= targets.R);
+
+      const totalThickness = layers.reduce((acc, l) => acc + Number(l.thickness || 0), 0);
+
+      // STATE MODIFIERS
+      const updateAssembly = (updater) => {
+        setAssemblies(prev => ({ ...prev, [activeTab]: updater(prev[activeTab]) }));
+      };
+
+      const addLayer = () => {
+        updateAssembly(prev => ({ ...prev, layers: [...prev.layers, { id: Math.random().toString(36).substr(2, 9), name: 'Custom Material', type: 'material', thickness: 50, kValue: 0.1, rValue: 0, density: 1000, specificHeat: 1000 }] }));
+      };
+      const removeLayer = (id) => updateAssembly(prev => ({ ...prev, layers: prev.layers.filter(l => l.id !== id) }));
+      const moveLayer = (index, direction) => {
+        updateAssembly(prev => {
+          const newLayers = [...prev.layers];
+          if (direction === 'up' && index > 0) [newLayers[index - 1], newLayers[index]] = [newLayers[index], newLayers[index - 1]];
+          else if (direction === 'down' && index < prev.layers.length - 1) [newLayers[index + 1], newLayers[index]] = [newLayers[index], newLayers[index + 1]];
+          return { ...prev, layers: newLayers };
+        });
+      };
+      const updateLayer = (id, field, value) => updateAssembly(prev => ({ ...prev, layers: prev.layers.map(l => l.id === id ? { ...l, [field]: value } : l) }));
+      const applyPreset = (id, presetName) => {
+        const preset = MATERIAL_PRESETS.find(p => p.name === presetName);
+        if (preset) {
+          updateAssembly(prev => ({ ...prev, layers: prev.layers.map(l => {
+            if (l.id === id) {
+              return { ...l, ...preset, thickness: preset.defaultThickness || l.thickness, rValueUp: preset.rValueUp, rValueDown: preset.rValueDown, rValueUpPitched: preset.rValueUpPitched, rValueDownPitched: preset.rValueDownPitched };
+            }
+            return l;
+          })}));
+        }
+      };
+      const toggleSurfaces = (checked) => updateAssembly(prev => ({ ...prev, includeSurfaces: checked }));
+
+      // FENESTRATION MODIFIERS
+      const addWindow = (targetStorey = 0) => {
+        setFenestration(prev => ({ 
+          ...prev, 
+          windows: [...prev.windows, { 
+            id: Math.random().toString(36).substr(2, 9), 
+            reference: `W${prev.windows.length + 1}`, 
+            storey: targetStorey, 
+            name: 'New Window', 
+            qty: 1, width: 1.0, height: 1.0, uValue: 7.90, shgc: 0.81, shading: 1.0, orientation: 'N' 
+          }] 
+        }));
+      };
+      const removeWindow = (id) => setFenestration(prev => ({ ...prev, windows: prev.windows.filter(w => w.id !== id) }));
+      const updateWindow = (id, field, value) => setFenestration(prev => ({ ...prev, windows: prev.windows.map(w => w.id === id ? { ...w, [field]: value } : w) }));
+      const applyWindowPreset = (id, presetName) => {
+        const preset = WINDOW_PRESETS.find(p => p.name === presetName);
+        if (preset) {
+          setFenestration(prev => ({ ...prev, windows: prev.windows.map(w => w.id === id ? { ...w, uValue: preset.uValue, shgc: preset.shgc } : w) }));
+        }
+      };
+
+      // AUTO SOLVER (MAGIC WAND)
+      const autoSolveThickness = (layerId) => {
+        const layer = layers.find(l => l.id === layerId);
+        if (!layer || layer.type !== 'material' || layer.kValue <= 0) return;
+
+        let deltaR = 0;
+        if (activeTab === 'roofs') {
+          const deltaUp = Math.max(0, targets.R_up - totals.R_up);
+          const deltaDown = Math.max(0, targets.R_down - totals.R_down);
+          deltaR = Math.max(deltaUp, deltaDown);
+        } else {
+          deltaR = Math.max(0, targets.R - totals.R);
+        }
+
+        if (deltaR > 0) {
+          const addedThicknessMm = deltaR * layer.kValue * 1000;
+          const newThickness = layer.thickness + addedThicknessMm;
+          const roundedUp = Math.ceil(newThickness / 5) * 5; 
+          updateLayer(layerId, 'thickness', roundedUp);
+        }
+      };
+
+      const getLayerStyle = (name) => {
+        const n = name.toLowerCase();
+        if (n.includes('foil') || n.includes('radiant')) return { backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '2px dashed #ef4444' };
+        if (n.includes('brick')) return { backgroundColor: '#bd5b3b' };
+        if (n.includes('plaster') || n.includes('render') || n.includes('screed')) return { backgroundColor: '#d4d4d8' };
+        if (n.includes('concrete')) return { backgroundColor: '#94a3b8' };
+        if (n.includes('insulation') || n.includes('eps') || n.includes('xps') || n.includes('glasswool')) return { backgroundColor: '#fef08a' };
+        if (n.includes('air') || n.includes('space') || n.includes('cavity')) return { backgroundColor: '#eff6ff', backgroundImage: 'radial-gradient(#93c5fd 1px, transparent 1px)', backgroundSize: '8px 8px' };
+        if (n.includes('board') || n.includes('gypsum')) return { backgroundColor: '#e7e5e4' };
+        if (n.includes('steel') || n.includes('iron')) return { backgroundColor: '#64748b' };
+        if (n.includes('tile')) return { backgroundColor: '#fdba74' };
+        if (n.includes('timber') || n.includes('wood')) return { backgroundColor: '#d97706' };
+        if (n.includes('vinyl')) return { backgroundColor: '#9ca3af' };
+        if (n.includes('dpm') || n.includes('membrane')) return { backgroundColor: '#0f172a' };
+        if (n.includes('fill') || n.includes('hardcore')) return { backgroundColor: '#a8a29e' };
+        if (n.includes('soil') || n.includes('earth')) return { backgroundColor: '#78350f' };
+        return { backgroundColor: '#e2e8f0' };
+      };
+
+      const getLayerRDisplay = (layer) => {
+        if (layer.type === 'material') {
+          return (layer.kValue > 0 ? (layer.thickness / 1000) / layer.kValue : 0).toFixed(3);
+        }
+        if (activeTab === 'roofs') {
+           let rUp = layer.rValueUp !== undefined ? layer.rValueUp : layer.rValue;
+           let rDown = layer.rValueDown !== undefined ? layer.rValueDown : layer.rValue;
+           
+           if (isPitchedRoof) {
+              if (layer.rValueUpPitched !== undefined) rUp = layer.rValueUpPitched;
+              if (layer.rValueDownPitched !== undefined) rDown = layer.rValueDownPitched;
+           }
+           
+           if (rUp !== rDown) return `${rUp.toFixed(2)}↑ | ${rDown.toFixed(2)}↓`;
+        }
+        return (parseFloat(layer.rValue) || 0).toFixed(3);
+      };
+
+      // PDF Export
+      const exportPDF = () => {
+        if (activeTab === 'project') return; 
+
+        const reportDate = new Date().toLocaleDateString('en-ZA', { year: 'numeric', month: 'long', day: 'numeric' });
+        const selectedZone = CLIMATE_ZONES.find(z => z.id === zone)?.name || 'Unknown';
+        const occName = OCCUPANCY_CLASSES.find(o => o.id === occupancy)?.name || occupancy;
+        const projType = projectInfo.projectType === 'new' ? 'New Building' : 'Alteration/Addition';
+        
+        let classificationText = '';
+        if (activeTab === 'walls') classificationText = totals.surfaceMass >= 270 ? 'Heavyweight (≥ 270 kg/m²)' : 'Lightweight (< 270 kg/m²)';
+        else if (activeTab === 'roofs') classificationText = isPitchedRoof ? `Pitched Roof (≥ 30°)` : `Flat Roof (< 30°)`;
+        else if (activeTab === 'floors') classificationText = `${floorType === 'suspended' ? 'Suspended Slab' : 'Slab on Ground'} ${floorHeating ? '(Heated)' : ''}`;
+        else if (activeTab === 'fenestration') classificationText = `Fenestration Schedule`;
+
+        let perfHtml = '';
+        if (activeTab === 'roofs') {
+          perfHtml = `
+            <p><strong>Target R (Up / Down):</strong> ${targets.R_up.toFixed(2)} / ${targets.R_down.toFixed(2)} m²·K/W</p>
+            <p><strong>Total R (Up / Down):</strong> <span class="r-total">${totals.R_up.toFixed(2)}</span> / <span class="r-total">${totals.R_down.toFixed(2)}</span> m²·K/W</p>
+          `;
+        } else if (activeTab === 'fenestration') {
+          const global = fenestrationData.global;
+          const uTargetText = global.exempt ? 'N/A (< 20%)' : global.overLimit ? 'N/A (> 60%)' : global.maxU.toFixed(2);
+          const shgcTargetText = global.exempt ? 'N/A (< 20%)' : global.overLimit ? 'N/A (> 60%)' : global.maxSHGC.toFixed(2);
+          
+          const uClass = global.exempt ? 'pass' : (global.overLimit || global.aggU > global.maxU) ? 'fail' : 'pass';
+          const shgcClass = global.exempt ? 'pass' : (global.overLimit || global.aggSHGC > global.maxSHGC) ? 'fail' : 'pass';
+
+          perfHtml = `
+            <p><strong>Total Fenestration Area:</strong> ${global.totalWinArea.toFixed(2)} m² (${global.ratio.toFixed(1)}% of Floor)</p>
+            <p><strong>Global Target U / SHGC:</strong> ${uTargetText} / ${shgcTargetText}</p>
+            <p><strong>Global Aggregate Conductance (U):</strong> <span class="${uClass}">${global.aggU.toFixed(2)}</span> W/m²K</p>
+            <p><strong>Global Aggregate SHGC:</strong> <span class="${shgcClass}">${global.aggSHGC.toFixed(2)}</span></p>
+          `;
+        } else {
+          perfHtml = `
+            <p><strong>Target R-Value:</strong> ${targets.R.toFixed(2)} m²·K/W</p>
+            <p><strong>Total R-Value:</strong> <span class="r-total">${totals.R.toFixed(2)}</span> m²·K/W</p>
+          `;
+        }
+
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <title>${projectInfo.projectName || 'Building'} Envelope Report</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; color: #1e293b; max-width: 800px; margin: 0 auto; }
+              .header { border-bottom: 3px solid #cbd5e1; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;}
+              h1 { color: #0f172a; margin: 0 0 10px 0; font-size: 28px; text-transform: capitalize; }
+              .date { color: #64748b; font-size: 14px; margin: 0; }
+              .proj-details { text-align: right; color: #475569; font-size: 14px; }
+              .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+              .box { padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; }
+              .box h3 { margin-top: 0; color: #334155; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+              .box p { margin: 8px 0; font-size: 14px; }
+              .box strong { color: #0f172a; display: inline-block; width: 140px; }
+              .pass { color: #059669; font-weight: bold; font-size: 18px; }
+              .fail { color: #dc2626; font-weight: bold; font-size: 18px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 30px; font-size: 13px; }
+              th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; }
+              th { background-color: #f1f5f9; color: #475569; font-weight: 600; }
+              .r-total { font-size: 24px; font-weight: bold; color: ${isCompliant ? '#059669' : '#dc2626'}; }
+              
+              .diagram { display: flex; flex-direction: ${params.isVertical ? 'row' : 'column'}; height: ${params.isVertical ? '250px' : 'auto'}; min-height: 250px; border: 2px solid #cbd5e1; border-radius: 8px; overflow: hidden; margin-bottom: 30px; background: #fff; }
+              .diagram-surface { display: flex; align-items: center; justify-content: center; background-color: rgba(239, 246, 255, 0.5); flex-shrink: 0; }
+              .diagram-surface.vertical { width: 40px; border-right: 1px solid #e2e8f0; }
+              .diagram-surface.vertical:last-child { border-right: none; border-left: 1px solid #e2e8f0; }
+              .diagram-surface.horizontal { height: 30px; border-bottom: 1px solid #e2e8f0; }
+              .diagram-surface.horizontal:last-child { border-bottom: none; border-top: 1px solid #e2e8f0; }
+              .diagram-surface-text { color: #60a5fa; font-weight: bold; font-size: 10px; letter-spacing: 2px; text-align: center; }
+              .diagram-surface-text.vertical { writing-mode: vertical-rl; transform: rotate(180deg); }
+              .diagram-layer { display: flex; align-items: center; justify-content: center; position: relative; box-sizing: border-box; }
+              .diagram-layer.vertical { border-right: 1px solid rgba(15, 23, 42, 0.2); }
+              .diagram-layer.horizontal { border-bottom: 1px solid rgba(15, 23, 42, 0.2); }
+              .diagram-text { font-size: 12px; font-weight: bold; white-space: nowrap; text-align: center; padding: 4px; }
+              .diagram-text.vertical { transform: rotate(-90deg); }
+              .warning-box { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
+              .exempt-box { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
+              .storey-header { background: #e2e8f0; padding: 10px 15px; border-radius: 6px 6px 0 0; margin-top: 20px; border: 1px solid #cbd5e1; border-bottom: none; font-weight: bold; color: #334155; display: flex; justify-content: space-between;}
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div>
+                <h1>SANS 10400-XA Report: ${activeTab}</h1>
+                <p class="date">Generated on: ${reportDate} | ${projType}</p>
+              </div>
+              <div class="proj-details">
+                <strong>${projectInfo.projectName || 'Untitled Project'}</strong><br/>
+                ${projectInfo.standNumber ? `Stand ${projectInfo.standNumber}, ` : ''}${projectInfo.township || ''}<br/>
+                ${projectInfo.location || ''}
+              </div>
+            </div>
+            
+            <div class="grid">
+              <div class="box">
+                <h3>Site Parameters</h3>
+                <p><strong>Climate Zone:</strong> ${selectedZone}</p>
+                <p><strong>Occupancy:</strong> ${occName}</p>
+                <p><strong>Classification:</strong> ${classificationText}</p>
+                ${activeTab === 'fenestration' ? `<p><strong>Total Net Floor Area:</strong> ${totalFloorArea} m²</p>` : `<p><strong>Total Thickness:</strong> ${totalThickness} mm</p>`}
+              </div>
+              <div class="box">
+                <h3>Thermal Performance</h3>
+                ${perfHtml}
+                ${activeTab !== 'fenestration' ? `<p><strong>Time Lag (approx):</strong> ${totals.lag.toFixed(1)} hours</p>` : ''}
+                <p style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                  <strong>Status:</strong> <span class="${isCompliant ? 'pass' : 'fail'}">${isCompliant ? 'COMPLIANT' : 'NON-COMPLIANT'}</span>
+                </p>
+              </div>
+            </div>
+
+            ${activeTab === 'fenestration' && fenestrationData.global.exempt ? `<div class="exempt-box">EXEMPT FROM AGGREGATE LIMITS: Global window-to-floor area ratio is 20% or below. Any glazing solution is acceptable.</div>` : ''}
+            ${activeTab === 'fenestration' && fenestrationData.global.overLimit ? `<div class="warning-box">RATIONAL DESIGN REQUIRED: Fenestration exceeds 60% of net floor area. Prescriptive compliance is not permitted.</div>` : ''}
+
+            ${activeTab !== 'fenestration' ? `
+              <h3>Assembly Cross-Section Diagram</h3>
+              <div class="diagram">
+                ${includeSurfaces ? `<div class="diagram-surface ${params.isVertical ? 'vertical' : 'horizontal'}"><div class="diagram-surface-text ${params.isVertical ? 'vertical' : ''}">${params.outLabel}</div></div>` : ''}
+                ${layers.map(layer => {
+                  const style = getLayerStyle(layer.name);
+                  const styleStr = Object.entries(style).map(([k, v]) => `${k.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`)}: ${v}`).join(';');
+                  const isLightColor = layer.name.toLowerCase().match(/air|space|cavity|insulation|plaster|board|concrete/);
+                  const textColor = isLightColor ? '#334155' : 'rgba(255,255,255,0.9)';
+                  const thicknessStr = layer.thickness > 0 ? `${(layer.thickness / totalThickness) * 100}%` : '0';
+                  
+                  return `
+                    <div class="diagram-layer ${params.isVertical ? 'vertical' : 'horizontal'}" style="${styleStr}; flex-grow: ${layer.thickness}; flex-basis: ${thicknessStr}; min-${params.isVertical ? 'width' : 'height'}: ${layer.thickness > 0 ? '24px' : '0'};">
+                      ${layer.thickness >= 5 ? `
+                        <div class="diagram-text ${params.isVertical ? 'vertical' : ''}" style="color: ${textColor};">
+                          ${params.isVertical ? `
+                            <div style="max-width: 280px; overflow: hidden; text-overflow: ellipsis; font-size: 14px;">${layer.name}</div>
+                            <div style="opacity: 0.8; margin-top: 4px; font-size: 12px;">${layer.thickness}mm</div>
+                          ` : `
+                            <div style="max-width: 280px; overflow: hidden; text-overflow: ellipsis; font-size: 14px;">${layer.name} <span style="opacity: 0.8;">(${layer.thickness}mm)</span></div>
+                          `}
+                        </div>
+                      ` : ''}
+                    </div>
+                  `;
+                }).join('')}
+                ${includeSurfaces ? `<div class="diagram-surface ${params.isVertical ? 'vertical' : 'horizontal'}"><div class="diagram-surface-text ${params.isVertical ? 'vertical' : ''}">${params.inLabel}</div></div>` : ''}
+              </div>
+
+              <h3>Assembly Breakdown (${params.outLabel} → ${params.inLabel})</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Layer Component</th>
+                    <th>Thick (mm)</th>
+                    <th>k-value (W/m·K)</th>
+                    <th>Density (kg/m³)</th>
+                    <th>R-Value Contribution</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${includeSurfaces ? `<tr><td>-</td><td>External Surface (Rse)</td><td>-</td><td>-</td><td>-</td><td><strong>${params.rSe.toFixed(3)}</strong></td></tr>` : ''}
+                  ${layers.map((l, i) => {
+                    return `
+                      <tr>
+                        <td>${i + 1}</td>
+                        <td>${l.name}</td>
+                        <td>${l.thickness}</td>
+                        <td>${l.type === 'material' ? l.kValue : '-'}</td>
+                        <td>${l.density || '-'}</td>
+                        <td><strong>${getLayerRDisplay(l)}</strong></td>
+                      </tr>
+                    `;
+                  }).join('')}
+                  ${includeSurfaces ? `<tr><td>-</td><td>Internal Air Film (Rsi)</td><td>-</td><td>-</td><td>-</td><td><strong>${activeTab === 'roofs' ? `${params.rSiUp.toFixed(3)}↑ | ${params.rSiDown.toFixed(3)}↓` : params.rSi.toFixed(3)}</strong></td></tr>` : ''}
+                </tbody>
+              </table>
+            ` : `
+            <h3>Fenestration Schedules by Storey</h3>
+            ${fenestrationData.storeys.map((storey) => `
+              <div class="storey-header">
+                <span>Storey ${storey.storeyIndex + 1}</span>
+                <span>Net Area: ${storey.floorArea} m² | Ratio: ${storey.ratio.toFixed(1)}% | Agg U: ${storey.aggU.toFixed(2)} | Agg SHGC: ${storey.aggSHGC.toFixed(2)}</span>
+              </div>
+              <table style="margin-top: 0; border-top-left-radius: 0; border-top-right-radius: 0;">
+                <thead>
+                  <tr>
+                    <th>Ref</th>
+                    <th>Description</th>
+                    <th>Orient</th>
+                    <th>Qty</th>
+                    <th>W × H (m)</th>
+                    <th>Area (m²)</th>
+                    <th>Conductance (U)</th>
+                    <th>SHGC</th>
+                    <th>Shading (Fs)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${storey.windows.length === 0 ? `<tr><td colspan="9" style="text-align:center; color:#94a3b8;">No windows assigned to this storey.</td></tr>` : ''}
+                  ${storey.windows.map((w) => {
+                    let orientLabel = 'North';
+                    if (w.orientation === 'E/W') orientLabel = 'East/West';
+                    if (w.orientation === 'S') orientLabel = 'South';
+                    const effectiveSHGC = w.orientation === 'S' ? '0.00 (South)' : w.shgc.toFixed(2);
+                    return `
+                      <tr>
+                        <td><strong>${w.reference}</strong></td>
+                        <td>${w.name}</td>
+                        <td>${orientLabel}</td>
+                        <td>${w.qty}</td>
+                        <td>${w.width} × ${w.height}</td>
+                        <td>${(w.qty * w.width * w.height).toFixed(2)}</td>
+                        <td>${w.uValue.toFixed(2)}</td>
+                        <td>${effectiveSHGC}</td>
+                        <td>${w.shading.toFixed(2)}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            `).join('')}
+            `}
+            
+            <script>
+              window.onload = () => { setTimeout(() => { window.print(); }, 500); };
+            <\/script>
+          </body>
+          </html>
+        `;
+
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      };
+
+      return (
+        <div className="min-h-screen bg-slate-100 p-4 md:p-8 font-sans text-slate-800">
+          <div className="max-w-5xl mx-auto space-y-6">
+            
+            {/* GLOBAL APP HEADER */}
+            <div className="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 p-4 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-white">
+              <div>
+                <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
+                  <Building className="w-6 h-6 text-blue-400" /> SANS 10400-XA Compliance Suite
+                </h2>
+                <p className="text-slate-400 text-sm mt-1">2021 Edition Energy Efficiency Calculator</p>
+              </div>
+              <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 px-5 text-sm">
+                <div className="font-semibold text-blue-300">{projectInfo.projectName || 'Untitled Project'}</div>
+                <div className="text-slate-400 flex items-center gap-2 mt-1">
+                  <MapPin className="w-3 h-3" /> Zone {zone} | Class {occupancy}
+                </div>
+              </div>
+            </div>
+
+            {/* TAB NAVIGATION */}
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => setActiveTab('project')} className={`flex-1 py-4 px-2 md:px-6 rounded-t-xl font-bold text-xs md:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'project' ? 'bg-white text-indigo-600 border-t-4 border-indigo-600 shadow-sm' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}>
+                <FileText className="w-4 h-4" /> Project
+              </button>
+              <button onClick={() => setActiveTab('walls')} className={`flex-1 py-4 px-2 md:px-6 rounded-t-xl font-bold text-xs md:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'walls' ? 'bg-white text-blue-600 border-t-4 border-blue-600 shadow-sm' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}>
+                <Grid className="w-4 h-4" /> Walls
+              </button>
+              <button onClick={() => setActiveTab('roofs')} className={`flex-1 py-4 px-2 md:px-6 rounded-t-xl font-bold text-xs md:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'roofs' ? 'bg-white text-orange-600 border-t-4 border-orange-600 shadow-sm' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}>
+                <ArrowUp className="w-4 h-4" /> Roofs
+              </button>
+              <button onClick={() => setActiveTab('floors')} className={`flex-1 py-4 px-2 md:px-6 rounded-t-xl font-bold text-xs md:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'floors' ? 'bg-white text-stone-600 border-t-4 border-stone-600 shadow-sm' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}>
+                <ArrowDown className="w-4 h-4" /> Floors
+              </button>
+              <button onClick={() => setActiveTab('fenestration')} className={`flex-1 py-4 px-2 md:px-6 rounded-t-xl font-bold text-xs md:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'fenestration' ? 'bg-white text-teal-600 border-t-4 border-teal-600 shadow-sm' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}>
+                <Maximize className="w-4 h-4" /> Glazing
+              </button>
+            </div>
+
+            {/* ACTIVE TAB CONTENT */}
+            <div className="bg-white rounded-b-2xl rounded-tr-2xl shadow-xl border border-slate-200 -mt-6 relative z-10 p-6 space-y-6">
+              
+              {/* --- PROJECT INFO TAB --- */}
+              {activeTab === 'project' && (
+                <div className="space-y-6">
+                  <div className="pb-4 border-b border-slate-100">
+                    <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                      Project Information
+                    </h1>
+                    <p className="text-slate-500 mt-1">These settings dictate the compliance targets across all calculation modules.</p>
+                  </div>
+
+                  <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-6">
+                    <h3 className="font-bold text-indigo-900 mb-4 border-b border-indigo-100 pb-2">Global Compliance Settings</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">City / Location (Auto-selects Zone)</label>
+                        <input 
+                          type="text" 
+                          list="sa-towns"
+                          placeholder="e.g. Pretoria" 
+                          value={projectInfo.location} 
+                          onChange={handleLocationChange} 
+                          className="w-full text-sm border-slate-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border bg-white" 
+                        />
+                        <datalist id="sa-towns">
+                          {SA_TOWNS.map(t => <option key={t.name} value={t.name} />)}
+                        </datalist>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Climate Zone</label>
+                        <select value={projectInfo.zone} onChange={(e) => handleProjectUpdate('zone', e.target.value)} className="w-full text-sm border-slate-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white p-2.5 border">
+                          {CLIMATE_ZONES.map(z => <option key={z.id} value={z.id}>{z.name}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Occupancy Class (SANS 10400)</label>
+                        <select value={projectInfo.occupancy} onChange={(e) => handleProjectUpdate('occupancy', e.target.value)} className="w-full text-sm border-slate-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white p-2.5 border">
+                          {OCCUPANCY_CLASSES.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Project Type</label>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-100 transition-colors">
+                          <input type="radio" name="projectType" value="new" checked={projectInfo.projectType === 'new'} onChange={(e) => handleProjectUpdate('projectType', e.target.value)} className="text-indigo-600 focus:ring-indigo-500" />
+                          <span className="text-sm font-medium text-slate-700">New Building</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-100 transition-colors">
+                          <input type="radio" name="projectType" value="alteration" checked={projectInfo.projectType === 'alteration'} onChange={(e) => handleProjectUpdate('projectType', e.target.value)} className="text-indigo-600 focus:ring-indigo-500" />
+                          <span className="text-sm font-medium text-slate-700">Alteration / Addition</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Project Name</label>
+                      <input type="text" placeholder="e.g. Horizon Estate Phase 1" value={projectInfo.projectName} onChange={(e) => handleProjectUpdate('projectName', e.target.value)} className="w-full text-sm border-slate-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Number of Storeys</label>
+                      <input type="number" min="1" value={projectInfo.storeys} onChange={(e) => handleStoreysChange(e.target.value)} className="w-full text-sm border-slate-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Township / Suburb</label>
+                      <input type="text" placeholder="e.g. Menlyn" value={projectInfo.township} onChange={(e) => handleProjectUpdate('township', e.target.value)} className="w-full text-sm border-slate-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Stand / Erf Number</label>
+                      <input type="text" placeholder="e.g. Erf 452" value={projectInfo.standNumber} onChange={(e) => handleProjectUpdate('standNumber', e.target.value)} className="w-full text-sm border-slate-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border" />
+                    </div>
+
+                    {/* Dynamic Floor Areas Block */}
+                    <div className="md:col-span-2 bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-inner mt-2">
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-4">Net Floor Areas (m²)</label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {projectInfo.floorAreas.map((area, idx) => (
+                          <div key={idx}>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Storey {idx + 1}</label>
+                            <input type="number" min="1" value={area} onChange={(e) => handleFloorAreaChange(idx, e.target.value)} className="w-full text-sm border-slate-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border bg-white" />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-5 pt-4 border-t border-slate-200 flex justify-between items-center">
+                        <span className="text-sm font-semibold text-slate-600">Total Building Net Floor Area:</span>
+                        <span className="text-lg font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-100">{totalFloorArea} m²</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* --- FENESTRATION TAB --- */}
+              {activeTab === 'fenestration' && (
+                <>
+                  {/* Dashboard & Settings */}
+                  <div className="flex flex-col lg:flex-row justify-between items-start gap-6 pb-6 border-b border-slate-100">
+                    <div className="flex-1 w-full space-y-4">
+                      <div>
+                        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                          Fenestration & Glazing
+                        </h1>
+                        <p className="text-slate-500 mt-1">SANS 10400-XA Aggregate Solar & Conductance Calculations</p>
+                      </div>
+
+                      <div className="flex items-center gap-4 bg-teal-50 p-3 rounded-lg border border-teal-200 w-max">
+                        <span className="text-sm font-semibold text-teal-800">Global Net Floor Area:</span>
+                        <span className="text-lg font-bold text-teal-900">{totalFloorArea} m²</span>
+                      </div>
+
+                      {fenestrationData.global.exempt && (
+                        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm p-3 rounded-lg flex items-start gap-2">
+                          <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <strong>EXEMPT FROM AGGREGATE LIMITS:</strong> The global window-to-floor area ratio is 20% or below. Any glazing solution is acceptable.
+                          </div>
+                        </div>
+                      )}
+
+                      {fenestrationData.global.overLimit && (
+                        <div className="bg-red-50 border border-red-200 text-red-800 text-sm p-3 rounded-lg flex items-start gap-2">
+                          <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <strong>RATIONAL DESIGN REQUIRED:</strong> The total fenestration area ({fenestrationData.global.ratio.toFixed(1)}%) exceeds the prescriptive maximum of 60% of the net floor area.
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
+                        <button onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 font-medium shadow-sm text-sm"><FileText className="w-4 h-4" /> Export Schedule</button>
+                        <button onClick={() => setShowHelp(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 font-medium shadow-sm text-sm"><HelpCircle className="w-4 h-4" /> View Requirements & Tables</button>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-3">
+                      {/* Area Ratio Flag */}
+                      <div className={`border rounded-xl p-3 min-w-[130px] text-center ${fenestrationData.global.ratio > 60 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}>
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Global Ratio</div>
+                        <div className={`text-2xl font-black tracking-tight ${fenestrationData.global.ratio > 60 ? 'text-red-700' : 'text-slate-700'}`}>
+                          {fenestrationData.global.ratio.toFixed(1)}%
+                        </div>
+                        <div className="text-[10px] font-medium mt-1 text-slate-500">
+                          Limit: ≤ 60.0%
+                        </div>
+                      </div>
+
+                      {/* Aggregate U */}
+                      <div className={`border rounded-xl p-3 min-w-[140px] text-center transition-opacity ${fenestrationData.global.exempt ? 'bg-slate-100 border-slate-200 opacity-70' : fenestrationData.global.aggU <= fenestrationData.global.maxU ? 'bg-slate-50 border-slate-200' : 'bg-orange-50 border-orange-200'}`}>
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Global Agg U</div>
+                        <div className={`text-2xl font-black tracking-tight ${fenestrationData.global.exempt ? 'text-slate-400' : fenestrationData.global.aggU <= fenestrationData.global.maxU ? 'text-slate-700' : 'text-orange-700'}`}>
+                          {fenestrationData.global.aggU.toFixed(2)}
+                        </div>
+                        <div className="text-[10px] font-medium mt-1 text-slate-500">
+                          Target: {fenestrationData.global.exempt || fenestrationData.global.overLimit ? 'N/A' : `≤ ${fenestrationData.global.maxU.toFixed(2)}`}
+                        </div>
+                      </div>
+
+                      {/* Aggregate SHGC */}
+                      <div className={`border rounded-xl p-3 min-w-[140px] text-center transition-opacity ${fenestrationData.global.exempt ? 'bg-slate-100 border-slate-200 opacity-70' : fenestrationData.global.aggSHGC <= fenestrationData.global.maxSHGC ? 'bg-slate-50 border-slate-200' : 'bg-orange-50 border-orange-200'}`}>
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Global Agg SHGC</div>
+                        <div className={`text-2xl font-black tracking-tight ${fenestrationData.global.exempt ? 'text-slate-400' : fenestrationData.global.aggSHGC <= fenestrationData.global.maxSHGC ? 'text-slate-700' : 'text-orange-700'}`}>
+                          {fenestrationData.global.aggSHGC.toFixed(2)}
+                        </div>
+                        <div className="text-[10px] font-medium mt-1 text-slate-500">
+                          Target: {fenestrationData.global.exempt || fenestrationData.global.overLimit ? 'N/A' : `≤ ${fenestrationData.global.maxSHGC.toFixed(2)}`}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* STOREY-BY-STOREY WINDOW BUILDERS */}
+                  <div className="space-y-8">
+                    {fenestrationData.storeys.map((storey) => (
+                      <div key={storey.storeyIndex} className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <div className="bg-slate-100 px-6 py-4 border-b border-slate-200 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                          <h2 className="font-semibold text-slate-800 flex items-center gap-2 text-lg">
+                            <Layers className="w-5 h-5 text-teal-600" /> Storey {storey.storeyIndex + 1}
+                          </h2>
+                          <div className="flex gap-4 text-xs font-medium text-slate-600 bg-white px-4 py-2 rounded-lg border border-slate-200">
+                            <span>Net Area: <strong className="text-slate-800">{storey.floorArea} m²</strong></span>
+                            <span className="w-px bg-slate-300"></span>
+                            <span>Ratio: <strong className={storey.overLimit ? 'text-red-600' : 'text-slate-800'}>{storey.ratio.toFixed(1)}%</strong></span>
+                            <span className="w-px bg-slate-300"></span>
+                            <span>Agg U: <strong className={!storey.exempt && storey.aggU > storey.maxU ? 'text-orange-600' : 'text-slate-800'}>{storey.aggU.toFixed(2)}</strong></span>
+                            <span className="w-px bg-slate-300"></span>
+                            <span>Agg SHGC: <strong className={!storey.exempt && storey.aggSHGC > storey.maxSHGC ? 'text-orange-600' : 'text-slate-800'}>{storey.aggSHGC.toFixed(2)}</strong></span>
+                          </div>
+                        </div>
+                        
+                        <div className="p-4 space-y-3">
+                          {storey.windows.length === 0 ? (
+                            <div className="text-center py-8 text-slate-400 text-sm">No windows assigned to this storey yet.</div>
+                          ) : (
+                            storey.windows.map((win) => (
+                              <div key={win.id} className="flex items-stretch gap-3 p-4 bg-white border border-slate-200 rounded-xl hover:border-slate-300 transition-colors shadow-sm relative">
+                                <div className="flex-1 flex flex-col gap-3">
+                                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                                    <div className="md:col-span-2">
+                                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Ref</label>
+                                      <input type="text" value={win.reference} onChange={(e) => updateWindow(win.id, 'reference', e.target.value)} className="w-full text-sm font-bold text-teal-700 border-slate-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500 p-2 border" />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Storey Location</label>
+                                      <select value={win.storey} onChange={(e) => updateWindow(win.id, 'storey', parseInt(e.target.value))} className="w-full text-sm border-slate-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500 p-2 border bg-slate-50 text-slate-700">
+                                        {projectInfo.floorAreas.map((_, i) => <option key={i} value={i}>Storey {i + 1}</option>)}
+                                      </select>
+                                    </div>
+                                    <div className="md:col-span-3">
+                                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Description</label>
+                                      <input type="text" value={win.name} onChange={(e) => updateWindow(win.id, 'name', e.target.value)} className="w-full text-sm border-slate-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500 p-2 border" />
+                                    </div>
+                                    
+                                    <div className="md:col-span-3">
+                                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Preset Glass/Frame</label>
+                                      <select onChange={(e) => applyWindowPreset(win.id, e.target.value)} className="w-full text-sm border-slate-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500 p-2 border bg-slate-50 text-slate-600">
+                                        <option value="">Select preset...</option>
+                                        {WINDOW_PRESETS.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
+                                      </select>
+                                    </div>
+
+                                    <div className="md:col-span-2 flex items-center pb-1 justify-end">
+                                      <div className="w-full">
+                                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Orientation</label>
+                                        <select value={win.orientation} onChange={(e) => updateWindow(win.id, 'orientation', e.target.value)} className="w-full text-sm border-slate-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500 p-2.5 border bg-white font-medium text-slate-700">
+                                          <option value="N">North Facing</option>
+                                          <option value="E/W">East/West Facing</option>
+                                          <option value="S">South Facing</option>
+                                        </select>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-slate-50/50 p-3 rounded-lg border border-slate-100">
+                                    <div className="md:col-span-1">
+                                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Qty</label>
+                                      <input type="number" min="1" value={win.qty} onChange={(e) => updateWindow(win.id, 'qty', parseInt(e.target.value) || 1)} className="w-full text-sm border-slate-200 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500 p-1.5 border" />
+                                    </div>
+                                    <div className="md:col-span-1">
+                                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">W (m)</label>
+                                      <input type="number" step="0.1" min="0" value={win.width} onChange={(e) => updateWindow(win.id, 'width', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500 p-1.5 border" />
+                                    </div>
+                                    <div className="md:col-span-1">
+                                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">H (m)</label>
+                                      <input type="number" step="0.1" min="0" value={win.height} onChange={(e) => updateWindow(win.id, 'height', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500 p-1.5 border" />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Conductance (U)</label>
+                                      <input type="number" step="0.1" min="0" value={win.uValue} onChange={(e) => updateWindow(win.id, 'uValue', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500 p-1.5 border" />
+                                    </div>
+                                    <div className="md:col-span-3 relative">
+                                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Solar Heat Gain (SHGC)</label>
+                                      <input 
+                                        type="number" step="0.01" min="0" max="1" 
+                                        value={win.shgc} 
+                                        onChange={(e) => updateWindow(win.id, 'shgc', parseFloat(e.target.value) || 0)} 
+                                        disabled={win.orientation === 'S'}
+                                        className={`w-full text-sm border-slate-200 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500 p-1.5 border ${win.orientation === 'S' ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : ''}`} 
+                                      />
+                                      {win.orientation === 'S' && (
+                                        <span className="absolute right-2 top-[26px] text-[10px] font-bold text-teal-600 uppercase tracking-wider bg-slate-200 px-1 rounded">
+                                          Treated as 0
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="md:col-span-2 relative">
+                                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Shading (Fs)</label>
+                                      <div className="flex gap-1">
+                                        <input type="number" step="0.01" min="0" max="1" value={win.shading} onChange={(e) => updateWindow(win.id, 'shading', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500 p-1.5 border" title="1.0 = Unshaded, < 1.0 = Overhangs/Fins" />
+                                        <button 
+                                          onClick={() => openShadingCalc(win)}
+                                          className={`p-1.5 rounded-md border border-slate-200 transition-colors ${win.orientation === 'S' ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-white text-teal-600 hover:bg-teal-50 hover:border-teal-200'}`}
+                                          title={win.orientation === 'S' ? "Shading calc disabled for South" : "Calculate Table 5 Shading Multiplier"}
+                                          disabled={win.orientation === 'S'}
+                                        >
+                                          <Calculator className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                    <div className="md:col-span-2 flex justify-end items-center">
+                                      <span className="text-sm font-mono font-medium text-teal-700 bg-teal-50 border border-teal-100 px-2 py-1.5 rounded w-full text-center">
+                                        {(win.qty * win.width * win.height).toFixed(2)} m²
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex flex-col gap-2 items-center justify-center">
+                                  <button onClick={() => removeWindow(win.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        <div className="p-4 border-t border-slate-200 bg-white">
+                          <button onClick={() => addWindow(storey.storeyIndex)} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100 font-medium shadow-sm text-sm"><Plus className="w-4 h-4" /> Add Window to Storey {storey.storeyIndex + 1}</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* --- ENVELOPE TABS (WALLS, ROOFS, FLOORS) --- */}
+              {activeTab !== 'project' && activeTab !== 'fenestration' && (
+                <>
+                  {/* Dashboard & Settings */}
+                  <div className="flex flex-col lg:flex-row justify-between items-start gap-6 pb-6 border-b border-slate-100">
+                    <div className="flex-1 w-full space-y-4">
+                      <div>
+                        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2 capitalize">
+                          {activeTab} Assembly
+                        </h1>
+                        <p className="text-slate-500 mt-1">SANS 10400-XA Performance Metrics</p>
+                      </div>
+
+                      {/* Element-Specific Toggles */}
+                      {activeTab === 'roofs' && (
+                        <div className="flex flex-col md:flex-row md:items-center gap-4 bg-orange-50 p-3 rounded-lg border border-orange-200">
+                          <span className="text-sm font-semibold text-orange-800">Roof Profile:</span>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" checked={isPitchedRoof} onChange={(e) => setIsPitchedRoof(e.target.checked)} className="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500" />
+                            <span className="text-sm font-medium text-stone-700">Pitched Roof (≥ 30°)</span>
+                          </label>
+                        </div>
+                      )}
+
+                      {activeTab === 'floors' && (
+                        <div className="flex flex-col md:flex-row md:items-center gap-4 bg-stone-50 p-3 rounded-lg border border-stone-200">
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-semibold text-stone-800">Floor System:</span>
+                            <select value={floorType} onChange={(e) => setFloorType(e.target.value)} className="text-sm border-slate-300 rounded shadow-sm focus:border-stone-500 focus:ring-stone-500 py-1.5 pl-2 pr-8">
+                              <option value="ground">Slab on Ground</option>
+                              <option value="suspended">Suspended Floor</option>
+                            </select>
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" checked={floorHeating} onChange={(e) => setFloorHeating(e.target.checked)} className="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500" />
+                            <span className="text-sm font-medium text-stone-700 flex items-center gap-1.5"><Thermometer className="w-4 h-4 text-orange-500" /> Underfloor Heating</span>
+                          </label>
+                        </div>
+                      )}
+
+                      {/* Dynamic Floor Warnings */}
+                      {activeTab === 'floors' && floorHeating && (
+                        <div className="bg-orange-50 border border-orange-200 text-orange-800 text-sm p-3 rounded-lg flex items-start gap-2">
+                          <Info className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                          <p><strong>Note:</strong> SANS 10400-XA requires the R-1.0 thermal resistance to be positioned directly below the heating system.</p>
+                        </div>
+                      )}
+                      {activeTab === 'floors' && !floorHeating && floorType === 'ground' && ['1', '2'].includes(zone) && (
+                        <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm p-3 rounded-lg flex items-start gap-2">
+                          <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                          <p><strong>Perimeter Edge Insulation Required:</strong> While the main floor area requires no insulation (Target R-0), SANS 10400-XA requires vertical or horizontal Perimeter Edge Insulation (R-1.0) for unheated ground slabs in Climate Zones 1 and 2.</p>
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
+                        <button onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 font-medium shadow-sm text-sm"><FileText className="w-4 h-4" /> Export Report</button>
+                        <button onClick={() => setShowHelp(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 font-medium shadow-sm text-sm"><HelpCircle className="w-4 h-4" /> View Requirements & Tables</button>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-3">
+                      {/* Classification/Regime Flag */}
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 min-w-[130px] text-center">
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                          {activeTab === 'walls' ? 'Wall Class' : 'Total Mass'}
+                        </div>
+                        <div className="text-2xl font-black tracking-tight text-slate-700">
+                          {activeTab === 'walls' ? (totals.surfaceMass >= 270 ? 'HEAVY' : 'LIGHT') : Math.round(totals.surfaceMass)}
+                        </div>
+                        <div className="text-[10px] font-medium mt-1 text-slate-500">
+                          {activeTab === 'walls' ? `${Math.round(totals.surfaceMass)} kg/m²` : 'kg/m²'}
+                        </div>
+                      </div>
+
+                      {/* Dynamic Target & Total R-Value UI (Dual for Roofs, Single for others) */}
+                      {activeTab === 'roofs' ? (
+                        <>
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 min-w-[180px] text-center">
+                            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Target R-Values</div>
+                            <div className="flex justify-around">
+                              <div><div className="text-[10px] text-blue-500 font-bold leading-none mb-1">WINTER (UP)</div><div className="text-xl font-black text-slate-700">{targets.R_up.toFixed(2)}</div></div>
+                              <div className="w-px bg-slate-300"></div>
+                              <div><div className="text-[10px] text-orange-500 font-bold leading-none mb-1">SUMMER (DN)</div><div className="text-xl font-black text-slate-700">{targets.R_down.toFixed(2)}</div></div>
+                            </div>
+                          </div>
+                          
+                          <div className={`border rounded-xl p-3 min-w-[220px] text-center relative overflow-hidden transition-colors ${isCompliant ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+                            <div className={`text-xs font-bold uppercase tracking-wider mb-2 flex items-center justify-center gap-1 ${isCompliant ? 'text-emerald-600' : 'text-red-600'}`}>
+                              {isCompliant ? <CheckCircle className="w-4 h-4"/> : <XCircle className="w-4 h-4"/>}
+                              Calculated Totals
+                            </div>
+                            <div className="flex justify-around">
+                              <div>
+                                <div className="text-[10px] text-blue-600 font-bold leading-none mb-1">WINTER (UP)</div>
+                                <div className={`text-2xl font-black ${totals.R_up >= targets.R_up ? 'text-emerald-700' : 'text-red-700'}`}>{totals.R_up.toFixed(2)}</div>
+                              </div>
+                              <div className={`w-px ${isCompliant ? 'bg-emerald-200' : 'bg-red-200'}`}></div>
+                              <div>
+                                <div className="text-[10px] text-orange-600 font-bold leading-none mb-1">SUMMER (DN)</div>
+                                <div className={`text-2xl font-black ${totals.R_down >= targets.R_down ? 'text-emerald-700' : 'text-red-700'}`}>{totals.R_down.toFixed(2)}</div>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 min-w-[120px] text-center">
+                            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Target R</div>
+                            <div className="text-3xl font-black text-slate-700">{targets.R.toFixed(2)}</div>
+                          </div>
+
+                          <div className={`border rounded-xl p-3 min-w-[150px] text-center relative overflow-hidden transition-colors ${isCompliant ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+                            <div className={`text-xs font-bold uppercase tracking-wider mb-1 flex items-center justify-center gap-1 ${isCompliant ? 'text-emerald-600' : 'text-red-600'}`}>
+                              {isCompliant ? <CheckCircle className="w-4 h-4"/> : <XCircle className="w-4 h-4"/>}
+                              Total R-Value
+                            </div>
+                            <div className={`text-3xl font-black ${isCompliant ? 'text-emerald-700' : 'text-red-700'}`}>
+                              {totals.R.toFixed(2)}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Cross-Section Visualizer */}
+                  <div>
+                    <h2 className="text-sm font-semibold text-slate-700 mb-4 flex justify-between items-center">
+                      <span>Assembly Cross-Section</span>
+                      <span className="text-slate-500 font-normal">Orientation: <strong className="text-slate-700">{params.isVertical ? 'Vertical' : 'Horizontal'}</strong> | Total Thick: {totalThickness} mm</span>
+                    </h2>
+                    
+                    <div className={`w-full flex rounded-xl border-2 border-slate-300 overflow-hidden shadow-inner bg-slate-50 ${params.isVertical ? 'h-[250px] flex-row' : 'h-[350px] flex-col'}`}>
+                      {/* Outside/Top Surface */}
+                      {includeSurfaces && (
+                        <div className={`${params.isVertical ? 'w-10 border-r border-slate-200' : 'h-8 border-b border-slate-200'} flex-shrink-0 bg-blue-50/50 flex items-center justify-center`}>
+                          <div className="text-blue-500 font-bold tracking-widest text-[10px]" style={params.isVertical ? { writingMode: 'vertical-rl', transform: 'rotate(180deg)' } : {}}>
+                            {params.outLabel}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Layers */}
+                      {layers.map(layer => {
+                        const isLightColor = layer.name.toLowerCase().match(/air|space|cavity|insulation|plaster|board|concrete/);
+                        const thicknessRatio = totalThickness > 0 ? (layer.thickness / totalThickness) * 100 : 0;
+                        
+                        return (
+                          <div key={`viz-${layer.id}`} className={`relative flex items-center justify-center group box-border ${params.isVertical ? 'h-full border-r' : 'w-full border-b'} border-slate-900/20`}
+                            style={{ 
+                              ...getLayerStyle(layer.name), 
+                              flexGrow: layer.thickness, 
+                              flexBasis: `${thicknessRatio}%`, 
+                              minWidth: params.isVertical ? (layer.thickness > 0 ? '24px' : '0') : 'auto',
+                              minHeight: !params.isVertical ? (layer.thickness > 0 ? '24px' : '0') : 'auto'
+                            }}
+                            title={`${layer.name} (${layer.thickness}mm)`}>
+                            
+                            {layer.thickness >= 5 && (
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden p-1">
+                                <div className={`flex flex-col items-center justify-center ${params.isVertical ? '-rotate-90' : ''}`} style={{ maxWidth: '280px', width: '280px' }}>
+                                  {params.isVertical ? (
+                                    <>
+                                      <span className={`text-sm font-bold whitespace-nowrap overflow-hidden text-ellipsis w-full text-center ${isLightColor ? 'text-slate-700' : 'text-white/90'}`}>{layer.name}</span>
+                                      <span className={`text-xs font-bold mt-1 ${isLightColor ? 'text-slate-500' : 'text-white/70'}`}>{layer.thickness}mm</span>
+                                    </>
+                                  ) : (
+                                    <span className={`text-sm font-bold whitespace-nowrap overflow-hidden text-ellipsis w-full text-center ${isLightColor ? 'text-slate-700' : 'text-white/90'}`}>
+                                      {layer.name} <span className="opacity-80 font-medium">({layer.thickness}mm)</span>
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+
+                      {/* Inside/Bottom Surface */}
+                      {includeSurfaces && (
+                        <div className={`${params.isVertical ? 'w-10 border-l border-slate-200' : 'h-8 border-t border-slate-200'} flex-shrink-0 bg-blue-50/50 flex items-center justify-center`}>
+                          <div className="text-blue-500 font-bold tracking-widest text-[10px]" style={params.isVertical ? { writingMode: 'vertical-rl', transform: 'rotate(180deg)' } : {}}>
+                            {params.inLabel}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Builder List */}
+                  <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden">
+                    <div className="bg-slate-100 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                      <h2 className="font-semibold text-slate-700 flex items-center gap-2">
+                        <Layers className="w-5 h-5" /> Layer Builder ({params.outLabel} → {params.inLabel})
+                      </h2>
+                      <label className="flex items-center gap-2 cursor-pointer w-max">
+                        <input type="checkbox" checked={includeSurfaces} onChange={(e) => toggleSurfaces(e.target.checked)} className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500" />
+                        <span className="font-medium text-slate-600 text-xs uppercase tracking-wider">Include standard Air Films</span>
+                      </label>
+                    </div>
+                    
+                    <div className="p-4 space-y-3">
+                      {layers.map((layer, index) => (
+                        <div key={layer.id} className="flex items-stretch gap-3 p-4 bg-white border border-slate-200 rounded-xl hover:border-slate-300 transition-colors shadow-sm">
+                          {/* Reorder controls */}
+                          <div className="flex flex-col gap-1 items-center justify-center text-slate-400">
+                            <button onClick={() => moveLayer(index, 'up')} disabled={index === 0} className="hover:text-blue-600 disabled:opacity-30"><ArrowUp className="w-4 h-4" /></button>
+                            <GripVertical className="w-4 h-4 opacity-30" />
+                            <button onClick={() => moveLayer(index, 'down')} disabled={index === layers.length - 1} className="hover:text-blue-600 disabled:opacity-30"><ArrowDown className="w-4 h-4" /></button>
+                          </div>
+
+                          <div className="flex-1 flex flex-col gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                              <div className="md:col-span-5">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Material</label>
+                                <select value={layer.name} onChange={(e) => applyPreset(layer.id, e.target.value)} className="w-full text-sm border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-slate-50 p-2 border">
+                                  {MATERIAL_PRESETS.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
+                                </select>
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Thick (mm)</label>
+                                <input type="number" min="0" value={layer.thickness} onChange={(e) => updateLayer(layer.id, 'thickness', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border" />
+                              </div>
+                              <div className="md:col-span-3">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{layer.type === 'material' ? 'k-value (W/mK)' : 'Fixed R-value'}</label>
+                                <input type="number" step="0.001" min="0" value={layer.type === 'material' ? layer.kValue : layer.rValue} onChange={(e) => updateLayer(layer.id, layer.type === 'material' ? 'kValue' : 'rValue', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border" />
+                              </div>
+                              <div className="md:col-span-2 flex justify-end pb-2 relative group">
+                                <span className="text-sm font-mono font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded cursor-help whitespace-nowrap">
+                                  R: {getLayerRDisplay(layer)}
+                                </span>
+                                {/* Tooltip for smart resistances */}
+                                {layer.type === 'resistance' && (layer.rValueUp !== undefined || layer.rValueDown !== undefined) && (
+                                  <div className="absolute right-0 bottom-full mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-20">
+                                    Smart Directional Resistance active for Winter(↑) and Summer(↓) conditions.
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-slate-50/50 p-3 rounded-lg border border-slate-100">
+                              <div className="md:col-span-3 md:col-start-6">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Density (kg/m³)</label>
+                                <input type="number" min="0" value={layer.density || 0} onChange={(e) => updateLayer(layer.id, 'density', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded-md shadow-sm focus:border-orange-500 focus:ring-orange-500 p-1.5 border" />
+                              </div>
+                              <div className="md:col-span-3">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sp. Heat (J/kgK)</label>
+                                <input type="number" min="0" value={layer.specificHeat || 0} onChange={(e) => updateLayer(layer.id, 'specificHeat', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded-md shadow-sm focus:border-orange-500 focus:ring-orange-500 p-1.5 border" />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2 items-center justify-center">
+                            {layer.type === 'material' && layer.kValue > 0 && !isCompliant && (
+                              <button onClick={() => autoSolveThickness(layer.id)} title="Auto-solve thickness to meet compliance" className="p-2 text-purple-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors">
+                                <Wand2 className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button onClick={() => removeLayer(layer.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-4 border-t border-slate-200">
+                      <button onClick={addLayer} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium shadow-sm"><Plus className="w-4 h-4" /> Add Layer to {activeTab}</button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+          </div>
+
+          {/* Shading Multiplier (Fs) Inline Modal */}
+          {shadingModal.isOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden">
+                <div className="px-5 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                  <h2 className="text-md font-bold text-slate-800 flex items-center gap-2">
+                    <Calculator className="w-4 h-4 text-teal-600" />
+                    Calculate Shading (Fs)
+                  </h2>
+                  <button onClick={() => setShadingModal(prev => ({...prev, isOpen: false}))} className="text-slate-400 hover:text-slate-700 transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="p-5 space-y-4">
+                  <p className="text-xs text-slate-500">Based on SANS 10400-XA Table 5 (Projection Factor P<sub>h</sub>)</p>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Projection (P) in meters</label>
+                    <input type="number" step="0.1" min="0" value={shadingModal.projection} onChange={(e) => setShadingModal(prev => ({...prev, projection: parseFloat(e.target.value) || 0}))} className="w-full text-sm border-slate-300 rounded focus:border-teal-500 focus:ring-teal-500 p-2 border" />
+                    <p className="text-[10px] text-slate-400 mt-1">Horizontal distance the roof/eave overhangs the window.</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Height (H) in meters</label>
+                    <input type="number" step="0.1" min="0.1" value={shadingModal.height} onChange={(e) => setShadingModal(prev => ({...prev, height: parseFloat(e.target.value) || 0}))} className="w-full text-sm border-slate-300 rounded focus:border-teal-500 focus:ring-teal-500 p-2 border" />
+                    <p className="text-[10px] text-slate-400 mt-1">Vertical distance from window sill to underside of overhang.</p>
+                  </div>
+                  
+                  <div className="bg-slate-50 p-3 rounded border border-slate-200 flex justify-between items-center">
+                    <span className="text-xs font-bold text-slate-500">Calculated P<sub>h</sub>:</span>
+                    <span className="text-sm font-mono font-bold text-slate-800">{(shadingModal.projection / (shadingModal.height || 1)).toFixed(2)}</span>
+                  </div>
+                </div>
+                <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end">
+                  <button onClick={applyShadingCalc} className="px-4 py-2 bg-teal-600 text-white text-sm font-bold rounded hover:bg-teal-700 transition-colors shadow-sm">Apply Fs Value</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SANS 10400-XA Reference Modal */}
+          {showHelp && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                  <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <Info className="w-5 h-5 text-blue-600" />
+                    SANS 10400-XA (2021) Reference & Data
+                  </h2>
+                  <button onClick={() => setShowHelp(false)} className="text-slate-400 hover:text-slate-700 transition-colors">
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+                
+                <div className="p-6 overflow-y-auto space-y-8">
+                  <section>
+                    <h3 className="text-md font-bold text-slate-800 border-b border-slate-200 pb-2 mb-3">1. Clause 4.2: Theoretical Energy Consumption (Performance Route)</h3>
+                    <p className="text-sm text-slate-600 mb-3">If a building design cannot meet the prescriptive deemed-to-satisfy requirements for fenestration or the thermal envelope, compliance must be demonstrated via the Performance Route (Clause 4.2). This involves using certified thermal modeling software (e.g., EnergyPlus) to prove the building's theoretical energy demand falls below the maximum limits specified in SANS 10400-XA Tables 1 and 2.</p>
+                  </section>
+
+                  <section>
+                    <h3 className="text-md font-bold text-slate-800 border-b border-slate-200 pb-2 mb-3">2. Fenestration (Glazing) Limitations</h3>
+                    <p className="text-sm text-slate-600 mb-3">SANS 10400-XA 2021 provides self-contained rules for fenestration compliance:</p>
+                    <ul className="list-disc pl-5 space-y-2 text-sm text-slate-600">
+                      <li><strong>The 20% Exemption:</strong> If total fenestration is ≤ 20% of net floor area, no specific U-value or SHGC limits apply (any glazing passes).</li>
+                      <li><strong>The 60% Hard Ceiling:</strong> If you exceed 60% of the net floor area, prescriptive compliance falls away entirely and you must commission a Rational Design (energy model).</li>
+                      <li><strong>Aggregates:</strong> Between 20% and 60%, compliance is determined by the <em>Aggregate</em> Conductance (U-Value) and Solar Heat Gain (SHGC) of all windows combined. The targets become progressively stricter as your area ratio climbs.</li>
+                      <li><strong>Table 4 (Section 5.3.5):</strong> Details the specific stepped maximum permitted U-Values and SHGC aggregates required for compliance.</li>
+                      <li><strong>South Facing Exemption:</strong> Under Clause 5.3.5.5, fenestration facing South receives almost no direct sunlight, therefore its SHGC is taken as 0 for the purpose of the aggregate calculation.</li>
+                      <li><strong>Shading Multipliers (Fs):</strong> Calculated using the Projection factor ($P_h = P / H$) referenced against Table 5 in the standard. This multiplier heavily reduces the effective solar heat gain of a window.</li>
+                    </ul>
+                  </section>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

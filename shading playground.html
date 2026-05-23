@@ -1,0 +1,532 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SANS 10400-XA Shading Explorer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen bg-neutral-100 p-4 md:p-8 font-sans text-neutral-800 flex items-center justify-center">
+
+    <div class="max-w-5xl w-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row">
+        
+        <!-- LEFT COLUMN: Controls & Math -->
+        <div class="w-full md:w-5/12 bg-neutral-50 p-6 md:p-8 border-r border-neutral-200 flex flex-col gap-6">
+            
+            <div>
+                <h1 class="text-2xl font-bold text-neutral-900 tracking-tight">Shading Explorer</h1>
+                <p class="text-sm text-neutral-500 mt-1">SANS 10400-XA (3rd Ed.) Table 3 Simulator</p>
+            </div>
+
+            <!-- Region Selector -->
+            <div class="space-y-3">
+                <label class="text-sm font-semibold text-neutral-700 flex items-center gap-2">
+                    <i data-lucide="map-pin" class="w-4 h-4 text-blue-600"></i>
+                    Building Location (Latitude)
+                </label>
+                <select id="region-select" class="w-full p-3 bg-white border border-neutral-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                    <!-- Options populated by JS -->
+                </select>
+            </div>
+
+            <!-- Shading Strategy Selector -->
+            <div class="space-y-3 pt-4 border-t border-neutral-200">
+                <label class="text-sm font-semibold text-neutral-700 flex items-center gap-2">
+                    <i data-lucide="sun-dim" class="w-4 h-4 text-amber-500"></i>
+                    Shading Strategy
+                </label>
+                <div class="flex flex-col gap-2">
+                    <label id="lbl-strat-fixed" class="flex items-center gap-3 p-3 border-2 border-blue-500 bg-blue-50 rounded-lg cursor-pointer transition-colors">
+                        <input type="radio" name="shading_type" value="fixed" checked class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm font-medium text-blue-900">Fixed Overhang (Clause 5.2.1a)</span>
+                    </label>
+                    <label id="lbl-strat-ext" class="flex items-center gap-3 p-3 border border-neutral-200 hover:bg-neutral-50 rounded-lg cursor-pointer transition-colors">
+                        <input type="radio" name="shading_type" value="external" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-neutral-900">External Device (Clause 5.2.1b)</span>
+                            <span class="text-xs text-neutral-500">Shutters, screens, or adjustable blinds</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Sliders -->
+            <div id="sliders-container" class="space-y-6 pt-4 border-t border-neutral-200 transition-opacity duration-300">
+                <!-- Window Height Slider -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="text-sm font-semibold text-neutral-700 flex items-center gap-2">
+                            <i data-lucide="ruler" class="w-4 h-4 text-blue-600"></i>
+                            Window Height (H)
+                        </label>
+                        <span id="height-label" class="font-mono bg-blue-100 text-blue-800 py-1 px-2 rounded text-sm font-bold">1.50m</span>
+                    </div>
+                    <input type="range" id="height-slider" min="0.5" max="2.5" step="0.1" value="1.5" class="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-blue-600"/>
+                    <p class="text-xs text-neutral-500">Sill to underside of overhang.</p>
+                </div>
+
+                <!-- Overhang Projection Slider -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="text-sm font-semibold text-neutral-700 flex items-center gap-2">
+                            <i data-lucide="ruler" class="w-4 h-4 text-emerald-600"></i>
+                            Overhang Projection (P)
+                        </label>
+                        <span id="proj-label" class="font-mono bg-emerald-100 text-emerald-800 py-1 px-2 rounded text-sm font-bold">0.50m</span>
+                    </div>
+                    <input type="range" id="proj-slider" min="0" max="2.5" step="0.05" value="0.5" class="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"/>
+                </div>
+            </div>
+
+            <!-- Math Output Box -->
+            <div id="math-box" class="mt-auto p-4 rounded-xl border bg-emerald-50 border-emerald-200">
+                <div id="math-calc-view">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">The Calculation</h3>
+                    <div class="flex items-center justify-between font-mono text-sm">
+                        <span class="text-neutral-600">Required (H × M):</span>
+                        <span id="math-req" class="font-bold text-neutral-900"></span>
+                    </div>
+                    <div class="flex items-center justify-between font-mono text-sm mt-1">
+                        <span class="text-neutral-600">Actual (P):</span>
+                        <span id="math-act" class="font-bold text-emerald-600"></span>
+                    </div>
+                    <hr id="math-hr" class="my-2 border-emerald-200" />
+                    <p id="math-result" class="text-sm font-semibold flex items-center gap-1 text-emerald-700">
+                        <span id="math-res-icon-check"><i data-lucide="check-circle-2" class="w-4 h-4"></i></span>
+                        <span id="math-res-icon-alert" class="hidden"><i data-lucide="alert-triangle" class="w-4 h-4"></i></span>
+                        <span id="math-res-text"></span>
+                    </p>
+                </div>
+                <div id="math-external-view" class="hidden flex flex-col gap-2">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1 flex items-center gap-1">
+                        <i data-lucide="shield-check" class="w-4 h-4"></i> Clause 5.2.1(b) Applied
+                    </h3>
+                    <p class="text-sm text-emerald-800 font-medium">
+                        Window is deemed <strong>SHADED</strong> via an external device.
+                    </p>
+                    <p class="text-xs text-emerald-700/80">
+                        Device must restrict ≥80% of summer solar radiation, OR be readily adjustable by occupants.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Visualizer -->
+        <div class="w-full md:w-7/12 p-6 flex flex-col relative bg-neutral-100/50">
+            
+            <!-- Status Banners Area -->
+            <div class="flex flex-col z-10 w-full">
+                <!-- Main Status Banner -->
+                <div id="status-banner" class="py-3 px-4 rounded-lg shadow-sm flex items-center justify-between transition-colors bg-emerald-600 text-white">
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span id="banner-icon-check"><i data-lucide="check-circle-2" class="w-6 h-6"></i></span>
+                        <span id="banner-icon-alert" class="hidden"><i data-lucide="alert-triangle" class="w-6 h-6"></i></span>
+                        <span id="banner-title" class="font-bold text-lg">SHADED (Compliant)</span>
+                    </div>
+                    <span id="banner-desc" class="text-sm opacity-90 font-medium text-right ml-4">
+                        SHADED - use 'With shading in accordance with 5.2.2' column
+                    </span>
+                </div>
+
+                <!-- Excessive Overhang Warning -->
+                <div id="excessive-warning" class="hidden mt-3 py-2 px-4 rounded-lg bg-amber-100 border border-amber-300 text-amber-900 flex items-center gap-3 text-sm font-semibold shadow-sm">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0 text-amber-600"></i>
+                    <p>Warning: Excessively deep overhangs will result in insufficient sunlight entering the building in winter.</p>
+                </div>
+            </div>
+
+            <!-- Canvas Area -->
+            <div class="flex-1 flex items-center justify-center mt-4 overflow-hidden border border-neutral-200 bg-white rounded-xl shadow-inner relative">
+                <svg width="100%" height="100%" viewBox="0 0 400 450" preserveAspectRatio="xMidYMid meet" class="max-h-[450px]">
+                    <!-- Background/Sky Grid -->
+                    <defs>
+                        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+                        </pattern>
+                        <linearGradient id="windowGlare" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="rgba(255,255,255,0.4)" />
+                            <stop offset="50%" stop-color="rgba(255,255,255,0)" />
+                            <stop offset="100%" stop-color="rgba(255,255,255,0.1)" />
+                        </linearGradient>
+                        <pattern id="louvrePattern" width="10" height="12" patternUnits="userSpaceOnUse">
+                            <line x1="-2" y1="4" x2="12" y2="10" stroke="#475569" stroke-width="3" stroke-linecap="round"/>
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+
+                    <!-- Floor -->
+                    <rect x="0" y="420" width="400" height="30" fill="#e5e7eb" />
+                    <line x1="0" y1="420" x2="400" y2="420" stroke="#9ca3af" stroke-width="2" />
+
+                    <!-- Inside Building (right of wall) -->
+                    <rect id="inside-room" x="300" y="0" width="100" height="420" fill="#f8fafc" />
+
+                    <!-- The Wall -->
+                    <rect id="wall-top" x="300" y="0" width="20" fill="#94a3b8" />
+                    <rect id="wall-bottom" x="300" y="350" width="20" fill="#94a3b8" />
+
+                    <!-- The Window -->
+                    <rect id="window-frame" x="304" width="12" fill="#bae6fd" stroke="#38bdf8" stroke-width="1" />
+                    <rect id="window-glare" x="304" width="12" fill="url(#windowGlare)" />
+
+                    <!-- External Louvres (Hidden initially) -->
+                    <rect id="external-louvres" x="296" width="14" fill="url(#louvrePattern)" class="hidden" />
+
+                    <!-- Dynamic Overhang Group -->
+                    <g id="overhang-group" class="transition-opacity duration-300">
+                        <!-- Minimum Required Overhang (Target dashed line) -->
+                        <path id="min-req-path" stroke="#22c55e" stroke-width="2" stroke-dasharray="6,4" fill="none" />
+                        <line id="min-req-tick" stroke="#22c55e" stroke-width="2" />
+                        <text id="min-req-text" text-anchor="middle" fill="#16a34a" font-size="11" font-weight="bold">Target</text>
+
+                        <!-- Actual Overhang -->
+                        <rect id="actual-overhang" height="10" fill="#475569" />
+
+                        <!-- Sun / Shadow Ray -->
+                        <!-- Polygon showing the shadowed area cast by the overhang -->
+                        <polygon id="shadow-poly" fill="rgba(0,0,0,0.15)" />
+                        <!-- The critical sun ray line -->
+                        <line id="sun-ray" stroke="#fbbf24" stroke-width="2" stroke-dasharray="4,4" />
+                    </g>
+
+                    <!-- Dimension Lines -->
+                    <!-- Window Height (H) -->
+                    <line id="dim-h-line1" stroke="#64748b" stroke-width="1" />
+                    <line id="dim-h-line2" stroke="#64748b" stroke-width="1" />
+                    <line id="dim-h-line3" stroke="#64748b" stroke-width="1" />
+                    <text id="dim-h-text" fill="#64748b" font-size="12" font-weight="bold">H</text>
+
+                    <!-- Actual Projection (P) -->
+                    <line id="dim-p-line1" stroke="#64748b" stroke-width="1" />
+                    <line id="dim-p-line2" stroke="#64748b" stroke-width="1" />
+                    <line id="dim-p-line3" stroke="#64748b" stroke-width="1" />
+                    <text id="dim-p-text" text-anchor="middle" fill="#64748b" font-size="12" font-weight="bold">P</text>
+
+                    <!-- Annotations -->
+                    <text id="roof-label" fill="#475569" font-size="12" font-weight="bold">Roof / Floor Above</text>
+                    
+                    <!-- Conditional warning if unshaded -->
+                    <circle id="unshaded-pulse" r="5" fill="#ef4444" class="animate-pulse hidden" />
+                </svg>
+            </div>
+
+            <!-- Informational Cards Area -->
+            <div class="mt-4 space-y-3">
+                
+                <!-- Cross-Section Info -->
+                <div id="info-ray" class="flex items-start gap-2 text-neutral-500 bg-neutral-200/50 p-3 rounded-lg text-sm transition-all duration-300">
+                    <i data-lucide="info" class="w-4 h-4 mt-0.5 shrink-0"></i>
+                    <p>
+                        The yellow dotted line represents the critical sun angle based on the region's multiplier. 
+                        If the shadow ray strikes above the window sill, the window is legally <strong>Unshaded</strong>.
+                    </p>
+                </div>
+
+                <!-- Clause 5.2.1 Horizontal Extension Warning -->
+                <div id="info-horizontal" class="flex items-start gap-2 text-blue-700 bg-blue-50 border border-blue-100 p-3 rounded-lg text-sm transition-all duration-300">
+                    <i data-lucide="arrow-left-right" class="w-4 h-4 mt-0.5 shrink-0 text-blue-600"></i>
+                    <p>
+                        <strong>Clause 5.2.1 Note:</strong> To legally qualify as shaded via an overhang, it must also extend horizontally past both sides of the window by a distance of at least <strong>P</strong>, or provide equivalent shading using reveals/side fins.
+                    </p>
+                </div>
+
+                <!-- Clause 5.2.1(b) Annex D Reference -->
+                <div id="info-external" class="hidden flex items-start gap-2 text-purple-700 bg-purple-50 border border-purple-100 p-3 rounded-lg text-sm transition-all duration-300">
+                    <i data-lucide="book-open" class="w-4 h-4 mt-0.5 shrink-0 text-purple-600"></i>
+                    <p>
+                        <strong>Annex D Note:</strong> Please refer to Annex D in the standard for illustrations and examples of acceptable external shading devices (louvres, screens, blinds, etc.) under Clause 5.2.1(b).
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // SANS 10400-XA Table 3 Multipliers and Table C.1 Reference Cities
+        const REGIONS = [
+            { id: 'lat-1', name: 'Latitude ≤ 22°', m: 0.33 },
+            { id: 'lat-2', name: 'Latitude > 22° to ≤ 24° (Musina, Polokwane, Makhado)', m: 0.36 },
+            { id: 'lat-3', name: 'Latitude > 24° to ≤ 26° (Pretoria, Mbombela, Rustenburg)', m: 0.40 },
+            { id: 'lat-4', name: 'Latitude > 26° to ≤ 28° (Johannesburg, Klerksdorp, Welkom)', m: 0.42 },
+            { id: 'lat-5', name: 'Latitude > 28° to ≤ 30° (Durban, Bloemfontein, Kimberley)', m: 0.46 },
+            { id: 'lat-6', name: 'Latitude > 30° to ≤ 32° (De Aar, Calvinia, Beaufort West)', m: 0.50 },
+            { id: 'lat-7', name: 'Latitude > 32° (Cape Town, Gqeberha, East London)', m: 0.54 }
+        ];
+
+        // Constants for Drawing
+        const scale = 120; // 1 meter = 120 pixels
+        const wallX = 300;
+        const sillY = 350;
+        const floorY = 420;
+
+        // DOM Elements
+        const selectRegion = document.getElementById('region-select');
+        const sliderHeight = document.getElementById('height-slider');
+        const sliderProj = document.getElementById('proj-slider');
+        const radioStrategy = document.querySelectorAll('input[name="shading_type"]');
+        
+        const labelHeight = document.getElementById('height-label');
+        const labelProj = document.getElementById('proj-label');
+
+        function init() {
+            // Populate select dropdown
+            REGIONS.forEach((r, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = `${r.name} - Multiplier: ${r.m}`;
+                if (r.id === 'lat-4') opt.selected = true; // Default JHB
+                selectRegion.appendChild(opt);
+            });
+
+            // Initialize Lucide Icons
+            lucide.createIcons();
+
+            // Bind Event Listeners
+            selectRegion.addEventListener('change', updateUI);
+            sliderHeight.addEventListener('input', updateUI);
+            sliderProj.addEventListener('input', updateUI);
+            radioStrategy.forEach(radio => radio.addEventListener('change', updateUI));
+
+            // Initial Draw
+            updateUI();
+        }
+
+        function updateUI() {
+            // 1. Get current values
+            const region = REGIONS[selectRegion.value];
+            const height = parseFloat(sliderHeight.value);
+            const projection = parseFloat(sliderProj.value);
+            const strategy = document.querySelector('input[name="shading_type"]:checked').value;
+            const isExternal = strategy === 'external';
+
+            // 2. Core SANS 10400-XA Calculations
+            const minRequiredProjection = height * region.m;
+            
+            let isFullyShaded = false;
+            let isExcessive = false;
+
+            if (isExternal) {
+                isFullyShaded = true; // Automatically passes
+            } else {
+                isFullyShaded = projection >= minRequiredProjection;
+                isExcessive = projection >= (minRequiredProjection * 1.10);
+            }
+
+            // UI Adjustments for Strategy Selection
+            document.getElementById('sliders-container').classList.toggle('opacity-40', isExternal);
+            document.getElementById('sliders-container').classList.toggle('pointer-events-none', isExternal);
+            sliderHeight.disabled = isExternal;
+            sliderProj.disabled = isExternal;
+
+            const lblFixed = document.getElementById('lbl-strat-fixed');
+            const lblExt = document.getElementById('lbl-strat-ext');
+
+            if (isExternal) {
+                lblExt.className = "flex items-center gap-3 p-3 border-2 border-blue-500 bg-blue-50 rounded-lg cursor-pointer transition-colors";
+                lblFixed.className = "flex items-center gap-3 p-3 border border-neutral-200 hover:bg-neutral-50 rounded-lg cursor-pointer transition-colors";
+                document.querySelector('#lbl-strat-ext span').classList.replace('text-neutral-900', 'text-blue-900');
+                document.querySelector('#lbl-strat-fixed span').classList.replace('text-blue-900', 'text-neutral-900');
+            } else {
+                lblFixed.className = "flex items-center gap-3 p-3 border-2 border-blue-500 bg-blue-50 rounded-lg cursor-pointer transition-colors";
+                lblExt.className = "flex items-center gap-3 p-3 border border-neutral-200 hover:bg-neutral-50 rounded-lg cursor-pointer transition-colors";
+                document.querySelector('#lbl-strat-fixed span').classList.replace('text-neutral-900', 'text-blue-900');
+                document.querySelector('#lbl-strat-ext span').classList.replace('text-blue-900', 'text-neutral-900');
+            }
+
+            // Update Input Labels
+            labelHeight.textContent = height.toFixed(2) + 'm';
+            labelProj.textContent = projection.toFixed(2) + 'm';
+
+            // 3. Update Math Box
+            if (isExternal) {
+                document.getElementById('math-box').className = "mt-auto p-4 rounded-xl border bg-emerald-50 border-emerald-200";
+                document.getElementById('math-calc-view').classList.add('hidden');
+                document.getElementById('math-external-view').classList.remove('hidden');
+            } else {
+                document.getElementById('math-calc-view').classList.remove('hidden');
+                document.getElementById('math-external-view').classList.add('hidden');
+                
+                document.getElementById('math-req').textContent = `${height.toFixed(2)} × ${region.m.toFixed(2)} = ${minRequiredProjection.toFixed(2)}m`;
+                
+                const actSpan = document.getElementById('math-act');
+                actSpan.textContent = projection.toFixed(2) + 'm';
+                actSpan.className = `font-bold ${isFullyShaded ? 'text-emerald-600' : 'text-red-600'}`;
+
+                const mathBox = document.getElementById('math-box');
+                mathBox.className = `mt-auto p-4 rounded-xl border ${isFullyShaded ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`;
+                
+                document.getElementById('math-hr').className = `my-2 ${isFullyShaded ? 'border-emerald-200' : 'border-red-200'}`;
+                
+                const mathResultText = document.getElementById('math-result');
+                mathResultText.className = `text-sm font-semibold flex items-center gap-1 ${isFullyShaded ? 'text-emerald-700' : 'text-red-700'}`;
+                document.getElementById('math-res-text').textContent = isFullyShaded ? `Meets P ≥ ${minRequiredProjection.toFixed(2)}m` : `Fails P ≥ ${minRequiredProjection.toFixed(2)}m`;
+                
+                document.getElementById('math-res-icon-check').classList.toggle('hidden', !isFullyShaded);
+                document.getElementById('math-res-icon-alert').classList.toggle('hidden', isFullyShaded);
+            }
+
+            // 4. Update Status Banner
+            const statusBanner = document.getElementById('status-banner');
+            statusBanner.className = `py-3 px-4 rounded-lg shadow-sm flex items-center justify-between transition-colors ${isFullyShaded ? 'bg-emerald-600 text-white' : 'bg-red-500 text-white'}`;
+            
+            document.getElementById('banner-title').textContent = isFullyShaded ? 'SHADED (Compliant)' : 'UNSHADED (Penalized)';
+            
+            if (isExternal) {
+                document.getElementById('banner-desc').textContent = "SHADED - using external device (Clause 5.2.1b)";
+            } else {
+                document.getElementById('banner-desc').textContent = isFullyShaded ? "SHADED - use 'With shading in accordance with 5.2.2' column" : "UNSHADED - use 'With no shading or not in accordance with 5.2.2' column";
+            }
+            
+            document.getElementById('banner-icon-check').classList.toggle('hidden', !isFullyShaded);
+            document.getElementById('banner-icon-alert').classList.toggle('hidden', isFullyShaded);
+
+            // 5. Update Warning Banner & Info Cards
+            document.getElementById('excessive-warning').classList.toggle('hidden', !isExcessive);
+            
+            if (isExternal) {
+                document.getElementById('info-ray').classList.add('hidden');
+                document.getElementById('info-horizontal').classList.add('hidden');
+                document.getElementById('info-external').classList.remove('hidden');
+            } else {
+                document.getElementById('info-ray').classList.remove('hidden');
+                document.getElementById('info-horizontal').classList.remove('hidden');
+                document.getElementById('info-external').classList.add('hidden');
+            }
+
+            // 6. Calculate SVG Geometry
+            const windowTopY = sillY - (height * scale);
+            const overhangTipX = wallX - (projection * scale);
+            const minOverhangTipX = wallX - (minRequiredProjection * scale);
+            
+            // M = P / H --> H = P / M
+            const shadowDropHeight = projection / region.m;
+            const shadowHitY = windowTopY + (shadowDropHeight * scale);
+            const floorShadowX = overhangTipX + (floorY - windowTopY) * region.m;
+
+            // 7. Update SVG DOM Elements
+            
+            // Wall & Window
+            document.getElementById('wall-top').setAttribute('height', windowTopY);
+            document.getElementById('wall-bottom').setAttribute('height', floorY - sillY);
+            
+            const winH = sillY - windowTopY;
+            const windowFrames = ['window-frame', 'window-glare', 'external-louvres'];
+            windowFrames.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    el.setAttribute('y', windowTopY);
+                    el.setAttribute('height', winH);
+                }
+            });
+
+            // Toggle SVG Layers based on strategy
+            if (isExternal) {
+                document.getElementById('external-louvres').classList.remove('hidden');
+                document.getElementById('overhang-group').classList.add('opacity-20'); // dim overhang calculation
+                document.getElementById('dim-p-line1').classList.add('opacity-20');
+                document.getElementById('dim-p-line2').classList.add('opacity-20');
+                document.getElementById('dim-p-line3').classList.add('opacity-20');
+                document.getElementById('dim-p-text').classList.add('opacity-20');
+            } else {
+                document.getElementById('external-louvres').classList.add('hidden');
+                document.getElementById('overhang-group').classList.remove('opacity-20');
+                document.getElementById('dim-p-line1').classList.remove('opacity-20');
+                document.getElementById('dim-p-line2').classList.remove('opacity-20');
+                document.getElementById('dim-p-line3').classList.remove('opacity-20');
+                document.getElementById('dim-p-text').classList.remove('opacity-20');
+            }
+
+            // Target Required Overhang
+            document.getElementById('min-req-path').setAttribute('d', `M ${wallX} ${windowTopY} L ${minOverhangTipX} ${windowTopY}`);
+            
+            const minTick = document.getElementById('min-req-tick');
+            minTick.setAttribute('x1', minOverhangTipX);
+            minTick.setAttribute('y1', windowTopY - 10);
+            minTick.setAttribute('x2', minOverhangTipX);
+            minTick.setAttribute('y2', windowTopY + 10);
+
+            const minText = document.getElementById('min-req-text');
+            minText.setAttribute('x', minOverhangTipX);
+            minText.setAttribute('y', windowTopY - 15);
+
+            // Actual Overhang Rect
+            const actOverhang = document.getElementById('actual-overhang');
+            actOverhang.setAttribute('x', overhangTipX);
+            actOverhang.setAttribute('y', windowTopY - 10);
+            actOverhang.setAttribute('width', wallX - overhangTipX + 20);
+
+            // Sun & Shadow
+            const poly = document.getElementById('shadow-poly');
+            if (shadowHitY > floorY) {
+                poly.setAttribute('points', `${overhangTipX},${windowTopY} ${floorShadowX},${floorY} ${wallX},${floorY} ${wallX},${windowTopY}`);
+            } else {
+                poly.setAttribute('points', `${overhangTipX},${windowTopY} ${wallX},${shadowHitY} ${wallX},${windowTopY}`);
+            }
+
+            const ray = document.getElementById('sun-ray');
+            ray.setAttribute('x1', overhangTipX);
+            ray.setAttribute('y1', windowTopY);
+            ray.setAttribute('x2', shadowHitY > floorY ? floorShadowX : wallX);
+            ray.setAttribute('y2', shadowHitY > floorY ? floorY : shadowHitY);
+
+            // Dimensions: Height
+            const hLine1 = document.getElementById('dim-h-line1');
+            hLine1.setAttribute('x1', wallX + 40); hLine1.setAttribute('y1', windowTopY);
+            hLine1.setAttribute('x2', wallX + 40); hLine1.setAttribute('y2', sillY);
+
+            const hLine2 = document.getElementById('dim-h-line2');
+            hLine2.setAttribute('x1', wallX + 35); hLine2.setAttribute('y1', windowTopY);
+            hLine2.setAttribute('x2', wallX + 45); hLine2.setAttribute('y2', windowTopY);
+
+            const hLine3 = document.getElementById('dim-h-line3');
+            hLine3.setAttribute('x1', wallX + 35); hLine3.setAttribute('y1', sillY);
+            hLine3.setAttribute('x2', wallX + 45); hLine3.setAttribute('y2', sillY);
+
+            const hText = document.getElementById('dim-h-text');
+            hText.setAttribute('x', wallX + 48);
+            hText.setAttribute('y', windowTopY + (height * scale)/2 + 4);
+
+            // Dimensions: Projection
+            const pLine1 = document.getElementById('dim-p-line1');
+            pLine1.setAttribute('x1', overhangTipX); pLine1.setAttribute('y1', windowTopY - 30);
+            pLine1.setAttribute('x2', wallX); pLine1.setAttribute('y2', windowTopY - 30);
+
+            const pLine2 = document.getElementById('dim-p-line2');
+            pLine2.setAttribute('x1', overhangTipX); pLine2.setAttribute('y1', windowTopY - 35);
+            pLine2.setAttribute('x2', overhangTipX); pLine2.setAttribute('y2', windowTopY - 25);
+
+            const pLine3 = document.getElementById('dim-p-line3');
+            pLine3.setAttribute('x1', wallX); pLine3.setAttribute('y1', windowTopY - 35);
+            pLine3.setAttribute('x2', wallX); pLine3.setAttribute('y2', windowTopY - 25);
+
+            const pText = document.getElementById('dim-p-text');
+            pText.setAttribute('x', overhangTipX + (wallX - overhangTipX)/2);
+            pText.setAttribute('y', windowTopY - 38);
+
+            // Annotations
+            document.getElementById('roof-label').setAttribute('x', wallX + 10);
+            document.getElementById('roof-label').setAttribute('y', windowTopY - 15);
+
+            // Red Pulse
+            const pulse = document.getElementById('unshaded-pulse');
+            if (!isFullyShaded && shadowHitY < sillY) {
+                pulse.setAttribute('cx', wallX);
+                pulse.setAttribute('cy', shadowHitY);
+                pulse.classList.remove('hidden');
+            } else {
+                pulse.classList.add('hidden');
+            }
+        }
+
+        // Run on load
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Thermal Simulator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2canvas for robust DOM to PNG Blob generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* Fallback styling for sliders if standard accent colors don't pop enough */
+        input[type=range] { cursor: pointer; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-900 font-sans min-h-screen p-4 md:p-8">
+
+    <div id="capture-area" class="max-w-6xl mx-auto space-y-6 bg-slate-50 p-2 md:p-6 rounded-3xl">
+        
+        <!-- Header -->
+        <header class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold flex items-center gap-2">
+                    <!-- Home Icon -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-blue-600"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Building Thermal Simulator
+                </h1>
+                <p class="text-slate-500 mt-1">Explore how building envelope choices affect indoor temperatures over a 1-week period.</p>
+            </div>
+            <button id="export-btn" data-html2canvas-ignore="true" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm shadow-sm">
+                <!-- Download Icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Export PNG
+            </button>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Controls Panel -->
+            <div class="lg:col-span-4 space-y-6">
+                
+                <!-- Climate Selection -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <!-- Sun Medium Icon -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><circle cx="12" cy="12" r="4"/><path d="M12 3v1"/><path d="M12 20v1"/><path d="M3 12h1"/><path d="M20 12h1"/><path d="m18.364 5.636-.707.707"/><path d="m6.343 17.657-.707.707"/><path d="m5.636 5.636.707.707"/><path d="m17.657 17.657.707.707"/></svg>
+                        Climate Zone
+                        <button onclick="openModal('climate')" class="ml-auto text-slate-400 hover:text-blue-500 transition-colors focus:outline-none" title="Climate Zone Information">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        </button>
+                    </h2>
+                    <div class="grid grid-cols-3 gap-2" id="climate-buttons">
+                        <button data-climate="hot" class="climate-btn flex flex-col items-center p-3 rounded-xl border transition-all bg-white border-slate-200 text-slate-600 hover:bg-slate-50">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                            <span class="text-xs font-medium mt-1">Hot</span>
+                        </button>
+                        <button data-climate="cool" class="climate-btn flex flex-col items-center p-3 rounded-xl border transition-all bg-white border-slate-200 text-slate-600 hover:bg-slate-50">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg>
+                            <span class="text-xs font-medium mt-1">Cool</span>
+                        </button>
+                        <button data-climate="desert" class="climate-btn flex flex-col items-center p-3 rounded-xl border transition-all bg-blue-50 border-blue-200 text-blue-700 shadow-inner">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><circle cx="12" cy="12" r="4"/><path d="M12 3v1"/><path d="M12 20v1"/><path d="M3 12h1"/><path d="M20 12h1"/><path d="m18.364 5.636-.707.707"/><path d="m6.343 17.657-.707.707"/><path d="m5.636 5.636.707.707"/><path d="m17.657 17.657.707.707"/></svg>
+                            <span class="text-xs font-medium mt-1">Desert</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Abstracted Levers -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-6">
+                    <h2 class="text-lg font-semibold flex items-center gap-2">
+                        <!-- Settings Icon -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+                        5 heat gain and loss levers
+                        <button onclick="openModal('levers')" class="ml-auto text-slate-400 hover:text-blue-500 transition-colors focus:outline-none" title="Levers Information">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        </button>
+                    </h2>
+                    
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <label class="text-sm font-medium text-slate-700">1. Windows (Solar Heating)</label>
+                            <span id="lbl-winArea" class="text-sm text-slate-500">15 m&sup2;</span>
+                        </div>
+                        <div class="relative w-full h-5 flex items-center">
+                            <div class="absolute w-full h-1.5 bg-slate-200 rounded-full"></div>
+                            <div id="fill-winArea" class="absolute h-1.5 bg-blue-600 rounded-full transition-all duration-75"></div>
+                            <div id="thumb-winArea" class="absolute w-4 h-4 bg-white border-2 border-blue-600 rounded-full shadow pointer-events-none transition-all duration-75" style="transform: translateX(-50%);"></div>
+                            <input id="in-winArea" type="range" min="0" max="50" step="1" value="15" class="absolute w-full h-full opacity-0 cursor-pointer m-0">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <label class="text-sm font-medium text-slate-700">2. Insulation Quality</label>
+                            <span id="lbl-insulation" class="text-sm text-slate-500">5.0 / 10</span>
+                        </div>
+                        <div class="relative w-full h-5 flex items-center">
+                            <div class="absolute w-full h-1.5 bg-slate-200 rounded-full"></div>
+                            <div id="fill-insulation" class="absolute h-1.5 bg-indigo-500 rounded-full transition-all duration-75"></div>
+                            <div id="thumb-insulation" class="absolute w-4 h-4 bg-white border-2 border-indigo-500 rounded-full shadow pointer-events-none transition-all duration-75" style="transform: translateX(-50%);"></div>
+                            <input id="in-insulation" type="range" min="1.0" max="10.0" step="0.1" value="5.0" class="absolute w-full h-full opacity-0 cursor-pointer m-0">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <label class="text-sm font-medium text-slate-700">3. Thermal Mass (Weight)</label>
+                            <span id="lbl-thermalMass" class="text-sm text-slate-500">5.0 / 10</span>
+                        </div>
+                        <div class="relative w-full h-5 flex items-center">
+                            <div class="absolute w-full h-1.5 bg-slate-200 rounded-full"></div>
+                            <div id="fill-thermalMass" class="absolute h-1.5 bg-stone-500 rounded-full transition-all duration-75"></div>
+                            <div id="thumb-thermalMass" class="absolute w-4 h-4 bg-white border-2 border-stone-500 rounded-full shadow pointer-events-none transition-all duration-75" style="transform: translateX(-50%);"></div>
+                            <input id="in-thermalMass" type="range" min="1.0" max="10.0" step="0.1" value="5.0" class="absolute w-full h-full opacity-0 cursor-pointer m-0">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <label class="text-sm font-medium text-slate-700">4. Ventilation (Drafts)</label>
+                            <span id="lbl-ventilation" class="text-sm text-slate-500">0.5 ACH</span>
+                        </div>
+                        <div class="relative w-full h-5 flex items-center">
+                            <div class="absolute w-full h-1.5 bg-slate-200 rounded-full"></div>
+                            <div id="fill-ventilation" class="absolute h-1.5 bg-teal-500 rounded-full transition-all duration-75"></div>
+                            <div id="thumb-ventilation" class="absolute w-4 h-4 bg-white border-2 border-teal-500 rounded-full shadow pointer-events-none transition-all duration-75" style="transform: translateX(-50%);"></div>
+                            <input id="in-ventilation" type="range" min="0.1" max="5.0" step="0.1" value="0.5" class="absolute w-full h-full opacity-0 cursor-pointer m-0">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <label class="text-sm font-medium text-slate-700 flex items-center gap-1">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 text-yellow-500"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                5. Internal Heat (People/Tech)
+                            </label>
+                            <span id="lbl-internalHeat" class="text-sm text-slate-500">150 W</span>
+                        </div>
+                        <div class="relative w-full h-5 flex items-center">
+                            <div class="absolute w-full h-1.5 bg-slate-200 rounded-full"></div>
+                            <div id="fill-internalHeat" class="absolute h-1.5 bg-yellow-500 rounded-full transition-all duration-75"></div>
+                            <div id="thumb-internalHeat" class="absolute w-4 h-4 bg-white border-2 border-yellow-500 rounded-full shadow pointer-events-none transition-all duration-75" style="transform: translateX(-50%);"></div>
+                            <input id="in-internalHeat" type="range" min="0" max="1000" step="50" value="150" class="absolute w-full h-full opacity-0 cursor-pointer m-0">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Results Panel -->
+            <div class="lg:col-span-8 flex flex-col gap-6">
+                
+                <!-- Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex items-center gap-4">
+                        <div class="p-3 bg-red-100 text-red-600 rounded-full">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-slate-500 font-medium">Peak Temp</p>
+                            <p id="stat-peak" class="text-2xl font-bold text-slate-800">--&deg;C</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex items-center gap-4">
+                        <div class="p-3 bg-blue-100 text-blue-600 rounded-full">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-slate-500 font-medium">Lowest Temp</p>
+                            <p id="stat-min" class="text-2xl font-bold text-slate-800">--&deg;C</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex items-center gap-4">
+                        <div class="p-3 bg-green-100 text-green-600 rounded-full">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-slate-500 font-medium">Comfort Score</p>
+                            <p id="stat-comfort" class="text-2xl font-bold text-slate-800">--%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex-grow min-h-[400px] flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-lg font-semibold">Stabilized 24-Hour Forecast</h2>
+                        <div class="flex items-center gap-4 text-sm">
+                            <div class="flex items-center gap-1.5"><div class="w-4 h-1 bg-red-500 rounded-full"></div> Indoor</div>
+                            <div class="flex items-center gap-1.5"><div class="w-4 border-t-2 border-dashed border-slate-400"></div> Outdoor</div>
+                            <div class="flex items-center gap-1.5"><div class="w-3 h-3 bg-green-300 rounded-sm"></div> Comfort Zone</div>
+                        </div>
+                    </div>
+                    <div id="chart-container" class="w-full flex-grow relative">
+                        <!-- SVG chart injected via JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Area -->
+    <footer class="max-w-6xl mx-auto mt-8 px-2 md:px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
+        <p>&copy; 2026 <a href="https://peterleroux.co.za/sans-10400-xa/" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline transition-colors font-medium">Peter le Roux</a></p>
+        <a href="https://www.cpdcentral.co.za/courses/mastering-sans-10400-XA" target="_blank" class="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 px-4 py-2 rounded-lg font-medium transition-colors">
+            Sign up for deemed-to-satisfy CPD course
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+    </footer>
+
+    <!-- Info Modal -->
+    <div id="info-modal" data-html2canvas-ignore="true" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 relative transform scale-95 transition-transform duration-300" id="info-modal-content">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 focus:outline-none">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <h3 id="modal-title" class="text-xl font-bold mb-4 text-slate-800">Title</h3>
+            <div id="modal-body" class="text-slate-600 space-y-4 text-sm leading-relaxed">
+                <!-- Content injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Application State ---
+        const state = {
+            climate: 'desert',
+            winArea: 15,
+            insulation: 5.0,
+            thermalMass: 5.0,
+            ventilation: 0.5,
+            internalHeat: 150
+        };
+
+        // --- DOM Elements binding ---
+        const UI = {
+            climateBtns: document.querySelectorAll('.climate-btn'),
+            lblWinArea: document.getElementById('lbl-winArea'),
+            lblInsulation: document.getElementById('lbl-insulation'),
+            lblThermalMass: document.getElementById('lbl-thermalMass'),
+            lblVentilation: document.getElementById('lbl-ventilation'),
+            lblInternalHeat: document.getElementById('lbl-internalHeat'),
+            statPeak: document.getElementById('stat-peak'),
+            statMin: document.getElementById('stat-min'),
+            statComfort: document.getElementById('stat-comfort'),
+            chartContainer: document.getElementById('chart-container')
+        };
+
+        // --- Formatting Helpers ---
+        const format1 = (num) => Number(num).toFixed(1);
+        
+        // --- Physics Engine ---
+        function runSimulation() {
+            const hours = 337; // Simulate 14 full days + 1 hour
+            const dt = 3600; 
+            
+            const C_eff = state.thermalMass * 1000000;
+            const wallR = 0.5 + ((state.insulation - 1) / 9) * 7.5;
+            const roofR = 0.5 + ((state.insulation - 1) / 9) * 9.5;
+            const winU = 4.0 - ((state.insulation - 1) / 9) * 3.0;
+            const winSHGC = 0.5;
+
+            const floorArea = 100;
+            const A_roof = floorArea;
+            const volume = 300;
+            const total_wall = 120;
+            const A_wall = Math.max(0, total_wall - state.winArea);
+
+            const airVolumetricHeatCapacity = 1200;
+            const infiltrationConductance = (state.ventilation * volume * airVolumetricHeatCapacity) / 3600;
+
+            let T_in = 22;
+            const results = [];
+
+            for (let h = 0; h < hours; h++) {
+                const timeOfDay = h % 24;
+
+                let peakT, minT;
+                if (state.climate === 'hot') {
+                    peakT = 29; minT = 17;
+                } else if (state.climate === 'cool') {
+                    peakT = 20; minT = 10;
+                } else {
+                    peakT = 36; minT = 12; // Desert
+                }
+
+                const shift = timeOfDay - 16;
+                const T_out = minT + ((peakT - minT) / 2) * (1 + Math.cos((shift * Math.PI) / 12));
+
+                let solarIrradiance = 0;
+                if (timeOfDay >= 6 && timeOfDay <= 18) {
+                    const solarShift = timeOfDay - 12;
+                    solarIrradiance = 500 * Math.cos((solarShift * Math.PI) / 12);
+                }
+
+                const U_wall = 1 / wallR;
+                const U_roof = 1 / roofR;
+                const K_total = (U_wall * A_wall) + (U_roof * A_roof) + (winU * state.winArea) + infiltrationConductance;
+                
+                const Q_internal = state.internalHeat;
+                const windowOrientationFactor = 0.3;
+                const Q_solar = solarIrradiance * (state.winArea * windowOrientationFactor) * winSHGC;
+
+                const T_eq = T_out + ((Q_solar + Q_internal) / K_total);
+                const decay = Math.exp((-K_total * dt) / C_eff);
+                T_in = T_eq + (T_in - T_eq) * decay;
+
+                results.push({ hour: h, T_out, T_in });
+            }
+            
+            // Extract final 25 hours
+            const sliced = results.slice(-25).map((d, i) => ({ ...d, displayHour: i }));
+            return sliced;
+        }
+
+        // --- Chart Rendering (SVG) ---
+        function renderChartSVG(data) {
+            const width = 800;
+            const height = 300;
+            const padding = { top: 20, right: 20, bottom: 40, left: 50 };
+            const chartW = width - padding.left - padding.right;
+            const chartH = height - padding.top - padding.bottom;
+
+            const maxTemp = Math.max(45, Math.ceil(Math.max(...data.map(d => Math.max(d.T_in, d.T_out))) / 5) * 5);
+            const minTemp = Math.min(0, Math.floor(Math.min(...data.map(d => Math.min(d.T_in, d.T_out))) / 5) * 5);
+
+            const getX = (displayHour) => padding.left + (displayHour / 24) * chartW;
+            const getY = (temp) => padding.top + chartH - ((temp - minTemp) / (maxTemp - minTemp)) * chartH;
+
+            const comfortTop = getY(26);
+            const comfortBottom = getY(20);
+
+            const tOutPath = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(d.displayHour)} ${getY(d.T_out)}`).join(' ');
+            const tInPath = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(d.displayHour)} ${getY(d.T_in)}`).join(' ');
+
+            let svgStr = `<svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" class="overflow-visible" xmlns="http://www.w3.org/2000/svg">`;
+            
+            // Comfort zone rect
+            svgStr += `<rect x="${padding.left}" y="${comfortTop}" width="${chartW}" height="${comfortBottom - comfortTop}" fill="#22c55e" fill-opacity="0.2" />`;
+
+            // Y-Axis
+            for(let t = minTemp; t <= maxTemp; t+=5) {
+                const y = getY(t);
+                svgStr += `
+                    <g>
+                        <line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#e5e7eb" stroke-dasharray="${t === 0 ? "0" : "4"}" stroke-width="${t === 0 ? 2 : 1}" />
+                        <text x="${padding.left - 10}" y="${y + 4}" text-anchor="end" font-size="12" fill="#6b7280">${t}&deg;</text>
+                    </g>
+                `;
+            }
+
+            // X-Axis
+            const xLabels = [
+                { h: 0, label: '12 AM' }, { h: 4, label: '4 AM' }, { h: 8, label: '8 AM' },
+                { h: 12, label: '12 PM' }, { h: 16, label: '4 PM' }, { h: 20, label: '8 PM' },
+                { h: 24, label: '12 AM' }
+            ];
+            xLabels.forEach(mark => {
+                const x = getX(mark.h);
+                svgStr += `
+                    <g>
+                        <line x1="${x}" y1="${padding.top}" x2="${x}" y2="${height - padding.bottom}" stroke="#f3f4f6" />
+                        <text x="${x}" y="${height - padding.bottom + 20}" text-anchor="middle" font-size="12" fill="#6b7280">${mark.label}</text>
+                    </g>
+                `;
+            });
+
+            // Data Lines
+            svgStr += `<path d="${tOutPath}" fill="none" stroke="#9ca3af" stroke-width="2" stroke-dasharray="6 4" />`;
+            svgStr += `<path d="${tInPath}" fill="none" stroke="#ef4444" stroke-width="3" />`;
+            svgStr += `</svg>`;
+
+            return svgStr;
+        }
+
+        // --- Core Update Loop ---
+        function updateApp() {
+            // Update UI Labels
+            UI.lblWinArea.innerHTML = `${state.winArea} m&sup2;`;
+            UI.lblInsulation.innerText = `${format1(state.insulation)} / 10`;
+            UI.lblThermalMass.innerText = `${format1(state.thermalMass)} / 10`;
+            UI.lblVentilation.innerText = `${format1(state.ventilation)} ACH`;
+            UI.lblInternalHeat.innerText = `${state.internalHeat} W`;
+
+            // Update Custom Sliders Visuals
+            const sliderConfigs = [
+                { id: 'winArea', min: 0, max: 50 },
+                { id: 'insulation', min: 1, max: 10 },
+                { id: 'thermalMass', min: 1, max: 10 },
+                { id: 'ventilation', min: 0.1, max: 5 },
+                { id: 'internalHeat', min: 0, max: 1000 }
+            ];
+
+            sliderConfigs.forEach(cfg => {
+                const val = state[cfg.id];
+                const pct = ((val - cfg.min) / (cfg.max - cfg.min)) * 100;
+                document.getElementById(`fill-${cfg.id}`).style.width = `${pct}%`;
+                document.getElementById(`thumb-${cfg.id}`).style.left = `${pct}%`;
+            });
+
+            // Run Math
+            const simData = runSimulation();
+
+            // Calculate Stats (on first 24 hrs to avoid double counting midnight)
+            let max = -100, min = 100, comfortHours = 0;
+            const dayData = simData.slice(0, 24);
+            dayData.forEach(d => {
+                if (d.T_in > max) max = d.T_in;
+                if (d.T_in < min) min = d.T_in;
+                if (d.T_in >= 20 && d.T_in <= 26) comfortHours++;
+            });
+
+            UI.statPeak.innerHTML = `${format1(max)}&deg;C`;
+            UI.statMin.innerHTML = `${format1(min)}&deg;C`;
+            UI.statComfort.innerText = `${Math.round((comfortHours / 24) * 100)}%`;
+
+            // Render Chart
+            UI.chartContainer.innerHTML = renderChartSVG(simData);
+        }
+
+        // --- Event Listeners Setup ---
+        
+        // 1. Climate Buttons
+        UI.climateBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const targetBtn = e.currentTarget;
+                state.climate = targetBtn.dataset.climate;
+                
+                // Reset styling on all
+                UI.climateBtns.forEach(b => {
+                    b.className = "climate-btn flex flex-col items-center p-3 rounded-xl border transition-all bg-white border-slate-200 text-slate-600 hover:bg-slate-50";
+                });
+                
+                // Highlight active
+                targetBtn.className = "climate-btn flex flex-col items-center p-3 rounded-xl border transition-all bg-blue-50 border-blue-200 text-blue-700 shadow-inner";
+                
+                updateApp();
+            });
+        });
+
+        // 2. Sliders
+        const sliders = ['winArea', 'insulation', 'thermalMass', 'ventilation', 'internalHeat'];
+        sliders.forEach(key => {
+            document.getElementById(`in-${key}`).addEventListener('input', (e) => {
+                state[key] = parseFloat(e.target.value);
+                updateApp();
+            });
+        });
+
+        // 3. Export to PNG via Blob
+        document.getElementById('export-btn').addEventListener('click', () => {
+            const btn = document.getElementById('export-btn');
+            const captureArea = document.getElementById('capture-area');
+            
+            // Temporary UI state for capture (button itself is ignored by html2canvas)
+            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...`;
+            btn.style.opacity = "0.8";
+            btn.disabled = true;
+
+            // Use html2canvas to render the DOM cleanly into a canvas
+            html2canvas(captureArea, {
+                scale: 2, // High resolution
+                backgroundColor: "#f8fafc" // bg-slate-50
+            }).then(canvas => {
+                // Convert to blob for download maximum compatibility
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `thermal_simulation_${new Date().getTime()}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    // Restore UI
+                    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Export PNG`;
+                    btn.style.opacity = "1";
+                    btn.disabled = false;
+                }, 'image/png');
+            });
+        });
+
+        // --- Modal Logic ---
+        const modalData = {
+            climate: {
+                title: "Climate Zone Constraints",
+                body: `
+                    <p><strong>Hot Climate:</strong> Average 23&deg;C. The main challenge is removing internal heat and blocking the sun. You need shading (small windows) and ventilation to flush heat out.</p>
+                    <p><strong>Cool Climate:</strong> Average 15&deg;C. The goal is to trap heat. You need large windows to capture solar gain, excellent insulation to keep it in, and high thermal mass to store daytime heat for the cold nights.</p>
+                    <p><strong>Desert Climate:</strong> Average 24&deg;C. The overall average is comfortable, but the swings are extreme (36&deg;C day, 12&deg;C night). Heavy thermal mass is critical here to flatten the temperature curve, acting as a thermal battery.</p>
+                `
+            },
+            levers: {
+                title: "The 5 Design Levers",
+                body: `
+                    <p><strong>1. Windows (Solar Heating):</strong> Determines how much solar radiation enters the building during the day.</p>
+                    <p><strong>2. Insulation Quality:</strong> Controls the resistance to heat flow through walls and roof. Higher values slow down heat transfer.</p>
+                    <p><strong>3. Thermal Mass (Weight):</strong> Heavy materials (like concrete/stone) absorb heat slowly and release it slowly, flattening temperature extremes. Light materials respond quickly.</p>
+                    <p><strong>4. Ventilation (Drafts):</strong> Swaps indoor air with outdoor air. Essential for cooling down a hot building, but detrimental if you want to keep a cool building warm.</p>
+                    <p><strong>5. Internal Heat:</strong> Simulates the constant heat given off by occupants, lights, and appliances.</p>
+                `
+            }
+        };
+
+        function openModal(type) {
+            const modal = document.getElementById('info-modal');
+            document.getElementById('modal-title').innerText = modalData[type].title;
+            document.getElementById('modal-body').innerHTML = modalData[type].body;
+            modal.classList.remove('hidden');
+            // Small delay for CSS transitions
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('info-modal-content').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('info-modal');
+            modal.classList.add('opacity-0');
+            document.getElementById('info-modal-content').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Close modal on click outside
+        document.getElementById('info-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'info-modal') {
+                closeModal();
+            }
+        });
+
+        // --- Initialization ---
+        updateApp();
+
+    </script>
+</body>
+</html>
