@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XA Express | XA 2026 3rd Edition Deemed-to-Satisfy Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.23.10/babel.min.js"></script>
+  <style>
+    body { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    @media print { 
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } 
+  body { background-color: white; } 
+  .page-break { page-break-before: always; break-before: page; margin-top: 40px; padding-top: 20px; border-top: 2px dashed #cbd5e1; } 
+}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // --- ICONS ---
+    const Plus = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>;
+    const Trash2 = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>;
+    const ArrowUp = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>;
+    const ArrowDown = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>;
+    const GripVertical = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>;
+    const CheckCircle = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>;
+    const XCircle = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>;
+    const FileText = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>;
+    const X = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>;
+    const Layers = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>;
+    const GridIcon = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
+    const Sun = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>;
+    const Thermometer = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>;
+    const MapPin = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>;
+    const Building = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></svg>;
+    const Maximize = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>;
+    const Layout = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>;
+    const Globe = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>;
+    const AlertTriangle = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>;
+    const Settings = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>;
+    const HelpCircle = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"></path></svg>;
+    const ExternalLink = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"></path></svg>;
+    const Droplet = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>;
+    const Wand = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 4 2 2"></path><path d="m17.7 5.2-1.2 1.2"></path><path d="m2.1 21.9 8.8-8.8"></path><path d="m10.1 13.1 3.8-3.8"></path><path d="m13.9 9.3 2.5-2.5"></path><path d="m20.1 3.9-2.4 2.4"></path><path d="m21.9 2.1-1.8 1.8"></path><path d="M8.8 14.9 3.1 20.6"></path><path d="m4.4 19.1 1.5 1.5"></path><path d="m6.1 17.4 1.5 1.5"></path><path d="m16.2 4.1 3.7 3.7"></path></svg>;
+
+    // --- COMPRESSED CONFIGURATIONS ---
+    const BUILD_VERSION = "2.0.0 (Stable Full PDF Rendering)";
+    const FENESTRATION_TARGETS = [{maxRatio:20,maxU:null,maxShgcUnshaded:null,maxShgcShaded:null},{maxRatio:25,maxU:5.20,maxShgcUnshaded:0.66,maxShgcShaded:0.49},{maxRatio:30,maxU:4.40,maxShgcUnshaded:0.53,maxShgcShaded:0.44},{maxRatio:35,maxU:3.80,maxShgcUnshaded:0.49,maxShgcShaded:0.40},{maxRatio:40,maxU:3.30,maxShgcUnshaded:0.35,maxShgcShaded:0.44},{maxRatio:45,maxU:3.00,maxShgcUnshaded:0.40,maxShgcShaded:0.33},{maxRatio:50,maxU:2.60,maxShgcUnshaded:0.35,maxShgcShaded:0.30},{maxRatio:55,maxU:2.40,maxShgcUnshaded:0.33,maxShgcShaded:0.28},{maxRatio:60,maxU:2.20,maxShgcUnshaded:0.30,maxShgcShaded:0.25},{maxRatio:100,maxU:2.00,maxShgcUnshaded:0.28,maxShgcShaded:0.22}];
+    const getFenestrationTargets = (r) => r <= 0 ? FENESTRATION_TARGETS[0] : (FENESTRATION_TARGETS.find(t => r <= t.maxRatio) || FENESTRATION_TARGETS[9]);
+    const LIGHTING_LIMITS={'A1':2,'A2':8,'A3':10,'A4':4,'C1':10,'C2':4,'E1':4,'E2':8,'E3':8,'E4':8,'F1':20,'F2':8,'F3':8,'G1':8,'H1':4,'H2':4,'H3':4,'H4':4,'H5':4,'J1':2,'J2':2,'J3':2,'J4':2};
+    const HVAC_EQUIPMENT_TYPES=[{id:'through_wall',name:'Through-the-wall consoles (< 7kW)',getLimits:()=>({copC:2.8,copH:1.0,reqHeating:true})},{id:'unitary_split',name:'Unitary splits',getLimits:(kw)=>{if(kw<7)return{copC:3.0,copH:3.2,reqHeating:true};if(kw<40)return{copC:2.9,copH:3.0,reqHeating:true};if(kw<70)return{copC:2.8,copH:2.9,reqHeating:true};return{copC:2.7,copH:2.8,reqHeating:true}}},{id:'air_cooled_packaged',name:'Air-cooled packaged & split units',getLimits:(kw)=>{if(kw<40)return{copC:3.3,copH:3.5,reqHeating:true};return{copC:3.2,copH:3.3,reqHeating:true}}},{id:'water_cooled_packaged',name:'Water-cooled packaged units',getLimits:()=>({copC:3.2,copH:3.3,reqHeating:true})},{id:'air_cooled_chiller',name:'Air-cooled water chillers',getLimits:()=>({copC:2.8,copH:null,reqHeating:false})},{id:'air_cooled_hp_chiller',name:'Air-cooled heat pump chillers',getLimits:()=>({copC:2.8,copH:3.0,reqHeating:true})},{id:'water_cooled_pos_disp',name:'Water-cooled, pos. displacement chillers',getLimits:(kw)=>{if(kw<528)return{copC:4.4,copH:null,reqHeating:false};if(kw<1055)return{copC:4.9,copH:null,reqHeating:false};return{copC:5.4,copH:null,reqHeating:false}}},{id:'water_cooled_centrifugal',name:'Water-cooled, centrifugal chillers',getLimits:(kw)=>{if(kw<1055)return{copC:5.3,copH:null,reqHeating:false};return{copC:5.9,copH:null,reqHeating:false}}}];
+    const WATER_DEMAND_RATES=[{label:"H4/H3 - Dwelling House (All other)",rate:115},{label:"H4/H3 - Dwelling House (Category 1)",rate:64},{label:"H1/H5 - Hotel / Hospitality",rate:140},{label:"H2 - Dormitory",rate:100},{label:"E3/E4 - Institutional / Health Care",rate:120},{label:"E2 - Hospital (General/Clinic w/beds)",rate:130},{label:"E2 - Day Hospital",rate:65},{label:"G1 - Office (with canteens)",rate:28},{label:"G1/F1/F2/F3/A3/C1/C2 - Commercial",rate:10},{label:"A1/A2 - Entertainment/Sport (Active)",rate:40},{label:"A1/A2 - Entertainment/Sport (Sedentary)",rate:10},{label:"E1 - Detention (Awaiting trial)",rate:140},{label:"E1 - Detention (Convicted)",rate:52}];
+    const WINDOW_PRESETS=[{name:'Clear (Aluminium)',uValue:7.90,shgc:0.81,type:'single'},{name:'Clear (Timber/uPVC)',uValue:5.60,shgc:0.76,type:'single'},{name:'Low-E (Aluminium)',uValue:5.50,shgc:0.65,type:'single_low_e'},{name:'Low-E (Timber/uPVC)',uValue:4.50,shgc:0.60,type:'single_low_e'},{name:'Double Glazed Clear (Aluminium)',uValue:4.50,shgc:0.70,type:'double'},{name:'Double Glazed Low-E (uPVC)',uValue:2.80,shgc:0.55,type:'double'}];
+    const MATERIAL_PRESETS=[{name:'Custom Material',type:'material',kValue:0.1,density:1000,specificHeat:1000},{name:'Custom Resistance / Air Gap',type:'resistance',rValue:0.18,density:1.2,specificHeat:1000},{name:'Clay Brick (Solid)',type:'material',kValue:0.77,density:1700,specificHeat:800,defaultThickness:110},{name:'Concrete Plaster / Render',type:'material',kValue:1.20,density:1800,specificHeat:1000,defaultThickness:15},{name:'EPS Insulation',type:'material',kValue:0.038,density:15,specificHeat:1450,defaultThickness:40},{name:'Glasswool Insulation',type:'material',kValue:0.040,density:12,specificHeat:840,defaultThickness:50},{name:'Corrugated Steel Sheeting',type:'resistance',rValue:0.01,density:7850,specificHeat:450,defaultThickness:1},{name:'Concrete Roof Tile',type:'material',kValue:1.50,density:2100,specificHeat:1000,defaultThickness:15},{name:'Unventilated Air Gap',type:'resistance',rValue:0.18,rValueUp:0.18,rValueDown:0.25,density:1.2,specificHeat:1000,defaultThickness:25},{name:'Ceramic Floor Tiles',type:'material',kValue:1.30,density:2000,specificHeat:800,defaultThickness:10},{name:'Concrete (Dense)',type:'material',kValue:1.40,density:2400,specificHeat:1000,defaultThickness:100},{name:'Compacted Fill / Hardcore',type:'material',kValue:1.30,density:1900,specificHeat:1000,defaultThickness:150},{name:'Soil / Earth',type:'material',kValue:1.50,density:1500,specificHeat:1000,defaultThickness:100},{name:'Reflective Foil (Radiant Barrier)',type:'resistance',rValue:0.0,rValueUp:0.40,rValueDown:0.92,density:100,specificHeat:1000,defaultThickness:1},{name:'Gypsum Plasterboard (Ceiling)',type:'material',kValue:0.25,density:900,specificHeat:1000,defaultThickness:10}];
+    const CLIMATE_ZONES=[{id:'1',name:'Zone 1: Cold Interior'},{id:'2',name:'Zone 2: Temperate Interior'},{id:'3',name:'Zone 3: Hot Interior'},{id:'4',name:'Zone 4: Temperate Coastal'},{id:'5',name:'Zone 5: Sub-Tropical Coastal'},{id:'5H',name:'Zone 5H: High Humidity'},{id:'6',name:'Zone 6: Hot Arid'},{id:'7',name:'Zone 7: Warm Temperate'}];
+    const OCCUPANCY_CLASSES=[{id:'A1',name:'A1 - Entertainment'},{id:'A2',name:'A2 - Theatrical/Sport'},{id:'A3',name:'A3 - Instruction'},{id:'A4',name:'A4 - Worship'},{id:'A5',name:'A5 - Outdoor sport'},{id:'B1',name:'B1 - High risk commercial'},{id:'B2',name:'B2 - Moderate risk commercial'},{id:'B3',name:'B3 - Low risk commercial'},{id:'C1',name:'C1 - Exhibition hall'},{id:'C2',name:'C2 - Museum'},{id:'D1',name:'D1 - High risk industrial'},{id:'D2',name:'D2 - Mod risk industrial'},{id:'D3',name:'D3 - Low risk industrial'},{id:'D4',name:'D4 - Plant room'},{id:'E1',name:'E1 - Detention'},{id:'E2',name:'E2 - Hospital'},{id:'E3',name:'E3 - Institutional'},{id:'E4',name:'E4 - Health care'},{id:'F1',name:'F1 - Large shop'},{id:'F2',name:'F2 - Small shop'},{id:'F3',name:'F3 - Wholesalers'},{id:'G1',name:'G1 - Offices'},{id:'H1',name:'H1 - Hotel'},{id:'H2',name:'H2 - Dormitory'},{id:'H3',name:'H3 - Domestic residence'},{id:'H4',name:'H4 - Dwelling house'},{id:'H5',name:'H5 - Hospitality work'},{id:'J1',name:'J1 - High risk storage'},{id:'J2',name:'J2 - Mod risk storage'},{id:'J3',name:'J3 - Low risk storage'},{id:'J4',name:'J4 - Parking garage'}];
+    const SA_TOWNS=[{name:'Beaufort West',zone:'6',lat:32.3,sccp:false},{name:'Bloemfontein',zone:'1',lat:29.1,sccp:false},{name:'Cape Town',zone:'4',lat:33.9,sccp:false},{name:'Durban',zone:'5H',lat:29.9,sccp:false},{name:'East London',zone:'4',lat:33.0,sccp:false},{name:'George',zone:'7',lat:33.9,sccp:true},{name:'Gqeberha (PE)',zone:'4',lat:33.9,sccp:true},{name:'Johannesburg',zone:'1',lat:26.2,sccp:false},{name:'Kimberley',zone:'6',lat:28.7,sccp:false},{name:'Klerksdorp',zone:'1',lat:26.8,sccp:false},{name:'Knysna',zone:'7',lat:34.0,sccp:true},{name:'Mahikeng',zone:'2',lat:25.8,sccp:false},{name:'Mbombela',zone:'3',lat:25.4,sccp:false},{name:'Mossel Bay',zone:'7',lat:34.1,sccp:true},{name:'Mthatha',zone:'4',lat:31.5,sccp:false},{name:'Pietermaritzburg',zone:'2',lat:29.6,sccp:false},{name:'Polokwane',zone:'2',lat:23.9,sccp:false},{name:'Pretoria',zone:'2',lat:25.7,sccp:false},{name:'Richards Bay',zone:'5H',lat:28.7,sccp:false},{name:'Rustenburg',zone:'2',lat:25.6,sccp:false},{name:'Upington',zone:'6',lat:28.4,sccp:false},{name:'Vereeniging',zone:'1',lat:26.6,sccp:false}];
+function App() {
+      const [activeTab, setActiveTab] = useState('project');
+      const [projectInfo, setProjectInfo] = useState({ projectName:'', projectType:'new', location:'Johannesburg', customLocation:false, latitude:26.2, isSccp:false, storeys:1, standNumber: '', township: '', zone:'1', occupancy:'H4' });
+      const [isExempt, setIsExempt] = useState(false);
+      
+      useEffect(() => { setIsExempt(['J3', 'A5', 'D4'].includes(projectInfo.occupancy)); }, [projectInfo.occupancy]);
+
+      const [spaces, setSpaces] = useState([{ id: 'sp-1', name: 'Main Living Area', storey: 0, area: 150 }]);
+      const [skylights, setSkylights] = useState([]);
+      const [lightingFixtures, setLightingFixtures] = useState([{ id: 'lf-1', spaceId: 'sp-1', name: 'LED Downlight', type: 'LED', qty: 12, watts: 8 }]);
+      const [hvacExempt, setHvacExempt] = useState(false);
+      const [hvacEquipment, setHvacEquipment] = useState([{ id: 'hvac-1', name: 'Main Office AC', type: 'unitary_split', capacity: 12, copC: 3.2, copH: 3.3, resViolation: false }]);
+      const [waterExempt, setWaterExempt] = useState(false);
+      const [waterPop, setWaterPop] = useState(4);
+      const [waterRate, setWaterRate] = useState(115); 
+      const [waterEquipment, setWaterEquipment] = useState([{ id: 'weq-1', name: 'Solar Water Heater', yield: 200 }]);
+      const [waterPipes, setWaterPipes] = useState([{ id: 'wp-1', reference: 'Main Hot Water Ring', diameter: 22, insulated: true }]);
+
+      const [officeInfo, setOfficeInfo] = useState({ companyName: '', registeredProfessional: '', sacapNumber: '', logoDataUrl: '' });
+      const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+      const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+
+      useEffect(() => {
+        const saved = localStorage.getItem('sans10400_office_config');
+        if (saved) { try { setOfficeInfo(JSON.parse(saved)); } catch (e) {} }
+      }, []);
+
+      useEffect(() => { localStorage.setItem('sans10400_office_config', JSON.stringify(officeInfo)); }, [officeInfo]);
+
+      const handleOfficeUpdate = (field, value) => setOfficeInfo(prev => ({ ...prev, [field]: value }));
+      const handleLogoUpload = (e) => { 
+        const file = e.target.files[0]; 
+        if (!file) return; 
+        if (file.size > 1024 * 1024) { alert("File is too large! Please select an image under 1MB to ensure the browser can save it to memory."); e.target.value = ''; return; }
+        const reader = new FileReader(); reader.onload = (evt) => handleOfficeUpdate('logoDataUrl', evt.target.result); reader.readAsDataURL(file); 
+      };
+
+      const derivedFloorAreas = useMemo(() => {
+        const areas = Array(projectInfo.storeys).fill(0);
+        spaces.forEach(sp => { if (sp.storey < projectInfo.storeys) areas[sp.storey] += (parseFloat(sp.area) || 0); });
+        return areas;
+      }, [spaces, projectInfo.storeys]);
+      const totalFloorArea = derivedFloorAreas.reduce((a, b) => a + b, 0);
+
+      const handleProjectUpdate = (field, value) => setProjectInfo(prev => ({ ...prev, [field]: value }));
+      const handleLocationChange = (e) => {
+        const val = e.target.value;
+        if (val === 'CUSTOM') { setProjectInfo(prev => ({ ...prev, location: '', customLocation: true })); return; }
+        const matched = SA_TOWNS.find(t => t.name === val);
+        if (matched) setProjectInfo(prev => ({ ...prev, location: matched.name, customLocation: false, zone: matched.zone, latitude: matched.lat, isSccp: matched.sccp }));
+      };
+      const handleStoreysChange = (val) => {
+        const count = Math.max(1, parseInt(val) || 1);
+        setProjectInfo(prev => ({ ...prev, storeys: count }));
+        setSpaces(prev => prev.map(s => s.storey >= count ? { ...s, storey: count - 1 } : s));
+        setFenestration(prev => ({ ...prev, windows: prev.windows.map(w => w.storey >= count ? { ...w, storey: count - 1 } : w) }));
+      };
+
+      const addSpace = () => setSpaces(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), name: `New Space ${prev.length + 1}`, storey: 0, area: 50 }]);
+      const updateSpace = (id, field, value) => setSpaces(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
+      const removeSpace = (id) => { setSpaces(prev => prev.filter(s => s.id !== id)); setSkylights(prev => prev.filter(sk => sk.spaceId !== id)); setLightingFixtures(prev => prev.filter(lf => lf.spaceId !== id)); };
+
+      const zone = projectInfo.zone;
+      const occupancy = projectInfo.occupancy;
+
+      const [floorType, setFloorType] = useState('ground'); 
+      const [floorHeating, setFloorHeating] = useState(false);
+      const [isPitchedRoof, setIsPitchedRoof] = useState(true);
+
+      const [assemblies, setAssemblies] = useState({
+        walls: [{ id: 'wall-1', name: 'External Cavity Wall', includeSurfaces: true, layers: [{ id: 'w1', name: 'Concrete Plaster / Render', type: 'material', thickness: 20, kValue: 1.20, rValue: 0, density: 1800, specificHeat: 1000 }, { id: 'w2', name: 'Clay Brick (Solid)', type: 'material', thickness: 115, kValue: 0.77, rValue: 0, density: 1700, specificHeat: 800 }, { id: 'w3', name: 'Unventilated Air Gap / Cavity', type: 'resistance', thickness: 50, rValue: 0.18, density: 1.2, specificHeat: 1000 }, { id: 'w4', name: 'Clay Brick (Solid)', type: 'material', thickness: 115, kValue: 0.77, rValue: 0, density: 1700, specificHeat: 800 }, { id: 'w5', name: 'Concrete Plaster / Render', type: 'material', thickness: 20, kValue: 1.20, rValue: 0, density: 1800, specificHeat: 1000 }] }],
+        roofs: { includeSurfaces: true, layers: [{ id: 'r1', name: 'Concrete Roof Tile', type: 'material', thickness: 15, kValue: 1.50, rValue: 0, density: 2100, specificHeat: 1000 }, { id: 'r2', name: 'Unventilated Air Gap / Cavity', type: 'resistance', thickness: 20, rValue: 0.18, rValueUp: 0.18, rValueDown: 0.25, density: 1.2, specificHeat: 1000 }, { id: 'r3', name: 'Reflective Foil (Radiant Barrier)', type: 'resistance', thickness: 1, rValue: 0, rValueUp: 0.40, rValueDown: 0.92, density: 100, specificHeat: 1000 }, { id: 'r4', name: 'Unventilated Air Gap / Cavity', type: 'resistance', thickness: 50, rValue: 0.18, rValueUp: 0.18, rValueDown: 0.25, density: 1.2, specificHeat: 1000 }, { id: 'r5', name: 'Glasswool Insulation', type: 'material', thickness: 50, kValue: 0.040, rValue: 0, density: 12, specificHeat: 840 }, { id: 'r6', name: 'Gypsum Plasterboard (Ceiling)', type: 'material', thickness: 10, kValue: 0.25, rValue: 0, density: 900, specificHeat: 1000 }] },
+        floors: { includeSurfaces: true, layers: [{ id: 'f1', name: 'Concrete (Dense)', type: 'material', thickness: 150, kValue: 1.40, rValue: 0, density: 2400, specificHeat: 1000 }] }
+      });
+      const [activeWallIndex, setActiveWallIndex] = useState(0);
+      const [fenestration, setFenestration] = useState({
+        windows: [{ id: 'win1', reference: 'W1', storey: 0, name: 'Lounge Double Door', qty: 1, width: 2.4, height: 2.1, uValue: 5.20, shgc: 0.60, shadingStatus: 'unshaded', glazingType: 'single_low_e' }, { id: 'win2', reference: 'W2', storey: 0, name: 'Bedroom Windows', qty: 3, width: 1.2, height: 1.2, uValue: 5.20, shgc: 0.60, shadingStatus: 'south', glazingType: 'single_low_e' }]
+      });
+
+      const calculateAssemblyPhysics = (layerArray, type, incSurfaces, pitched = false, fType = 'ground', fHeating = false) => {
+        let sumR = 0, sumR_up = 0, sumR_down = 0, sumMass = 0, sumSurfaceMass = 0;
+        let p = {};
+        if (type === 'roofs') p = { flow: 'Upward & Downward', rSe: 0.04, rSiUp: 0.10, rSiDown: 0.16 };
+        else if (type === 'floors') { const fDown = !fHeating && fType === 'ground'; p = { flow: fDown ? 'Downward' : 'Upward', rSe: fType === 'ground' ? 0.00 : 0.04, rSi: fDown ? 0.17 : 0.10 }; } 
+        else { p = { flow: 'Horizontal', rSe: 0.04, rSi: 0.13 }; }
+
+        if (incSurfaces) { if (type === 'roofs') { sumR_up += p.rSe + p.rSiUp; sumR_down += p.rSe + p.rSiDown; } else { sumR += p.rSe + p.rSi; } }
+        layerArray.forEach(layer => {
+          const thicknessM = (layer.thickness || 0) / 1000;
+          if (layer.type === 'material') { const r = layer.kValue > 0 ? thicknessM / layer.kValue : 0; sumR += r; sumR_up += r; sumR_down += r; } 
+          else {
+            const rStd = parseFloat(layer.rValue) || 0; let rUp = layer.rValueUp !== undefined ? layer.rValueUp : rStd; let rDown = layer.rValueDown !== undefined ? layer.rValueDown : rStd;
+            if (type === 'roofs' && pitched) { if (layer.rValueUpPitched !== undefined) rUp = layer.rValueUpPitched; if (layer.rValueDownPitched !== undefined) rDown = layer.rValueDownPitched; }
+            sumR += rStd; sumR_up += rUp; sumR_down += rDown;
+          }
+          sumMass += (thicknessM * (layer.density || 0) * (layer.specificHeat || 0)) / 1000;
+          sumSurfaceMass += thicknessM * (layer.density || 0);
+        });
+        return { R: sumR, R_up: sumR_up, R_down: sumR_down, mass: sumMass, surfaceMass: sumSurfaceMass };
+      };
+
+      const getTargetRequirements = (type, surfaceMass, projZone, fType, fHeating) => {
+        if (type === 'walls') return { R: surfaceMass >= 270 ? (['3','5','5H'].includes(projZone) ? 0.4 : 0.6) : (['3','4','5','5H'].includes(projZone) ? 1.9 : 2.2), R_up: 0, R_down: 0 };
+        if (type === 'roofs') { const rt = { '1':{up:3.7,down:3.7}, '2':{up:3.7,down:3.7}, '3':{up:3.7,down:0}, '4':{up:3.7,down:3.7}, '5':{up:0,down:3.7}, '5H':{up:0,down:2.7}, '6':{up:3.7,down:3.7}, '7':{up:3.7,down:3.7} }; return { R: 0, R_up: rt[projZone]?.up||0, R_down: rt[projZone]?.down||0 }; }
+        if (type === 'floors') { let r = 0; if (fHeating) r = 1.0; else if (fType === 'suspended') r = ['1','2','6','7'].includes(projZone) ? 1.5 : 1.0; return { R: r, R_up: r, R_down: r }; }
+        return { R: 0, R_up: 0, R_down: 0 };
+      };
+
+      const currentAssembly = activeTab === 'walls' ? (assemblies.walls[activeWallIndex] || assemblies.walls[0]) : ['roofs', 'floors'].includes(activeTab) ? assemblies[activeTab] : null;
+      const layers = currentAssembly?.layers || [];
+      const includeSurfaces = currentAssembly?.includeSurfaces ?? true;
+      const params = activeTab === 'roofs' ? { flow: 'Upward & Downward', outLabel: 'OUTSIDE (ROOF)', inLabel: 'INSIDE (CEILING)', isVertical: false, rSe: 0.04, rSiUp: 0.10, rSiDown: 0.16 } : activeTab === 'floors' ? { flow: (!floorHeating && floorType === 'ground') ? 'Downward' : 'Upward', outLabel: 'INSIDE (TOP)', inLabel: floorType === 'ground' ? 'OUTSIDE (GROUND)' : 'OUTSIDE (CRAWLSPACE)', isVertical: false, rSe: floorType === 'ground' ? 0.00 : 0.04, rSi: (!floorHeating && floorType === 'ground') ? 0.17 : 0.10 } : { flow: 'Horizontal', outLabel: 'OUTSIDE', inLabel: 'INSIDE', isVertical: true, rSe: 0.04, rSi: 0.13 };
+      
+      const [totals, setTotals] = useState({ R: 0, R_up: 0, R_down: 0, mass: 0, surfaceMass: 0, lag: 0 });
+      useEffect(() => { if (!['walls', 'roofs', 'floors'].includes(activeTab)) return; setTotals(calculateAssemblyPhysics(layers, activeTab, includeSurfaces, isPitchedRoof, floorType, floorHeating)); }, [layers, includeSurfaces, activeTab, floorType, floorHeating, isPitchedRoof]);
+
+      const fenestrationData = useMemo(() => {
+        let globalWinArea = 0; let globalUA = 0; let globalSHGCA = 0; let globalUnshadedArea = 0; let globalShadedArea = 0; let sccpViolation = false;
+        const storeys = derivedFloorAreas.map((floorArea, index) => {
+          const storeyWindows = fenestration.windows.filter(w => w.storey === index);
+          let totalWinArea = 0; let sumUA = 0; let sumSHGCA = 0; let unshadedArea = 0; let shadedArea = 0;
+          storeyWindows.forEach(win => {
+            const winArea = (win.width * win.height) * win.qty; totalWinArea += winArea; sumUA += winArea * win.uValue;
+            if (projectInfo.isSccp && win.glazingType === 'single_low_e') sccpViolation = true;
+            if (win.shadingStatus !== 'south') { sumSHGCA += winArea * win.shgc; if (win.shadingStatus === 'unshaded') unshadedArea += winArea; if (win.shadingStatus === 'shaded') shadedArea += winArea; }
+          });
+          const ratio = floorArea > 0 ? (totalWinArea / floorArea) * 100 : 0; const aggU = totalWinArea > 0 ? sumUA / totalWinArea : 0; const aggSHGC = totalWinArea > 0 ? sumSHGCA / totalWinArea : 0; 
+          const tier = getFenestrationTargets(ratio); const exempt = ratio <= 20; let blendedMaxSHGC = null;
+          if (!exempt) { const activeArea = unshadedArea + shadedArea; blendedMaxSHGC = activeArea > 0 ? ((unshadedArea * tier.maxShgcUnshaded) + (shadedArea * tier.maxShgcShaded)) / activeArea : 1.0; }
+          const isCompliant = exempt ? true : (aggU <= tier.maxU && aggSHGC <= blendedMaxSHGC);
+          globalWinArea += totalWinArea; globalUA += sumUA; globalSHGCA += sumSHGCA; globalUnshadedArea += unshadedArea; globalShadedArea += shadedArea;
+          return { storeyIndex: index, floorArea, windows: storeyWindows, totalWinArea, unshadedArea, shadedArea, ratio, aggU, aggSHGC, maxU: tier.maxU, maxSHGC: blendedMaxSHGC, exempt, isCompliant };
+        });
+        const globalRatio = totalFloorArea > 0 ? (globalWinArea / totalFloorArea) * 100 : 0; const globalAggU = globalWinArea > 0 ? globalUA / globalWinArea : 0; const globalAggSHGC = globalWinArea > 0 ? globalSHGCA / globalWinArea : 0;
+        const globalTier = getFenestrationTargets(globalRatio); const globalExempt = globalRatio <= 20; let globalBlendedMaxSHGC = null;
+        if (!globalExempt) { const activeGlobalArea = globalUnshadedArea + globalShadedArea; globalBlendedMaxSHGC = activeGlobalArea > 0 ? ((globalUnshadedArea * globalTier.maxShgcUnshaded) + (globalShadedArea * globalTier.maxShgcShaded)) / activeGlobalArea : 1.0; }
+        let globalCompliant = globalExempt ? true : (globalAggU <= globalTier.maxU && globalAggSHGC <= globalBlendedMaxSHGC); if (sccpViolation) globalCompliant = false;
+        return { storeys, sccpViolation, global: { totalWinArea: globalWinArea, ratio: globalRatio, aggU: globalAggU, aggSHGC: globalAggSHGC, maxU: globalTier.maxU, maxSHGC: globalBlendedMaxSHGC, exempt: globalExempt, isCompliant: globalCompliant } };
+      }, [fenestration.windows, derivedFloorAreas, totalFloorArea, projectInfo.isSccp]);
+
+      const skylightData = useMemo(() => {
+        let globalSkylightArea = 0; let anySpaceFailed = false;
+        const processedSpaces = spaces.map(space => {
+          const spaceSkylights = skylights.filter(s => s.spaceId === space.id);
+          let totalSkyArea = 0; let sumUA = 0; let sumSHGCA = 0;
+          spaceSkylights.forEach(sky => { const area = sky.qty * sky.width * sky.height; totalSkyArea += area; sumUA += area * sky.uValue; sumSHGCA += area * sky.shgc; });
+          const ratio = space.area > 0 ? (totalSkyArea / space.area) * 100 : 0; const aggU = totalSkyArea > 0 ? sumUA / totalSkyArea : 0; const aggSHGC = totalSkyArea > 0 ? sumSHGCA / totalSkyArea : 0;
+          let maxU = null, maxSHGC = null, exempt = false;
+          if (ratio <= 1.5) { exempt = true; } else if (ratio <= 3.0) { maxU = 5.8; maxSHGC = 0.75; } else if (ratio <= 5.0) { maxU = 5.8; maxSHGC = 0.50; } else if (ratio <= 10.0) { maxU = 2.7; maxSHGC = 0.25; } else { maxU = 2.0; maxSHGC = 0.25; }
+          const isCompliant = exempt ? true : (aggU <= maxU && aggSHGC <= maxSHGC); if (!isCompliant && spaceSkylights.length > 0) anySpaceFailed = true;
+          globalSkylightArea += totalSkyArea;
+          return { ...space, skylights: spaceSkylights, totalSkyArea, ratio, aggU, aggSHGC, maxU, maxSHGC, exempt, isCompliant };
+        });
+        const globalRatio = totalFloorArea > 0 ? (globalSkylightArea / totalFloorArea) * 100 : 0;
+        return { spaces: processedSpaces, global: { totalSkyArea: globalSkylightArea, ratio: globalRatio, isCompliant: !anySpaceFailed } }
+      }, [spaces, skylights, totalFloorArea]);
+
+      const lightingData = useMemo(() => {
+        const targetLPD = LIGHTING_LIMITS[projectInfo.occupancy] || 0; let globalWatts = 0; let allLedCfl = true; let hasFixtures = lightingFixtures.length > 0;
+        const processedSpaces = spaces.map(space => {
+          const spaceFixtures = lightingFixtures.filter(f => f.spaceId === space.id); let spaceWatts = 0;
+          spaceFixtures.forEach(f => { spaceWatts += (f.qty * f.watts); if (f.type === 'Other') allLedCfl = false; });
+          globalWatts += spaceWatts; const spaceLpd = space.area > 0 ? spaceWatts / space.area : 0; return { ...space, fixtures: spaceFixtures, spaceWatts, spaceLpd };
+        });
+        const globalLpd = totalFloorArea > 0 ? globalWatts / totalFloorArea : 0; const isResidentialExempt = ['H3', 'H4'].includes(projectInfo.occupancy) && allLedCfl && hasFixtures;
+        const isCompliant = isResidentialExempt ? true : (globalLpd <= targetLPD);
+        return { spaces: processedSpaces, globalWatts, globalLpd, targetLPD, isResidentialExempt, isCompliant, hasFixtures };
+      }, [spaces, lightingFixtures, totalFloorArea, projectInfo.occupancy]);
+
+      const hvacData = useMemo(() => {
+        if (hvacExempt) return { isCompliant: true, globalStatus: 'Exempt', equipment: [] }; let anyFailed = false;
+        const processed = hvacEquipment.map(eq => {
+          const typeDef = HVAC_EQUIPMENT_TYPES.find(t => t.id === eq.type) || HVAC_EQUIPMENT_TYPES[0]; const limits = typeDef.getLimits(eq.capacity || 0);
+          let passC = eq.copC >= limits.copC; let passH = !limits.reqHeating || (eq.copH >= limits.copH); let resistanceFail = eq.resViolation && (eq.capacity >= 10);
+          let isCompliant = passC && passH && !resistanceFail; if (!isCompliant) anyFailed = true;
+          return { ...eq, limits, passC, passH, resistanceFail, isCompliant };
+        });
+        return { equipment: processed, isCompliant: !anyFailed && hvacEquipment.length > 0, hasEquipment: hvacEquipment.length > 0 };
+      }, [hvacEquipment, hvacExempt]);
+
+      const waterData = useMemo(() => {
+        if (waterExempt) return { isCompliant: true, totalDemand: 0, targetYield: 0, totalYield: 0, pipesCompliant: true };
+        const totalDemand = waterPop * waterRate; const targetYield = totalDemand * 0.5; const totalYield = waterEquipment.reduce((acc, eq) => acc + (parseFloat(eq.yield) || 0), 0);
+        const yieldCompliant = totalDemand === 0 ? true : totalYield >= targetYield; const pipesCompliant = waterPipes.length > 0 ? waterPipes.every(p => p.insulated) : true;
+        return { totalDemand, targetYield, totalYield, yieldCompliant, pipesCompliant, isCompliant: yieldCompliant && pipesCompliant };
+      }, [waterPop, waterRate, waterEquipment, waterPipes, waterExempt]);
+
+      const targets = useMemo(() => getTargetRequirements(activeTab, totals.surfaceMass, zone, floorType, floorHeating), [activeTab, totals.surfaceMass, zone, projectInfo.occupancy, floorType, floorHeating]);
+      const isCompliant = activeTab === 'roofs' ? (totals.R_up >= targets.R_up && totals.R_down >= targets.R_down) : activeTab === 'fenestration' ? fenestrationData.global.isCompliant : activeTab === 'skylights' ? skylightData.global.isCompliant : activeTab === 'water' ? waterData.isCompliant : (totals.R >= targets.R);
+      const totalThickness = layers.reduce((acc, l) => acc + Number(l.thickness || 0), 0);
+
+      const updateCurrentAssembly = (updater) => { setAssemblies(prev => { if (activeTab === 'walls') { const newWalls = [...prev.walls]; newWalls[activeWallIndex] = updater(newWalls[activeWallIndex]); return { ...prev, walls: newWalls }; } else { return { ...prev, [activeTab]: updater(prev[activeTab]) }; } }); };
+      
+      const handleLayerAction = (action, id, field, value, index) => {
+        updateCurrentAssembly(prev => {
+          let newLayers = [...prev.layers];
+          if (action === 'add') newLayers.push({ id: Math.random().toString(36).substr(2, 9), name: 'Custom Material', type: 'material', thickness: 50, kValue: 0.1, rValue: 0, density: 1000, specificHeat: 1000 });
+          else if (action === 'remove') newLayers = newLayers.filter(l => l.id !== id);
+          else if (action === 'update') newLayers = newLayers.map(l => l.id === id ? { ...l, [field]: value } : l);
+          else if (action === 'move') {
+            if (value === 'up' && index > 0) [newLayers[index - 1], newLayers[index]] = [newLayers[index], newLayers[index - 1]];
+            else if (value === 'down' && index < newLayers.length - 1) [newLayers[index + 1], newLayers[index]] = [newLayers[index], newLayers[index + 1]];
+          }
+          else if (action === 'preset') {
+            const preset = MATERIAL_PRESETS.find(p => p.name === value);
+            if (preset) newLayers = newLayers.map(l => l.id === id ? { ...l, ...preset, thickness: preset.defaultThickness || l.thickness } : l);
+          }
+          return { ...prev, layers: newLayers };
+        });
+      };
+
+      const toggleSurfaces = (checked) => updateCurrentAssembly(prev => ({ ...prev, includeSurfaces: checked }));
+      const addWallType = () => { setAssemblies(prev => ({ ...prev, walls: [...prev.walls, { id: Math.random().toString(36).substr(2, 9), name: `External Cavity Wall ${prev.walls.length + 1}`, includeSurfaces: true, layers: [ { id: Math.random().toString(36).substr(2, 9), name: 'Concrete Plaster / Render', type: 'material', thickness: 20, kValue: 1.20, rValue: 0, density: 1800, specificHeat: 1000 }, { id: Math.random().toString(36).substr(2, 9), name: 'Clay Brick (Solid)', type: 'material', thickness: 115, kValue: 0.77, rValue: 0, density: 1700, specificHeat: 800 }, { id: Math.random().toString(36).substr(2, 9), name: 'Unventilated Air Gap / Cavity', type: 'resistance', thickness: 50, rValue: 0.18, density: 1.2, specificHeat: 1000 }, { id: Math.random().toString(36).substr(2, 9), name: 'Clay Brick (Solid)', type: 'material', thickness: 115, kValue: 0.77, rValue: 0, density: 1700, specificHeat: 800 }, { id: Math.random().toString(36).substr(2, 9), name: 'Concrete Plaster / Render', type: 'material', thickness: 20, kValue: 1.20, rValue: 0, density: 1800, specificHeat: 1000 } ] }] })); setActiveWallIndex(assemblies.walls.length); };
+      const removeWallType = (indexToRemove) => { if (assemblies.walls.length <= 1) return; setAssemblies(prev => ({ ...prev, walls: prev.walls.filter((_, idx) => idx !== indexToRemove) })); if (activeWallIndex >= indexToRemove && activeWallIndex > 0) setActiveWallIndex(prev => prev - 1); };
+      const updateWallName = (name) => setAssemblies(prev => { const newWalls = [...prev.walls]; newWalls[activeWallIndex] = { ...newWalls[activeWallIndex], name }; return { ...prev, walls: newWalls }; });
+
+      const solveCompliance = (layerId) => {
+        const layer = layers.find(l => l.id === layerId);
+        if (!layer || layer.type !== 'material' || layer.kValue <= 0) return;
+        let gap = activeTab === 'roofs' ? Math.max(targets.R_up - totals.R_up, targets.R_down - totals.R_down) : targets.R - totals.R;
+        if (gap <= 0) return;
+        const additionalThicknessMm = gap * layer.kValue * 1000;
+        const newThickness = Math.ceil((layer.thickness + additionalThicknessMm) / 5) * 5; 
+        handleLayerAction('update', layerId, 'thickness', newThickness);
+      };
+
+      const handleGlazingAction = (tab, action, id, field, value) => {
+        if (tab === 'windows') {
+          setFenestration(prev => {
+            let newWindows = [...prev.windows];
+            if (action === 'add') newWindows.push({ id: Math.random().toString(36).substr(2, 9), reference: `W${newWindows.length + 1}`, storey: value, name: 'New Window', qty: 1, width: 1.0, height: 1.0, uValue: 5.20, shgc: 0.60, shadingStatus: 'unshaded', glazingType: 'single_low_e' });
+            else if (action === 'remove') newWindows = newWindows.filter(w => w.id !== id);
+            else if (action === 'update') newWindows = newWindows.map(w => w.id === id ? { ...w, [field]: value } : w);
+            else if (action === 'preset') {
+              const preset = WINDOW_PRESETS.find(p => p.name === value);
+              if (preset) newWindows = newWindows.map(w => w.id === id ? { ...w, uValue: preset.uValue, shgc: preset.shgc, glazingType: preset.type } : w);
+            }
+            return { ...prev, windows: newWindows };
+          });
+        } else if (tab === 'skylights') {
+          setSkylights(prev => {
+            let newSkylights = [...prev];
+            if (action === 'add') newSkylights.push({ id: Math.random().toString(36).substr(2, 9), reference: `S${newSkylights.length + 1}`, spaceId: value, name: 'New Skylight', qty: 1, width: 1.0, height: 1.0, uValue: 5.80, shgc: 0.75 });
+            else if (action === 'remove') newSkylights = newSkylights.filter(s => s.id !== id);
+            else if (action === 'update') newSkylights = newSkylights.map(s => s.id === id ? { ...s, [field]: value } : s);
+            else if (action === 'preset') {
+              const preset = WINDOW_PRESETS.find(p => p.name === value);
+              if (preset) newSkylights = newSkylights.map(s => s.id === id ? { ...s, uValue: preset.uValue, shgc: preset.shgc } : s);
+            }
+            return newSkylights;
+          });
+        }
+      };
+
+      const handleHvacAction = (action, id, field, value) => {
+        setHvacEquipment(prev => {
+          let newHvac = [...prev];
+          if (action === 'add') newHvac.push({ id: Math.random().toString(36).substr(2, 9), name: `AC Unit ${newHvac.length + 1}`, type: 'unitary_split', capacity: 10, copC: 3.0, copH: 3.0, resViolation: false });
+          else if (action === 'remove') newHvac = newHvac.filter(h => h.id !== id);
+          else if (action === 'update') newHvac = newHvac.map(h => h.id === id ? { ...h, [field]: value } : h);
+          return newHvac;
+        });
+      };
+
+      const handleWaterAction = (type, action, id, field, value) => {
+        const setter = type === 'equipment' ? setWaterEquipment : setWaterPipes;
+        setter(prev => {
+          let newData = [...prev];
+          if (action === 'add') {
+            if (type === 'equipment') newData.push({ id: Math.random().toString(36).substr(2, 9), name: `Solar / Heat Pump`, yield: 150 });
+            else newData.push({ id: Math.random().toString(36).substr(2, 9), reference: `Pipe Loop`, diameter: 22, insulated: true });
+          }
+          else if (action === 'remove') newData = newData.filter(item => item.id !== id);
+          else if (action === 'update') newData = newData.map(item => item.id === id ? { ...item, [field]: value } : item);
+          return newData;
+        });
+      };
+
+      const handleLightingAction = (action, id, field, value) => {
+        setLightingFixtures(prev => {
+          let newData = [...prev];
+          if (action === 'add') newData.push({ id: Math.random().toString(36).substr(2, 9), spaceId: value, name: 'New Fixture', type: 'LED', qty: 1, watts: 10 });
+          else if (action === 'remove') newData = newData.filter(f => f.id !== id);
+          else if (action === 'update') newData = newData.map(f => f.id === id ? { ...f, [field]: value } : f);
+          return newData;
+        });
+      };
+
+      const getLayerStyle = (name) => {
+        const n = (name || '').toLowerCase();
+        if (n.includes('foil') || n.includes('radiant')) return { backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '2px dashed #ef4444' };
+        if (n.includes('brick')) return { backgroundColor: '#bd5b3b' };
+        if (n.includes('plaster') || n.includes('render') || n.includes('screed')) return { backgroundColor: '#d4d4d8' };
+        if (n.includes('concrete')) return { backgroundColor: '#94a3b8' };
+        if (n.includes('insulation') || n.includes('eps') || n.includes('xps') || n.includes('glasswool')) return { backgroundColor: '#fef08a' };
+        if (n.includes('air') || n.includes('space') || n.includes('cavity')) return { backgroundColor: '#eff6ff', backgroundImage: 'radial-gradient(#93c5fd 1px, transparent 1px)', backgroundSize: '8px 8px' };
+        if (n.includes('board') || n.includes('gypsum')) return { backgroundColor: '#e7e5e4' };
+        if (n.includes('steel') || n.includes('iron')) return { backgroundColor: '#64748b' };
+        if (n.includes('timber') || n.includes('wood')) return { backgroundColor: '#d97706' };
+        return { backgroundColor: '#e2e8f0' };
+      };
+
+      const generateVisualizerHtml = (layersToRender, incSurfaces, isVert, outLbl, inLbl) => {
+          const totThick = layersToRender.reduce((acc, l) => acc + Number(l.thickness || 0), 0);
+          
+          let html = `<div style="width: 100%; display: flex; border: 2px solid #cbd5e1; border-radius: 8px; overflow: hidden; background-color: #f8fafc; margin-bottom: 20px; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); ${isVert ? 'height: 150px; flex-direction: row;' : 'height: 250px; flex-direction: column;'}">`;
+
+          if (incSurfaces) {
+              html += `<div style="${isVert ? 'width: 30px; border-right: 1px solid #e2e8f0;' : 'height: 25px; border-bottom: 1px solid #e2e8f0;'} background-color: #eff6ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <div style="color: #3b82f6; font-weight: bold; font-size: 8px; letter-spacing: 1px; text-align: center; width: 100%; ${isVert ? 'writing-mode: vertical-rl; transform: rotate(180deg);' : ''}">${outLbl}</div>
+              </div>`;
+          }
+
+          layersToRender.forEach(layer => {
+              const r = totThick > 0 ? (layer.thickness / totThick) * 100 : 0;
+              const bg = getLayerStyle(layer.name);
+              
+              let sStr = Object.entries(bg).map(([k, v]) => {
+                  const kb = k.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+                  return `${kb}: ${v};`;
+              }).join(' ');
+
+              html += `<div style="${sStr} position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; flex-grow: ${layer.thickness}; flex-basis: ${r}%; ${isVert ? `border-right: 1px solid rgba(15,23,42,0.1); min-width: ${layer.thickness > 0 ? '24px' : '0'}; height: 100%;` : `border-bottom: 1px solid rgba(15,23,42,0.1); min-height: ${layer.thickness > 0 ? '24px' : '0'}; width: 100%;`}">`;
+              
+              if (layer.thickness >= 5) {
+                  html += `<div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 4px;">
+                      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 280px; max-width: 280px; text-align: center; ${isVert ? 'transform: rotate(-90deg);' : ''}">
+                          <span style="font-size: 10px; font-weight: bold; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${layer.name}</span>
+                          <span style="font-size: 9px; font-weight: bold; color: #64748b; margin-top: 2px;">${layer.thickness}mm</span>
+                      </div>
+                  </div>`;
+              }
+              html += `</div>`;
+          });
+
+          if (incSurfaces) {
+              html += `<div style="${isVert ? 'width: 30px; border-left: 1px solid #e2e8f0;' : 'height: 25px; border-top: 1px solid #e2e8f0;'} background-color: #eff6ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <div style="color: #3b82f6; font-weight: bold; font-size: 8px; letter-spacing: 1px; text-align: center; width: 100%; ${isVert ? 'writing-mode: vertical-rl; transform: rotate(180deg);' : ''}">${inLbl}</div>
+              </div>`;
+          }
+
+          html += `</div>`;
+          return html;
+      };
+
+      const getTabHTML = (tab) => {
+        if (isExempt) return `<div class="box"><h2 style="color:#059669; margin:0;">EXEMPT PROJECT</h2><p>Occupancy Class ${occupancy} is exempt from SANS 10400-XA calculations per Clause 4.2.</p></div>`;
+        let h = '';
+        if (tab === 'walls') {
+            h += '<h2>Walls Assembly Schedule</h2>';
+            assemblies.walls.forEach(w => {
+                const phys = calculateAssemblyPhysics(w.layers, 'walls', w.includeSurfaces);
+                const tgt = getTargetRequirements('walls', phys.surfaceMass, zone);
+                const pass = phys.R >= tgt.R;
+                h += `<div class="box" style="margin-bottom:20px;">
+                    <h4>${w.name}</h4>
+                    <p>Class: ${phys.surfaceMass >= 270 ? 'Heavyweight' : 'Lightweight'}</p>
+                    <p>Target R-Value: ${tgt.R.toFixed(2)}</p>
+                    <p>Total R-Value: <span class="${pass?'pass':'fail'}">${phys.R.toFixed(2)}</span></p>
+                    <h4 style="margin-top:15px; margin-bottom:5px; font-size:12px; color:#64748b; text-transform:uppercase;">Assembly Cross-Section</h4>
+                    ${generateVisualizerHtml(w.layers, w.includeSurfaces, true, 'OUTSIDE', 'INSIDE')}
+                </div>`;
+            });
+        }
+        else if (tab === 'roofs') {
+            const p = calculateAssemblyPhysics(assemblies.roofs.layers, 'roofs', assemblies.roofs.includeSurfaces, isPitchedRoof);
+            const t = getTargetRequirements('roofs', 0, zone);
+            const pass = p.R_up >= t.R_up && p.R_down >= t.R_down;
+            h += `<h2>Roof Assembly Schedule</h2><div class="box"><p>Profile: ${isPitchedRoof ? 'Pitched' : 'Flat'}</p><table><tr><th>Direction</th><th>Target R</th><th>Total R</th></tr><tr><td>WINTER (Up)</td><td>${t.R_up.toFixed(2)}</td><td>${p.R_up.toFixed(2)}</td></tr><tr><td>SUMMER (Down)</td><td>${t.R_down.toFixed(2)}</td><td>${p.R_down.toFixed(2)}</td></tr></table><p class="${pass?'pass':'fail'}">Status: ${pass?'COMPLIANT':'NON-COMPLIANT'}</p>
+            <h4 style="margin-top:15px; margin-bottom:5px; font-size:12px; color:#64748b; text-transform:uppercase;">Assembly Cross-Section</h4>
+            ${generateVisualizerHtml(assemblies.roofs.layers, assemblies.roofs.includeSurfaces, false, 'OUTSIDE (ROOF)', 'INSIDE (CEILING)')}
+            </div>`;
+        }
+        else if (tab === 'floors') {
+            const p = calculateAssemblyPhysics(assemblies.floors.layers, 'floors', assemblies.floors.includeSurfaces, false, floorType, floorHeating);
+            const t = getTargetRequirements('floors', 0, zone, floorType, floorHeating);
+            const pass = p.R >= t.R;
+            h += `<h2>Floor Assembly Schedule</h2><div class="box"><p>System: ${floorType === 'suspended' ? 'Suspended Slab' : 'Slab on Ground'} ${floorHeating ? '(Heated)' : ''}</p><p>Target R-Value: ${t.R.toFixed(2)}</p><p>Total R-Value: <span class="${pass?'pass':'fail'}">${p.R.toFixed(2)}</span></p>
+            <h4 style="margin-top:15px; margin-bottom:5px; font-size:12px; color:#64748b; text-transform:uppercase;">Assembly Cross-Section</h4>
+            ${generateVisualizerHtml(assemblies.floors.layers, assemblies.floors.includeSurfaces, false, 'INSIDE (TOP)', floorType === 'ground' ? 'OUTSIDE (GROUND)' : 'OUTSIDE (CRAWLSPACE)')}
+            </div>`;
+        }
+        else if (tab === 'fenestration') {
+            h += '<h2>Fenestration Schedule</h2>';
+            if (fenestrationData.global.totalWinArea === 0) return h + '<p>No fenestration specified.</p>';
+            const g = fenestrationData.global;
+            h += `<div class="box"><p>Total Area: ${g.totalWinArea.toFixed(2)} m² (${g.ratio.toFixed(1)}%)</p><p>Global U: ${g.aggU.toFixed(2)}</p><p>Global SHGC: ${g.aggSHGC.toFixed(2)}</p><p class="${g.isCompliant?'pass':'fail'}">Status: ${g.isCompliant?'COMPLIANT':'NON-COMPLIANT'}</p></div>`;
+            fenestrationData.storeys.filter(s => s.windows.length > 0).forEach(s => {
+                h += `<div class="storey-header">Storey ${s.storeyIndex + 1}</div><table><thead><tr><th>Ref</th><th>Description</th><th>Shading</th><th>Qty</th><th>W x H</th><th>Area (m²)</th><th>U</th><th>SHGC</th></tr></thead><tbody>`;
+                s.windows.forEach(w => { h += `<tr><td>${w.reference}</td><td>${w.name}</td><td style="text-transform:capitalize;">${w.shadingStatus}</td><td>${w.qty}</td><td>${w.width}x${w.height}</td><td>${(w.qty*w.width*w.height).toFixed(2)}</td><td>${w.uValue.toFixed(2)}</td><td>${w.shadingStatus==='south'?'0.00':w.shgc.toFixed(2)}</td></tr>`; });
+                h += `</tbody></table>`;
+            });
+        }
+        else if (tab === 'skylights') {
+            h += '<h2>Skylights Schedule</h2>';
+            if (skylightData.global.totalSkyArea === 0) return h + '<p>No skylights specified.</p>';
+            h += `<div class="box"><p>Total Area: ${skylightData.global.totalSkyArea.toFixed(2)} m² (${skylightData.global.ratio.toFixed(1)}%)</p><p class="${skylightData.global.isCompliant?'pass':'fail'}">Status: ${skylightData.global.isCompliant?'ALL SPACES COMPLIANT':'NON-COMPLIANT SPACES FOUND'}</p></div>`;
+            skylightData.spaces.filter(s => s.skylights.length > 0).forEach(s => {
+                h += `<div class="storey-header">${s.name}</div><table><thead><tr><th>Ref</th><th>Description</th><th>Qty</th><th>W x H</th><th>Area (m²)</th><th>U</th><th>SHGC</th></tr></thead><tbody>`;
+                s.skylights.forEach(sky => { h += `<tr><td>${sky.reference}</td><td>${sky.name}</td><td>${sky.qty}</td><td>${sky.width}x${sky.height}</td><td>${(sky.qty*sky.width*sky.height).toFixed(2)}</td><td>${sky.uValue.toFixed(2)}</td><td>${sky.shgc.toFixed(2)}</td></tr>`; });
+                h += `</tbody></table>`;
+            });
+        }
+        else if (tab === 'lighting') {
+            h += '<h2>Lighting Power Density Schedule</h2>';
+            if (!lightingData.hasFixtures) return h + '<p>No fixtures specified.</p>';
+            h += `<div class="box"><p>Total Power: ${lightingData.globalWatts.toFixed(1)} W</p><p>Global LPD: ${lightingData.globalLpd.toFixed(2)} W/m²</p><p>Target: ${lightingData.targetLPD} W/m²</p><p class="${lightingData.isCompliant || lightingData.isResidentialExempt?'pass':'fail'}">Status: ${lightingData.isCompliant || lightingData.isResidentialExempt?'COMPLIANT':'NON-COMPLIANT'}</p></div>`;
+            lightingData.spaces.filter(s => s.fixtures.length > 0).forEach(s => {
+                h += `<div class="storey-header">${s.name}</div><table><thead><tr><th>Description</th><th>Type</th><th>Qty</th><th>Watts</th><th>Total</th></tr></thead><tbody>`;
+                s.fixtures.forEach(f => { h += `<tr><td>${f.name}</td><td>${f.type}</td><td>${f.qty}</td><td>${f.watts} W</td><td>${(f.qty*f.watts).toFixed(1)} W</td></tr>`; });
+                h += `</tbody></table>`;
+            });
+        }
+        else if (tab === 'water') {
+            h += '<h2>Water Heating Schedule</h2>';
+            if (waterExempt) return h + '<div class="box"><p class="pass">EXEMPT (No Hot Water Services Installed)</p></div>';
+            h += `<div class="box"><p>Total Demand: ${waterData.totalDemand.toFixed(1)} L/day</p><p>Target 50% Yield: ${waterData.targetYield.toFixed(1)} L/day</p><p>Alternative Yield: ${waterData.totalYield.toFixed(1)} L/day</p><p class="${waterData.isCompliant?'pass':'fail'}">Status: ${waterData.isCompliant?'COMPLIANT':'NON-COMPLIANT'}</p></div>`;
+            if (waterEquipment.length > 0) {
+                h += `<table><thead><tr><th>Ref</th><th>Description</th><th>Yield (L/day)</th></tr></thead><tbody>`;
+                waterEquipment.forEach(eq => h += `<tr><td>${eq.id.substring(0,6)}</td><td>${eq.name}</td><td>${eq.yield} L</td></tr>`);
+                h += `</tbody></table>`;
+            }
+            h += `<h3>Pipe Insulation Schedule (SANS 10252-1)</h3>`;
+            if (waterPipes.length > 0) {
+                h += `<table><thead><tr><th>Reference</th><th>Diameter (mm)</th><th>Target R-Value</th><th>Compliant</th></tr></thead><tbody>`;
+                waterPipes.forEach(p => {
+                    const reqR = p.diameter <= 80 ? 1.00 : 1.50;
+                    h += `<tr><td>${p.reference}</td><td>${p.diameter} mm</td><td>R-${reqR.toFixed(2)}</td><td class="${p.insulated?'pass':'fail'}">${p.insulated?'YES':'NO'}</td></tr>`;
+                });
+                h += `</tbody></table>`;
+            } else {
+                h += `<p>No pipes specified.</p>`;
+            }
+        }
+        else if (tab === 'hvac') {
+            h += '<h2>HVAC Equipment Efficiency Schedule</h2>';
+            if (hvacExempt) return h + '<div class="box"><p class="pass">EXEMPT (No Air-Conditioning / Natural Ventilation)</p></div>';
+            if (!hvacData.hasEquipment) return h + '<p>No HVAC equipment specified.</p>';
+            h += `<div class="box"><p>Status: <span class="${hvacData.isCompliant?'pass':'fail'}">${hvacData.isCompliant?'COMPLIANT':'NON-COMPLIANT'}</span></p></div>`;
+            h += `<table><thead><tr><th>Ref</th><th>Type</th><th>Capacity</th><th>COP (Cooling)</th><th>COP (Heating)</th><th>Status</th></tr></thead><tbody>`;
+            hvacData.equipment.forEach(eq => {
+                const typeName = HVAC_EQUIPMENT_TYPES.find(t=>t.id===eq.type)?.name || eq.type;
+                h += `<tr><td>${eq.name}</td><td>${typeName}</td><td>${eq.capacity} kW</td><td>${eq.copC.toFixed(2)} (Min ${eq.limits.copC.toFixed(2)})</td><td>${eq.limits.reqHeating ? `${eq.copH.toFixed(2)} (Min ${eq.limits.copH.toFixed(2)})` : 'N/A'}</td><td class="${eq.isCompliant?'pass':'fail'}">${eq.isCompliant?'PASS':'FAIL'}</td></tr>`;
+            });
+            h += `</tbody></table>`;
+        }
+        return h;
+      };
+
+      const runReport = (title, contentHTML) => {
+        const reportDate = new Date().toLocaleDateString('en-ZA', { year: 'numeric', month: 'long', day: 'numeric' });
+        const occName = OCCUPANCY_CLASSES.find(o => o.id === occupancy)?.name || occupancy;
+        const projType = projectInfo.projectType === 'new' ? 'New Building' : 'Alteration/Addition';
+
+        const finalHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${projectInfo.projectName || 'Building'} - XA Express Report</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; color: #1e293b; max-width: 800px; margin: 0 auto; font-size: 13px; }
+              .header { border-bottom: 3px solid #cbd5e1; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;}
+              h1 { color: #0f172a; margin: 0 0 10px 0; font-size: 24px; } h2 { color: #1e293b; font-size: 18px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 20px; margin-top: 0;}
+              h3 { font-size: 16px; margin-top: 25px; margin-bottom: 10px; color: #334155; } h4 { font-size: 14px; margin-bottom: 5px; color: #475569; }
+              .date { color: #64748b; font-size: 14px; margin: 0; } .proj-details { text-align: right; color: #475569; font-size: 14px; }
+              .box { padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; margin-bottom: 20px; }
+              .pass { color: #059669; font-weight: bold; } .fail { color: #dc2626; font-weight: bold; }
+              table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 30px; } th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; } th { background-color: #f1f5f9; color: #475569; }
+              .storey-header { background: #e2e8f0; padding: 10px 15px; border-radius: 6px 6px 0 0; margin-top: 20px; border: 1px solid #cbd5e1; border-bottom: none; font-weight: bold; color: #334155; display: flex; justify-content: space-between;}
+              @media print { 
+              * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } 
+              body { background-color: white; padding: 0; max-width: 100%; } 
+              .page-break { page-break-before: always; break-before: page; margin-top: 40px; padding-top: 20px; border-top: 2px dashed #cbd5e1; } 
+            }
+          </style>
+          </head><body>
+            ${(officeInfo.logoDataUrl || officeInfo.companyName) ? `<div style="margin-bottom: 30px; display: flex; align-items: center; gap: 20px;">${officeInfo.logoDataUrl ? `<img src="${officeInfo.logoDataUrl}" style="max-height: 60px; max-width: 250px; object-fit: contain;" />` : ''}${officeInfo.companyName ? `<h2 style="margin: 0; color: #334155; font-size: 20px; border:none; padding:0;">${officeInfo.companyName}</h2>` : ''}</div>` : ''}
+            <div class="header"><div><h1>${title}</h1><p style="color: #0f172a; font-weight: bold; margin-bottom: 5px;">XA 2026 3rd edition deemed-to-satisfy calculator</p><p class="date">${reportDate} | ${projType}</p></div>
+              <div class="proj-details"><strong>${projectInfo.projectName || 'Untitled'}</strong><br/>Lat ${projectInfo.latitude}°S | Zone ${zone}<br/>${projectInfo.isSccp ? 'SCCP Active' : 'No SCCP'}</div>
+            </div>
+            <div style="padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; margin-bottom: 30px;">
+              <h3 style="margin-top: 0; color: #334155; font-size: 14px; text-transform: uppercase;">Project Parameters</h3>
+              <p><strong>Occupancy Class:</strong> ${occName}</p><p><strong>Total Net Floor Area:</strong> ${totalFloorArea.toFixed(2)} m²</p><p><strong>Storeys:</strong> ${projectInfo.storeys}</p>
+            </div>
+            ${contentHTML}
+            ${(officeInfo.registeredProfessional || officeInfo.sacapNumber) ? `<div style="margin-top: 50px; padding-top: 20px; border-top: 2px solid #cbd5e1; display:flex; justify-content: space-between; color: #475569; font-size: 14px;"><div><strong>Prepared by:</strong> ${officeInfo.registeredProfessional || '_____________________'}</div><div><strong>SACAP Registration Number:</strong> ${officeInfo.sacapNumber || '_____________________'}</div></div>` : ''}
+            <script>window.onload = () => { setTimeout(() => { window.print(); }, 500); };<\/script></body></html>`;
+        const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
+        window.open(URL.createObjectURL(blob), '_blank');
+      }
+
+      const exportFullReport = () => {
+        const fullContent = ['walls', 'roofs', 'floors', 'fenestration', 'skylights', 'lighting', 'water', 'hvac'].map(tab => `<div class="${tab !== 'walls' ? 'page-break' : ''}">${getTabHTML(tab)}</div>`).join('');
+        runReport('Comprehensive Compliance Report', fullContent);
+      };
+
+      const exportPDF = () => {
+        if (activeTab === 'project') return; 
+        runReport(`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Schedule`, getTabHTML(activeTab));
+      };
+return (
+        <div className="min-h-screen bg-slate-100 p-4 md:p-8 font-sans text-slate-800 flex flex-col relative">
+          <div className="max-w-5xl mx-auto space-y-6 w-full flex-grow">
+            
+            {/* GLOBAL APP HEADER */}
+            <div className="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 p-4 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-white relative">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2"><Building className="w-6 h-6 text-blue-400" /> XA Express</h2>
+                </div>
+                <p className="text-slate-400 text-sm mt-1">XA 2026 3rd edition deemed-to-satisfy calculator</p>
+              </div>
+              <div className="flex flex-col md:items-end gap-3 w-full md:w-auto">
+                <div className="flex items-center gap-3 mt-4 md:mt-0 w-full justify-between md:justify-end">
+                  <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 px-5 text-sm flex-1 md:flex-none">
+                    <div className="font-semibold text-blue-300">{projectInfo.projectName || 'Untitled Project'}</div>
+                    <div className="text-slate-400 flex flex-wrap items-center gap-2 mt-1">
+                      <MapPin className="w-3 h-3" /> Zone {zone} | Lat {projectInfo.latitude}°S | {projectInfo.isSccp ? 'SCCP Active' : 'No SCCP'} | Class {occupancy}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 w-full md:w-auto mt-2">
+                  <button onClick={exportFullReport} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-sm text-sm font-bold transition-colors">
+                    <FileText className="w-4 h-4" /> Export Full Report
+                  </button>
+                  <button onClick={() => setIsSettingsModalOpen(true)} className="p-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 transition-colors shadow-sm" title="Office Configuration">
+                    <Settings className="w-5 h-5" />
+                  </button>
+                  <button onClick={() => setIsHelpModalOpen(true)} className="p-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 transition-colors shadow-sm" title="Help & About">
+                    <HelpCircle className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* TAB NAVIGATION */}
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => setActiveTab('project')} className={`flex-1 py-4 px-2 md:px-6 rounded-t-xl font-bold text-xs md:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'project' ? 'bg-white text-indigo-600 border-t-4 border-indigo-600 shadow-sm' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}><FileText className="w-4 h-4" /> Project</button>
+              <button onClick={() => setActiveTab('walls')} className={`flex-1 py-4 px-2 md:px-6 rounded-t-xl font-bold text-xs md:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'walls' ? 'bg-white text-blue-600 border-t-4 border-blue-600 shadow-sm' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}><GridIcon className="w-4 h-4" /> Walls</button>
+              <button onClick={() => setActiveTab('roofs')} className={`flex-1 py-4 px-2 md:px-6 rounded-t-xl font-bold text-xs md:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'roofs' ? 'bg-white text-orange-600 border-t-4 border-orange-600 shadow-sm' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}><ArrowUp className="w-4 h-4" /> Roofs</button>
+              <button onClick={() => setActiveTab('floors')} className={`flex-1 py-4 px-2 md:px-6 rounded-t-xl font-bold text-xs md:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'floors' ? 'bg-white text-stone-600 border-t-4 border-stone-600 shadow-sm' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}><ArrowDown className="w-4 h-4" /> Floors</button>
+              <button onClick={() => setActiveTab('fenestration')} className={`flex-1 py-4 px-2 md:px-6 rounded-t-xl font-bold text-xs md:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'fenestration' ? 'bg-white text-teal-600 border-t-4 border-teal-600 shadow-sm' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}><Maximize className="w-4 h-4" /> Glazing</button>
+              <button onClick={() => setActiveTab('skylights')} className={`flex-1 py-4 px-2 md:px-6 rounded-t-xl font-bold text-xs md:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'skylights' ? 'bg-white text-sky-600 border-t-4 border-sky-600 shadow-sm' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}><Sun className="w-4 h-4" /> Skylights</button>
+              <button onClick={() => setActiveTab('lighting')} className={`flex-1 py-4 px-2 md:px-6 rounded-t-xl font-bold text-xs md:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'lighting' ? 'bg-white text-yellow-600 border-t-4 border-yellow-600 shadow-sm' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}><Sun className="w-4 h-4" /> Lighting</button>
+              <button onClick={() => setActiveTab('water')} className={`flex-1 py-4 px-2 md:px-6 rounded-t-xl font-bold text-xs md:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'water' ? 'bg-white text-blue-600 border-t-4 border-blue-600 shadow-sm' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}><Droplet className="w-4 h-4" /> Water</button>
+              <button onClick={() => setActiveTab('hvac')} className={`flex-1 py-4 px-2 md:px-6 rounded-t-xl font-bold text-xs md:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'hvac' ? 'bg-white text-red-600 border-t-4 border-red-600 shadow-sm' : 'bg-slate-200 text-slate-500 hover:bg-slate-300'}`}><Building className="w-4 h-4" /> HVAC</button>
+            </div>
+
+            {isExempt && (
+              <div className="bg-amber-100 border-l-4 border-amber-500 p-4 rounded shadow-sm">
+                <p className="font-bold text-amber-900">Occupancy Class {projectInfo.occupancy} is exempt from SANS 10400-XA calculations.</p>
+              </div>
+            )}
+
+            {/* ACTIVE TAB CONTENT */}
+            <div className={`bg-white rounded-b-2xl rounded-tr-2xl shadow-xl border border-slate-200 -mt-6 relative z-10 p-6 space-y-6 ${isExempt ? 'opacity-50 pointer-events-none' : ''}`}>
+              
+              {/* --- PROJECT INFO TAB --- */}
+              {activeTab === 'project' && (
+                <div className="space-y-6">
+                  <div className="pb-4 border-b border-slate-100"><h1 className="text-2xl font-bold text-slate-900">Project Information</h1></div>
+                  <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-6">
+                    <h3 className="font-bold text-indigo-900 mb-4 border-b border-indigo-100 pb-2">Global Compliance Settings</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">City / Location</label>
+                        <select value={projectInfo.customLocation ? 'CUSTOM' : projectInfo.location} onChange={handleLocationChange} className="w-full text-sm font-medium border-slate-300 rounded-lg shadow-sm focus:border-indigo-500 p-2.5 border bg-white">
+                          <option value="" disabled>Select a location...</option>
+                          {SA_TOWNS.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+                          <option value="CUSTOM">Other (Manual Entry)...</option>
+                        </select>
+                        <a href="https://csir.maps.arcgis.com/apps/webappviewer/index.html?id=79602766e2b54ede82625c939ac1814b" target="_blank" rel="noreferrer" className="text-xs text-indigo-600 hover:text-indigo-800 mt-2 inline-flex items-center gap-1 font-medium bg-indigo-100/50 px-2 py-1 rounded w-max transition-colors">
+                           <ExternalLink className="w-3 h-3"/> Verify climate zone on the CSIR Energy Demand Map
+                        </a>
+                      </div>
+                      {projectInfo.customLocation && (
+                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-4 gap-4 p-5 bg-indigo-50 rounded-lg border border-indigo-200 shadow-inner">
+                          <div className="md:col-span-4 flex items-center gap-2 pb-2 mb-2 border-b border-indigo-200"><Globe className="w-5 h-5 text-indigo-500"/><h4 className="font-bold text-indigo-900 text-sm">Custom Location Setup</h4></div>
+                          <div className="md:col-span-2"><label className="block text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1">Custom City Name</label><input type="text" value={projectInfo.location} onChange={e => handleProjectUpdate('location', e.target.value)} className="w-full text-sm border-slate-300 rounded p-2 border bg-white" /></div>
+                          <div><label className="block text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1">Latitude (°S)</label><input type="number" step="0.1" value={projectInfo.latitude} onChange={e => handleProjectUpdate('latitude', parseFloat(e.target.value)||0)} className="w-full text-sm border-slate-300 rounded p-2 border bg-white" /></div>
+                          <div><label className="block text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1">Climate Zone</label><select value={projectInfo.zone} onChange={e => handleProjectUpdate('zone', e.target.value)} className="w-full text-sm border-slate-300 rounded p-2 border bg-white">{CLIMATE_ZONES.map(z => <option key={z.id} value={z.id}>{z.name}</option>)}</select></div>
+                          <div className="md:col-span-4 flex items-center gap-3 pt-2"><label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-2 rounded border border-indigo-200 w-max"><input type="checkbox" checked={projectInfo.isSccp} onChange={e => handleProjectUpdate('isSccp', e.target.checked)} className="text-indigo-600 rounded" /><span className="text-sm font-medium text-indigo-900">Project is in the SCCP Area</span></label></div>
+                        </div>
+                      )}
+                      {!projectInfo.customLocation && projectInfo.location && (
+                        <div className="md:col-span-2 flex flex-wrap gap-4 text-sm text-indigo-800 bg-white p-3 rounded-lg border border-indigo-100 shadow-sm">
+                           <div className="flex flex-col"><span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Assigned Zone</span><span className="font-semibold">{CLIMATE_ZONES.find(z => z.id === projectInfo.zone)?.name || projectInfo.zone}</span></div>
+                           <div className="w-px bg-indigo-100"></div><div className="flex flex-col"><span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Site Latitude</span><span className="font-semibold">{projectInfo.latitude}°S</span></div>
+                           <div className="w-px bg-indigo-100"></div><div className="flex flex-col"><span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">SCCP Area Restriction</span><span className={`font-semibold ${projectInfo.isSccp ? 'text-orange-600' : 'text-emerald-600'}`}>{projectInfo.isSccp ? 'Yes (Glazing limits apply)' : 'No'}</span></div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="md:col-span-2"><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Occupancy Class</label><select value={projectInfo.occupancy} onChange={(e) => handleProjectUpdate('occupancy', e.target.value)} className="w-full text-sm border-slate-300 rounded-lg p-2.5 border bg-white">{OCCUPANCY_CLASSES.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select></div></div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2"><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Project Type</label><div className="flex gap-4"><label className="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-100"><input type="radio" value="new" checked={projectInfo.projectType === 'new'} onChange={(e) => handleProjectUpdate('projectType', e.target.value)} className="text-indigo-600" /><span className="text-sm font-medium text-slate-700">New Building</span></label><label className="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-100"><input type="radio" value="alteration" checked={projectInfo.projectType === 'alteration'} onChange={(e) => handleProjectUpdate('projectType', e.target.value)} className="text-indigo-600" /><span className="text-sm font-medium text-slate-700">Alteration / Addition</span></label></div></div>
+                    <div className="md:col-span-2"><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Project Name</label><input type="text" value={projectInfo.projectName} onChange={(e) => handleProjectUpdate('projectName', e.target.value)} className="w-full text-sm border-slate-300 rounded-lg p-2.5 border" /></div>
+                    <div><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Stand / Erf Number</label><input type="text" value={projectInfo.standNumber} onChange={(e) => handleProjectUpdate('standNumber', e.target.value)} className="w-full text-sm border-slate-300 rounded-lg p-2.5 border" /></div>
+                    <div><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Township / Suburb</label><input type="text" value={projectInfo.township} onChange={(e) => handleProjectUpdate('township', e.target.value)} className="w-full text-sm border-slate-300 rounded-lg p-2.5 border" /></div>
+                    <div><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Number of Storeys</label><input type="number" min="1" value={projectInfo.storeys} onChange={(e) => handleStoreysChange(e.target.value)} className="w-full text-sm border-slate-300 rounded-lg p-2.5 border" /></div>
+                  </div>
+                  
+                  {/* Spaces Conf */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl mt-6"><div className="bg-slate-100 px-5 py-3 border-b border-slate-200"><h3 className="font-bold text-slate-700 flex items-center gap-2"><Layout className="w-5 h-5 text-indigo-600" /> Space Definition</h3></div>
+                    <div className="p-5 space-y-4">
+                      {spaces.map((sp) => (
+                        <div key={sp.id} className="flex flex-wrap md:flex-nowrap items-end gap-3 p-3 bg-white border border-slate-200 rounded-lg shadow-sm">
+                          <div className="flex-1 min-w-[200px]"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Space Name</label><input type="text" value={sp.name} onChange={(e) => updateSpace(sp.id, 'name', e.target.value)} className="w-full text-sm border-slate-300 rounded p-2 border" /></div>
+                          <div className="w-32"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Storey</label><select value={sp.storey} onChange={(e) => updateSpace(sp.id, 'storey', parseInt(e.target.value))} className="w-full text-sm border-slate-300 rounded p-2 border bg-slate-50">{Array.from({ length: projectInfo.storeys }).map((_, i) => <option key={i} value={i}>Storey {i + 1}</option>)}</select></div>
+                          <div className="w-32"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Net Area (m²)</label><input type="number" min="0" step="0.1" value={sp.area} onChange={(e) => updateSpace(sp.id, 'area', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-300 rounded p-2 border" /></div>
+                          <button onClick={() => removeSpace(sp.id)} disabled={spaces.length <= 1} className="p-2 mb-[1px] text-slate-400 hover:text-red-500 rounded"><Trash2 className="w-5 h-5" /></button>
+                        </div>
+                      ))}
+                      <button onClick={addSpace} className="mt-2 flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-indigo-600 rounded-lg shadow-sm text-sm"><Plus className="w-4 h-4" /> Add Space</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* --- ENVELOPE TABS (WALLS, ROOFS, FLOORS) --- */}
+              {['walls', 'roofs', 'floors'].includes(activeTab) && (
+                <>
+                  {activeTab === 'walls' && (
+                    <div className="flex flex-wrap gap-2 mb-6 pb-6 border-b border-slate-100 items-center">
+                      {assemblies.walls.map((wall, idx) => (
+                        <div key={wall.id} className="flex rounded-lg shadow-sm">
+                          <button onClick={() => setActiveWallIndex(idx)} className={`px-4 py-2 rounded-l-lg text-sm font-semibold border ${activeWallIndex === idx ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-300'}`}>{wall.name}</button>
+                          <button onClick={() => removeWallType(idx)} disabled={assemblies.walls.length <= 1} className={`px-2 py-2 rounded-r-lg border-y border-r ${assemblies.walls.length <= 1 ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : activeWallIndex === idx ? 'bg-blue-700 text-blue-200' : 'bg-white text-slate-400 hover:text-red-500'}`}><X className="w-4 h-4" /></button>
+                        </div>
+                      ))}
+                      <button onClick={addWallType} className="px-3 py-2 rounded-lg text-sm font-semibold text-blue-600 bg-blue-50 border border-blue-200 flex items-center gap-1 shadow-sm ml-2"><Plus className="w-4 h-4" /> Add Wall Type</button>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col lg:flex-row justify-between items-start gap-6 pb-6 border-b border-slate-100">
+                    <div className="flex-1 w-full space-y-4">
+                      <div><h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2 capitalize">{activeTab === 'walls' && currentAssembly ? currentAssembly.name : `${activeTab} Assembly`}</h1><p className="text-slate-500 mt-1">SANS 10400-XA Performance Metrics</p></div>
+                      {activeTab === 'walls' && currentAssembly && (<div className="max-w-sm mt-2"><input type="text" value={currentAssembly.name} onChange={(e) => updateWallName(e.target.value)} className="w-full text-sm border-slate-300 rounded-lg shadow-sm focus:border-blue-500 p-2 border bg-white" placeholder="e.g. North Facing Cavity Wall" /></div>)}
+                      {activeTab === 'roofs' && (<div className="flex flex-col md:flex-row md:items-center gap-4 bg-orange-50 p-3 rounded-lg border border-orange-200 w-max"><span className="text-sm font-semibold text-orange-800">Roof Profile:</span><label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={isPitchedRoof} onChange={(e) => setIsPitchedRoof(e.target.checked)} className="w-4 h-4 text-orange-600 rounded border-slate-300" /><span className="text-sm font-medium text-stone-700">Pitched Roof (≥ 30°)</span></label></div>)}
+                      {activeTab === 'floors' && (
+                        <div className="flex flex-col md:flex-row md:items-center gap-4 bg-stone-50 p-3 rounded-lg border border-stone-200">
+                          <div className="flex items-center gap-3"><span className="text-sm font-semibold text-stone-800">Floor System:</span><select value={floorType} onChange={(e) => setFloorType(e.target.value)} className="text-sm border-slate-300 rounded shadow-sm py-1.5 pl-2 pr-8"><option value="ground">Slab on Ground</option><option value="suspended">Suspended Floor</option></select></div>
+                          <label className="flex items-center gap-2 cursor-pointer w-max"><input type="checkbox" checked={floorHeating} onChange={(e) => setFloorHeating(e.target.checked)} className="w-4 h-4 text-orange-600 rounded border-slate-300" /><span className="text-sm font-medium text-stone-700 flex items-center gap-1.5"><Thermometer className="w-4 h-4 text-orange-500" /> Underfloor Heating</span></label>
+                        </div>
+                      )}
+                      <div className="flex flex-wrap items-center gap-3 pt-2"><button onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg shadow-sm text-sm"><FileText className="w-4 h-4" /> Export Current Tab</button></div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-3">
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 min-w-[130px] text-center"><div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{activeTab === 'walls' ? 'Wall Class' : 'Total Mass'}</div><div className="text-2xl font-black tracking-tight text-slate-700">{activeTab === 'walls' ? (totals.surfaceMass >= 270 ? 'HEAVY' : 'LIGHT') : Math.round(totals.surfaceMass)}</div><div className="text-[10px] font-medium mt-1 text-slate-500">{activeTab === 'walls' ? `${Math.round(totals.surfaceMass)} kg/m²` : 'kg/m²'}</div></div>
+                      {activeTab === 'roofs' ? (
+                        <>
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 min-w-[180px] text-center"><div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Target R-Values</div><div className="flex justify-around"><div><div className="text-[10px] text-blue-500 font-bold mb-1">WINTER (UP)</div><div className="text-xl font-black text-slate-700">{targets.R_up.toFixed(2)}</div></div><div className="w-px bg-slate-300"></div><div><div className="text-[10px] text-orange-500 font-bold mb-1">SUMMER (DN)</div><div className="text-xl font-black text-slate-700">{targets.R_down.toFixed(2)}</div></div></div></div>
+                          <div className={`border rounded-xl p-3 min-w-[220px] text-center ${isCompliant ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}><div className={`text-xs font-bold uppercase tracking-wider mb-2 flex items-center justify-center gap-1 ${isCompliant ? 'text-emerald-600' : 'text-red-600'}`}>{isCompliant ? <CheckCircle className="w-4 h-4"/> : <XCircle className="w-4 h-4"/>}Calculated Totals</div><div className="flex justify-around"><div><div className="text-[10px] text-blue-600 font-bold mb-1">WINTER (UP)</div><div className={`text-2xl font-black ${totals.R_up >= targets.R_up ? 'text-emerald-700' : 'text-red-700'}`}>{totals.R_up.toFixed(2)}</div></div><div className={`w-px ${isCompliant ? 'bg-emerald-200' : 'bg-red-200'}`}></div><div><div className="text-[10px] text-orange-600 font-bold mb-1">SUMMER (DN)</div><div className={`text-2xl font-black ${totals.R_down >= targets.R_down ? 'text-emerald-700' : 'text-red-700'}`}>{totals.R_down.toFixed(2)}</div></div></div></div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 min-w-[120px] text-center"><div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Target R</div><div className="text-3xl font-black text-slate-700">{targets.R.toFixed(2)}</div></div>
+                          <div className={`border rounded-xl p-3 min-w-[150px] text-center ${isCompliant ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}><div className={`text-xs font-bold uppercase tracking-wider mb-1 flex items-center justify-center gap-1 ${isCompliant ? 'text-emerald-600' : 'text-red-600'}`}>{isCompliant ? <CheckCircle className="w-4 h-4"/> : <XCircle className="w-4 h-4"/>}Total R</div><div className={`text-3xl font-black ${isCompliant ? 'text-emerald-700' : 'text-red-700'}`}>{totals.R.toFixed(2)}</div></div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h2 className="text-sm font-semibold text-slate-700 mb-4 flex justify-between items-center"><span>Assembly Cross-Section Visualizer (To Scale)</span><span className="text-slate-500 font-normal">Orientation: <strong className="text-slate-700">{params.isVertical ? 'Vertical' : 'Horizontal'}</strong> | Total Thick: {totalThickness} mm</span></h2>
+                    <div dangerouslySetInnerHTML={{ __html: generateVisualizerHtml(layers, includeSurfaces, params.isVertical, params.outLabel, params.inLabel) }} />
+                  </div>
+
+                  <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden">
+                    <div className="bg-slate-100 px-6 py-4 border-b border-slate-200 flex justify-between items-center"><h2 className="font-semibold text-slate-700 flex items-center gap-2"><Layers className="w-5 h-5" /> Layer Builder</h2><label className="flex items-center gap-2 cursor-pointer w-max"><input type="checkbox" checked={includeSurfaces} onChange={(e) => toggleSurfaces(e.target.checked)} className="w-4 h-4 text-blue-600 rounded border-slate-300" /><span className="font-medium text-slate-600 text-xs uppercase tracking-wider">Include Air Films</span></label></div>
+                    <div className="p-4 space-y-3">
+                      {layers.map((layer, index) => (
+                        <div key={layer.id} className="flex items-stretch gap-3 p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
+                          <div className="flex flex-col gap-1 items-center justify-center text-slate-400"><button onClick={() => handleLayerAction('move', layer.id, null, 'up', index)} disabled={index === 0} className="hover:text-blue-600 disabled:opacity-30"><ArrowUp className="w-4 h-4" /></button><GripVertical className="w-4 h-4 opacity-30" /><button onClick={() => handleLayerAction('move', layer.id, null, 'down', index)} disabled={index === layers.length - 1} className="hover:text-blue-600 disabled:opacity-30"><ArrowDown className="w-4 h-4" /></button></div>
+                          <div className="flex-1 flex flex-col gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                              <div className="md:col-span-5"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Material</label><select value={layer.name} onChange={(e) => handleLayerAction('preset', layer.id, null, e.target.value)} className="w-full text-sm border-slate-300 rounded-md p-2 border"><option value="Custom Material">Custom Material</option>{MATERIAL_PRESETS.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}</select></div>
+                              <div className="md:col-span-2">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Thick (mm)</label>
+                                <div className="relative">
+                                  <input type="number" min="0" value={layer.thickness} onChange={(e) => handleLayerAction('update', layer.id, 'thickness', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-300 rounded-md p-2 border pr-8" />
+                                  {layer.type === 'material' && layer.kValue <= 0.05 && (
+                                    <button onClick={() => solveCompliance(layer.id)} className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-400 hover:text-indigo-600 transition-colors" title="Solve for Compliance">
+                                      <Wand className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="md:col-span-3"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{layer.type === 'material' ? 'k-value' : 'Fixed R-value'}</label><input type="number" step="0.001" min="0" value={layer.type === 'material' ? layer.kValue : layer.rValue} onChange={(e) => handleLayerAction('update', layer.id, layer.type === 'material' ? 'kValue' : 'rValue', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-300 rounded-md p-2 border" /></div>
+                              <div className="md:col-span-2 flex items-center justify-end gap-2 pb-1 relative group"><span className="text-xs font-mono font-medium text-slate-700 bg-slate-100 px-2 py-1.5 rounded whitespace-nowrap">R: {(layer.type === 'material' ? (layer.kValue > 0 ? (layer.thickness / 1000) / layer.kValue : 0) : parseFloat(layer.rValue) || 0).toFixed(3)}</span></div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-slate-50/50 p-3 rounded-lg border border-slate-100">
+                              <div className="md:col-span-3 md:col-start-6"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Density (kg/m²)</label><input type="number" min="0" value={layer.density || 0} onChange={(e) => handleLayerAction('update', layer.id, 'density', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded-md p-1.5 border" /></div>
+                              <div className="md:col-span-3"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sp. Heat (J/kgK)</label><input type="number" min="0" value={layer.specificHeat || 0} onChange={(e) => handleLayerAction('update', layer.id, 'specificHeat', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded-md p-1.5 border" /></div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2 items-center justify-center">
+                            <button onClick={() => handleLayerAction('remove', layer.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-4 border-t border-slate-200"><button onClick={() => handleLayerAction('add')} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 text-sm font-medium shadow-sm"><Plus className="w-4 h-4" /> Add Layer</button></div>
+                  </div>
+                </>
+              )}
+
+              {/* --- FENESTRATION TAB --- */}
+              {activeTab === 'fenestration' && (
+                <>
+                  <div className="flex flex-col lg:flex-row justify-between items-start gap-6 pb-6 border-b border-slate-100">
+                    <div className="flex-1 w-full space-y-4">
+                      <div><h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">Fenestration & Glazing</h1><p className="text-slate-500 mt-1">SANS 10400-XA:2026 Aggregate Conductance & Solar Targets</p></div>
+                      <div className="flex items-center gap-4 bg-teal-50 p-3 rounded-lg border border-teal-200 w-max"><span className="text-sm font-semibold text-teal-800">Global Net Floor Area:</span><span className="text-lg font-bold text-teal-900">{totalFloorArea} m²</span></div>
+                      
+                      {fenestrationData.sccpViolation && (
+                        <div className="bg-red-50 border-2 border-red-400 text-red-900 p-4 rounded-xl flex items-start gap-3 shadow-sm animate-pulse">
+                          <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <strong className="block text-base mb-1">CRITICAL SCCP VIOLATION (Clause 5.3.7)</strong>
+                            <p className="text-sm">Your project is located in a Southern Cape Condensation Problem (SCCP) area. You have selected <strong>Single Low-E</strong> glazing in one or more windows. This is strictly prohibited due to severe condensation risks. You must switch to Double Glazing.</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {fenestrationData.global.exempt && !fenestrationData.sccpViolation && (<div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm p-3 rounded-lg flex items-start gap-2"><CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" /><div><strong>EXEMPT FROM AGGREGATE LIMITS:</strong> The global ratio is 20% or below.</div></div>)}
+                      
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
+                        <button onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg shadow-sm text-sm"><FileText className="w-4 h-4" /> Export Current Tab</button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 min-w-[130px] text-center">
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Global Ratio</div>
+                        <div className="text-2xl font-black tracking-tight text-slate-700">{fenestrationData.global.ratio.toFixed(1)}%</div>
+                        <div className="text-[10px] font-medium mt-1 text-slate-500">Tier: {fenestrationData.global.exempt ? '≤ 20%' : fenestrationData.global.ratio > 60 ? '> 60%' : `≤ ${Math.ceil(fenestrationData.global.ratio / 5) * 5}%`}</div>
+                      </div>
+                      <div className={`border rounded-xl p-3 min-w-[140px] text-center transition-opacity ${fenestrationData.global.exempt ? 'bg-slate-100 border-slate-200 opacity-70' : fenestrationData.global.aggU <= fenestrationData.global.maxU ? 'bg-slate-50 border-slate-200' : 'bg-orange-50 border-orange-200'}`}>
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Global Agg U</div>
+                        <div className={`text-2xl font-black tracking-tight ${fenestrationData.global.exempt ? 'text-slate-400' : fenestrationData.global.aggU <= fenestrationData.global.maxU ? 'text-slate-700' : 'text-orange-700'}`}>{fenestrationData.global.aggU.toFixed(2)}</div>
+                        <div className="text-[10px] font-medium mt-1 text-slate-500">Target: {fenestrationData.global.exempt ? 'N/A' : `≤ ${fenestrationData.global.maxU.toFixed(2)}`}</div>
+                      </div>
+                      <div className={`border rounded-xl p-3 min-w-[140px] text-center transition-opacity ${fenestrationData.global.exempt ? 'bg-slate-100 border-slate-200 opacity-70' : fenestrationData.global.aggSHGC <= fenestrationData.global.maxSHGC ? 'bg-slate-50 border-slate-200' : 'bg-orange-50 border-orange-200'}`}>
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Blended SHGC</div>
+                        <div className={`text-2xl font-black tracking-tight ${fenestrationData.global.exempt ? 'text-slate-400' : fenestrationData.global.aggSHGC <= fenestrationData.global.maxSHGC ? 'text-slate-700' : 'text-orange-700'}`}>{fenestrationData.global.aggSHGC.toFixed(2)}</div>
+                        <div className="text-[10px] font-medium mt-1 text-slate-500">Target: {fenestrationData.global.exempt ? 'N/A' : `≤ ${fenestrationData.global.maxSHGC.toFixed(2)}`}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-8">
+                    {fenestrationData.storeys.map((storey) => (
+                      <div key={storey.storeyIndex} className={`rounded-2xl border overflow-hidden shadow-sm ${fenestrationData.sccpViolation ? 'border-red-200 bg-red-50/20' : 'bg-slate-50 border-slate-200'}`}>
+                        <div className="bg-slate-100 px-6 py-4 border-b border-slate-200 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                          <h2 className="font-semibold text-slate-800 flex items-center gap-2 text-lg"><Layers className="w-5 h-5 text-teal-600" /> Storey {storey.storeyIndex + 1}</h2>
+                          <div className="flex gap-4 text-xs font-medium text-slate-600 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
+                            <span>Ratio: <strong className="text-slate-800">{storey.ratio.toFixed(1)}%</strong></span><span className="w-px bg-slate-300"></span>
+                            <span>Agg U: <strong className={!storey.exempt && storey.aggU > storey.maxU ? 'text-red-600' : 'text-slate-800'}>{storey.aggU.toFixed(2)}</strong> <span className="text-slate-400 font-normal">/ {storey.exempt ? 'NA' : storey.maxU.toFixed(2)}</span></span><span className="w-px bg-slate-300"></span>
+                            <span>Agg SHGC: <strong className={!storey.exempt && storey.aggSHGC > storey.maxSHGC ? 'text-red-600' : 'text-slate-800'}>{storey.aggSHGC.toFixed(2)}</strong> <span className="text-slate-400 font-normal">/ {storey.exempt ? 'NA' : storey.maxSHGC.toFixed(2)}</span></span>
+                          </div>
+                        </div>
+                        <div className="p-4 space-y-3">
+                          {storey.windows.length === 0 ? <div className="text-center py-8 text-slate-400 text-sm">No windows assigned to this storey yet.</div> : storey.windows.map((win) => {
+                            const isSccpViolator = projectInfo.isSccp && win.glazingType === 'single_low_e';
+                            return (
+                            <div key={win.id} className={`flex items-stretch gap-3 p-4 bg-white border rounded-xl shadow-sm ${isSccpViolator ? 'border-red-400' : 'border-slate-200'}`}>
+                              <div className="flex-1 flex flex-col gap-3">
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                                  <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Ref</label><input type="text" value={win.reference} onChange={(e) => handleGlazingAction("windows", "update", win.id, 'reference', e.target.value)} className="w-full text-sm font-bold text-teal-700 border-slate-300 rounded shadow-sm p-2 border" /></div>
+                                  <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Storey</label><select value={win.storey} onChange={(e) => handleGlazingAction("windows", "update", win.id, 'storey', parseInt(e.target.value))} className="w-full text-sm border-slate-300 rounded shadow-sm p-2 border bg-slate-50 text-slate-700">{Array.from({length: projectInfo.storeys}).map((_, i) => <option key={i} value={i}>Storey {i + 1}</option>)}</select></div>
+                                  <div className="md:col-span-3"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Description</label><input type="text" value={win.name} onChange={(e) => handleGlazingAction("windows", "update", win.id, 'name', e.target.value)} className="w-full text-sm border-slate-300 rounded shadow-sm p-2 border" /></div>
+                                  <div className="md:col-span-3"><label className={`block text-[10px] font-bold uppercase tracking-wider mb-1 ${isSccpViolator ? 'text-red-600' : 'text-slate-400'}`}>Preset Glazing</label><select onChange={(e) => handleGlazingAction("windows", "preset", win.id, null, e.target.value)} className={`w-full text-sm border-slate-300 rounded shadow-sm p-2 border bg-slate-50 text-slate-600 ${isSccpViolator ? 'border-red-400 bg-red-50 text-red-700 font-bold' : ''}`}><option value="">Custom...</option>{WINDOW_PRESETS.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}</select></div>
+                                  <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Shading Status</label>
+                                    <select value={win.shadingStatus} onChange={(e) => handleGlazingAction("windows", "update", win.id, 'shadingStatus', e.target.value)} className="w-full text-[13px] border-slate-300 rounded shadow-sm p-2 border bg-white font-semibold text-slate-700">
+                                      <option value="unshaded">Unshaded</option>
+                                      <option value="shaded">Shaded (P ≥ Lat Factor)</option>
+                                      <option value="south">South / SE / SW (Exempt)</option>
+                                    </select>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-slate-50/50 p-3 rounded-lg border border-slate-100">
+                                  <div className="md:col-span-1"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Qty</label><input type="number" min="1" value={win.qty} onChange={(e) => handleGlazingAction("windows", "update", win.id, 'qty', parseInt(e.target.value) || 1)} className="w-full text-sm border-slate-200 rounded shadow-sm p-1.5 border" /></div>
+                                  <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">W (m)</label><input type="number" step="0.1" min="0" value={win.width} onChange={(e) => handleGlazingAction("windows", "update", win.id, 'width', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded shadow-sm p-1.5 border" /></div>
+                                  <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">H (m)</label><input type="number" step="0.1" min="0" value={win.height} onChange={(e) => handleGlazingAction("windows", "update", win.id, 'height', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded shadow-sm p-1.5 border" /></div>
+                                  <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">U-Value (W/m²K)</label><input type="number" step="0.1" min="0" value={win.uValue} onChange={(e) => handleGlazingAction("windows", "update", win.id, 'uValue', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded shadow-sm p-1.5 border font-semibold text-slate-700" /></div>
+                                  <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">SHGC</label><input type="number" step="0.01" min="0" max="1" value={win.shgc} onChange={(e) => handleGlazingAction("windows", "update", win.id, 'shgc', parseFloat(e.target.value) || 0)} className={`w-full text-sm border-slate-200 rounded shadow-sm p-1.5 border font-semibold ${win.shadingStatus === 'south' ? 'bg-slate-200 text-slate-400 line-through' : 'text-slate-700'}`} disabled={win.shadingStatus === 'south'} title={win.shadingStatus === 'south' ? "South-facing windows are assigned an SHGC of 0 in the aggregate." : ""} /></div>
+                                  
+                                  <div className="md:col-span-3 flex justify-end items-center"><span className="text-sm font-mono font-medium text-teal-700 bg-teal-50 border border-teal-100 px-3 py-1.5 rounded text-center">Area: {(win.qty * win.width * win.height).toFixed(2)} m²</span></div>
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-2 items-center justify-center"><button onClick={() => handleGlazingAction("windows", "remove", win.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button></div>
+                            </div>
+                            );
+                          })}
+                        </div>
+                        <div className="p-4 border-t border-slate-200 bg-white"><button onClick={() => handleGlazingAction("windows", "add", null, null, storey.storeyIndex)} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-300 text-slate-700 rounded-lg shadow-sm text-sm"><Plus className="w-4 h-4" /> Add Window to Storey {storey.storeyIndex + 1}</button></div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* --- SKYLIGHTS TAB --- */}
+              {activeTab === 'skylights' && (
+                <>
+                  <div className="flex flex-col lg:flex-row justify-between items-start gap-6 pb-6 border-b border-slate-100">
+                    <div className="flex-1 w-full space-y-4">
+                      <div><h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">Skylights & Rooflights</h1><p className="text-slate-500 mt-1">SANS 10400-XA:2026 (Table 5) Aggregate Conductance & Solar Targets per Space</p></div>
+                      
+                      <div className="flex items-center gap-4 bg-sky-50 p-3 rounded-lg border border-sky-200 w-max">
+                        <span className="text-sm font-semibold text-sky-800">Total Project Rooflight Area:</span>
+                        <span className="text-lg font-bold text-sky-900">{skylightData.global.totalSkyArea.toFixed(2)} m²</span>
+                      </div>
+
+                      {!skylightData.global.isCompliant && (
+                        <div className="bg-red-50 border border-red-200 text-red-800 text-sm p-3 rounded-lg flex items-start gap-2">
+                          <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                          <div><strong>COMPLIANCE FAILURE:</strong> One or more spaces failed to meet the aggregate U-Value or SHGC limits for its specific area ratio tier. See schedules below.</div>
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
+                        <button onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 font-medium shadow-sm text-sm"><FileText className="w-4 h-4" /> Export Current Tab</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-8">
+                    {spaces.length === 0 && (
+                      <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
+                        Please define spaces in the <strong>Project</strong> tab first to map skylights.
+                      </div>
+                    )}
+                    
+                    {skylightData.spaces.map((space) => (
+                      <div key={space.id} className={`rounded-2xl border overflow-hidden shadow-sm ${(!space.isCompliant && space.skylights.length > 0) ? 'border-red-300 bg-red-50/30' : 'bg-slate-50 border-slate-200'}`}>
+                        <div className="bg-slate-100 px-6 py-4 border-b border-slate-200 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                          <h2 className="font-semibold text-slate-800 flex items-center gap-2 text-lg"><Sun className="w-5 h-5 text-sky-600" /> {space.name} <span className="text-sm font-normal text-slate-500">(Storey {space.storey + 1})</span></h2>
+                          <div className="flex gap-4 text-xs font-medium text-slate-600 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
+                            <span>Area: <strong className="text-slate-800">{space.area} m²</strong></span><span className="w-px bg-slate-300"></span>
+                            <span>Ratio: <strong className="text-slate-800">{space.ratio.toFixed(1)}%</strong></span><span className="w-px bg-slate-300"></span>
+                            <span>Agg U: <strong className={!space.exempt && space.aggU > space.maxU ? 'text-red-600' : 'text-slate-800'}>{space.aggU.toFixed(2)}</strong> <span className="text-slate-400 font-normal">/ {space.exempt ? 'NA' : space.maxU.toFixed(2)}</span></span><span className="w-px bg-slate-300"></span>
+                            <span>Agg SHGC: <strong className={!space.exempt && space.aggSHGC > space.maxSHGC ? 'text-red-600' : 'text-slate-800'}>{space.aggSHGC.toFixed(2)}</strong> <span className="text-slate-400 font-normal">/ {space.exempt ? 'NA' : space.maxSHGC.toFixed(2)}</span></span>
+                          </div>
+                        </div>
+
+                        <div className="p-4 space-y-3">
+                          {space.skylights.length === 0 ? <div className="text-center py-6 text-slate-400 text-sm">No skylights assigned to this space.</div> : space.skylights.map((sky) => (
+                            <div key={sky.id} className="flex items-stretch gap-3 p-4 bg-white border border-slate-200 rounded-xl shadow-sm relative">
+                              <div className="flex-1 flex flex-col gap-3">
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                                  <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Ref</label><input type="text" value={sky.reference} onChange={(e) => handleGlazingAction("skylights", "update", sky.id, 'reference', e.target.value)} className="w-full text-sm font-bold text-sky-700 border-slate-300 rounded shadow-sm p-2 border" /></div>
+                                  <div className="md:col-span-6"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Description</label><input type="text" value={sky.name} onChange={(e) => handleGlazingAction("skylights", "update", sky.id, 'name', e.target.value)} className="w-full text-sm border-slate-300 rounded shadow-sm p-2 border" /></div>
+                                  <div className="md:col-span-4"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Glazing Preset (Optional)</label><select onChange={(e) => handleGlazingAction("skylights", "preset", sky.id, null, e.target.value)} className="w-full text-sm border-slate-300 rounded shadow-sm p-2 border bg-slate-50 text-slate-600"><option value="">Custom...</option>{WINDOW_PRESETS.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}</select></div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-slate-50/50 p-3 rounded-lg border border-slate-100">
+                                  <div className="md:col-span-1"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Qty</label><input type="number" min="1" value={sky.qty} onChange={(e) => handleGlazingAction("skylights", "update", sky.id, 'qty', parseInt(e.target.value) || 1)} className="w-full text-sm border-slate-200 rounded shadow-sm p-1.5 border" /></div>
+                                  <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">W (m)</label><input type="number" step="0.1" min="0" value={sky.width} onChange={(e) => handleGlazingAction("skylights", "update", sky.id, 'width', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded shadow-sm p-1.5 border" /></div>
+                                  <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">L/H (m)</label><input type="number" step="0.1" min="0" value={sky.height} onChange={(e) => handleGlazingAction("skylights", "update", sky.id, 'height', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded shadow-sm p-1.5 border" /></div>
+                                  <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">U-Value</label><input type="number" step="0.1" min="0" value={sky.uValue} onChange={(e) => handleGlazingAction("skylights", "update", sky.id, 'uValue', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded shadow-sm p-1.5 border font-semibold text-slate-700" /></div>
+                                  <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">SHGC</label><input type="number" step="0.01" min="0" max="1" value={sky.shgc} onChange={(e) => handleGlazingAction("skylights", "update", sky.id, 'shgc', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded shadow-sm p-1.5 border font-semibold text-slate-700" /></div>
+                                  <div className="md:col-span-3 flex justify-end items-center"><span className="text-sm font-mono font-medium text-sky-700 bg-sky-50 border border-sky-100 px-3 py-1.5 rounded text-center w-full">Area: {(sky.qty * sky.width * sky.height).toFixed(2)} m²</span></div>
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-2 items-center justify-center"><button onClick={() => handleGlazingAction("skylights", "remove", sky.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button></div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="p-4 border-t border-slate-200 bg-white"><button onClick={() => handleGlazingAction("skylights", "add", null, null, space.id)} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-300 text-slate-700 rounded-lg shadow-sm text-sm"><Plus className="w-4 h-4" /> Add Skylight to {space.name}</button></div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* --- LIGHTING TAB --- */}
+              {activeTab === 'lighting' && (
+                <>
+                  <div className="flex flex-col lg:flex-row justify-between items-start gap-6 pb-6 border-b border-slate-100">
+                    <div className="flex-1 w-full space-y-4">
+                      <div><h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">Lighting Calculator</h1><p className="text-slate-500 mt-1">SANS 10400-XA:2026 (Table 10) Lighting Power Density (LPD)</p></div>
+                      
+                      <div className="flex flex-wrap items-center gap-4">
+                        <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200 w-max">
+                          <span className="text-sm font-semibold text-yellow-800 block mb-1">Global Target LPD:</span>
+                          <span className="text-xl font-bold text-yellow-900">{lightingData.targetLPD ? `≤ ${lightingData.targetLPD} W/m²` : 'N/A'}</span>
+                        </div>
+                        <div className={`p-3 rounded-lg border w-max ${lightingData.isCompliant || lightingData.isResidentialExempt ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+                          <span className={`text-sm font-semibold block mb-1 ${lightingData.isCompliant || lightingData.isResidentialExempt ? 'text-emerald-800' : 'text-red-800'}`}>Calculated Global LPD:</span>
+                          <span className={`text-xl font-bold ${lightingData.isCompliant || lightingData.isResidentialExempt ? 'text-emerald-900' : 'text-red-900'}`}>{lightingData.globalLpd.toFixed(2)} W/m²</span>
+                        </div>
+                      </div>
+
+                      {lightingData.isResidentialExempt && (
+                        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm p-3 rounded-lg flex items-start gap-2">
+                          <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                          <div><strong>DEEMED TO COMPLY:</strong> Occupancy is {projectInfo.occupancy} and all specified fixtures are LED or CFL (Clause 6.2.2).</div>
+                        </div>
+                      )}
+
+                      {!lightingData.isCompliant && !lightingData.isResidentialExempt && lightingData.hasFixtures && (
+                         <div className="bg-red-50 border border-red-200 text-red-800 text-sm p-3 rounded-lg flex items-start gap-2">
+                           <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                           <div><strong>COMPLIANCE FAILURE:</strong> Global Lighting Power Density exceeds the Table 10 limit for this occupancy class.</div>
+                         </div>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
+                        <button onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg shadow-sm text-sm"><FileText className="w-4 h-4" /> Export Current Tab</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-8">
+                    {spaces.length === 0 && (
+                      <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
+                        Please define spaces in the <strong>Project</strong> tab first to map lighting fixtures.
+                      </div>
+                    )}
+                    
+                    {lightingData.spaces.map((space) => (
+                      <div key={space.id} className={`rounded-2xl border overflow-hidden shadow-sm bg-slate-50 border-slate-200`}>
+                        <div className="bg-slate-100 px-6 py-4 border-b border-slate-200 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                          <h2 className="font-semibold text-slate-800 flex items-center gap-2 text-lg"><Sun className="w-5 h-5 text-yellow-600" /> {space.name} <span className="text-sm font-normal text-slate-500">(Storey {space.storey + 1})</span></h2>
+                          <div className="flex gap-4 text-xs font-medium text-slate-600 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
+                            <span>Area: <strong className="text-slate-800">{space.area} m²</strong></span><span className="w-px bg-slate-300"></span>
+                            <span>Space Watts: <strong className="text-slate-800">{space.spaceWatts.toFixed(1)} W</strong></span><span className="w-px bg-slate-300"></span>
+                            <span>Space LPD: <strong className="text-slate-800">{space.spaceLpd.toFixed(2)} W/m²</strong></span>
+                          </div>
+                        </div>
+
+                        <div className="p-4 space-y-3">
+                          {space.fixtures.length === 0 ? <div className="text-center py-6 text-slate-400 text-sm">No lighting fixtures assigned to this space.</div> : space.fixtures.map((fix) => (
+                            <div key={fix.id} className="flex items-stretch gap-3 p-4 bg-white border border-slate-200 rounded-xl shadow-sm relative">
+                              <div className="flex-1 flex flex-col gap-3">
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                                  <div className="md:col-span-6"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Description</label><input type="text" value={fix.name} onChange={(e) => handleLightingAction("update", fix.id, 'name', e.target.value)} className="w-full text-sm border-slate-300 rounded shadow-sm p-2 border" /></div>
+                                  <div className="md:col-span-6"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Fixture Type</label>
+                                    <select value={fix.type} onChange={(e) => handleLightingAction("update", fix.id, 'type', e.target.value)} className="w-full text-[13px] border-slate-300 rounded shadow-sm p-2 border bg-white font-semibold text-slate-700">
+                                      <option value="LED">LED</option>
+                                      <option value="CFL">CFL</option>
+                                      <option value="Other">Other / Halogen / Incandescent</option>
+                                    </select>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-slate-50/50 p-3 rounded-lg border border-slate-100">
+                                  <div className="md:col-span-3"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Quantity</label><input type="number" min="1" value={fix.qty} onChange={(e) => handleLightingAction("update", fix.id, 'qty', parseInt(e.target.value) || 1)} className="w-full text-sm border-slate-200 rounded shadow-sm p-1.5 border" /></div>
+                                  <div className="md:col-span-4"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Watts per Unit</label><input type="number" step="0.1" min="0" value={fix.watts} onChange={(e) => handleLightingAction("update", fix.id, 'watts', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-200 rounded shadow-sm p-1.5 border font-semibold text-slate-700" /></div>
+                                  <div className="md:col-span-5 flex justify-end items-center"><span className="text-sm font-mono font-medium text-yellow-700 bg-yellow-50 border border-yellow-100 px-3 py-1.5 rounded text-center w-full">Total: {(fix.qty * fix.watts).toFixed(1)} W</span></div>
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-2 items-center justify-center"><button onClick={() => handleLightingAction("remove", fix.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button></div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="p-4 border-t border-slate-200 bg-white"><button onClick={() => handleLightingAction("add", null, null, space.id)} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-300 text-slate-700 rounded-lg shadow-sm text-sm"><Plus className="w-4 h-4" /> Add Fixture to {space.name}</button></div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* --- WATER HEATING TAB --- */}
+              {activeTab === 'water' && (
+                <>
+                  <div className="flex flex-col lg:flex-row justify-between items-start gap-6 pb-6 border-b border-slate-100">
+                    <div className="flex-1 w-full space-y-4">
+                      <div><h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">Water Heating Calculator</h1><p className="text-slate-500 mt-1">SANS 10400-XA:2026 (Clause 6.4) and SANS 10252-1</p></div>
+                      
+                      <label className="flex items-center gap-3 cursor-pointer bg-slate-50 p-4 rounded-xl border border-slate-200 w-max hover:bg-slate-100 transition-colors shadow-sm">
+                        <input type="checkbox" checked={waterExempt} onChange={(e) => setWaterExempt(e.target.checked)} className="w-5 h-5 text-blue-600 rounded border-slate-300 cursor-pointer" />
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-700">No Hot Water Services Installed</span>
+                          <span className="text-xs text-slate-500">Project does not use or provide any heated water.</span>
+                        </div>
+                      </label>
+
+                      {waterExempt && (
+                        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm p-4 rounded-xl flex items-start gap-2 shadow-sm">
+                          <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                          <div><strong>DEEMED TO COMPLY:</strong> The project is exempt from water heating efficiency requirements.</div>
+                        </div>
+                      )}
+
+                      {!waterExempt && !waterData.isCompliant && (
+                         <div className="bg-red-50 border border-red-200 text-red-800 text-sm p-3 rounded-lg flex items-start gap-2 shadow-sm">
+                           <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                           <div><strong>COMPLIANCE FAILURE:</strong> Alternative heating yield is less than 50% of the daily demand, OR one or more pipes are uninsulated.</div>
+                         </div>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
+                        <button onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg shadow-sm text-sm hover:bg-slate-700"><FileText className="w-4 h-4" /> Export Current Tab</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {!waterExempt && (
+                    <div className="space-y-8">
+                      {/* Demand Section */}
+                      <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <div className="bg-slate-100 px-6 py-4 border-b border-slate-200">
+                          <h2 className="font-semibold text-slate-800 text-lg flex items-center gap-2"><Droplet className="w-5 h-5 text-blue-600" /> Hot Water Demand (Table B.3)</h2>
+                          <p className="text-[11px] font-bold text-blue-600 mt-1 uppercase tracking-tight">Note: Table B.3 specifies Hot Water PRODUCTION PER DAY, not Hot Water Cylinder Storage Capacity.</p>
+                        </div>
+                        <div className="p-6 space-y-6">
+                          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                            <div className="md:col-span-3">
+                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Design Population</label>
+                              <input type="number" min="0" value={waterPop} onChange={(e) => setWaterPop(parseFloat(e.target.value) || 0)} className="w-full text-sm font-semibold border-slate-300 rounded-lg p-2.5 border text-slate-800 shadow-sm" />
+                            </div>
+                            <div className="md:col-span-9">
+                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Usage Category (Table B.3)</label>
+                              <select value={waterRate} onChange={(e) => setWaterRate(parseFloat(e.target.value))} className="w-full text-sm border-slate-300 rounded-lg p-2.5 border bg-white shadow-sm font-medium">
+                                {WATER_DEMAND_RATES.map((wr, i) => (
+                                  <option key={i} value={wr.rate}>{wr.label} — {wr.rate} Litres/person/day</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-col items-center justify-center">
+                              <span className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1">Total Daily Demand <sub>(V-total)</sub></span>
+                              <span className="text-3xl font-black text-blue-900">{waterData.totalDemand.toFixed(1)} <span className="text-lg">L</span></span>
+                            </div>
+                            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex flex-col items-center justify-center">
+                              <span className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1">50% Alternative Target</span>
+                              <span className="text-3xl font-black text-indigo-900">{waterData.targetYield.toFixed(1)} <span className="text-lg">L</span></span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Yield Section */}
+                      <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <div className="bg-slate-100 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                          <h2 className="font-semibold text-slate-800 text-lg flex items-center gap-2"><Sun className="w-5 h-5 text-orange-500" /> Alternative Heating Equipment</h2>
+                          <div className={`px-4 py-1.5 rounded-lg border text-sm font-bold shadow-sm ${waterData.yieldCompliant ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+                            Total Yield: {waterData.totalYield.toFixed(1)} L {waterData.yieldCompliant ? ' (Pass)' : ' (Fail)'}
+                          </div>
+                        </div>
+                        <div className="p-4 space-y-3">
+                          {waterEquipment.length === 0 ? <div className="text-center py-6 text-slate-400 text-sm">No alternative heating equipment specified.</div> : waterEquipment.map((eq) => (
+                            <div key={eq.id} className="flex items-stretch gap-3 p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
+                              <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                                <div className="md:col-span-8">
+                                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Equipment Description</label>
+                                  <input type="text" value={eq.name} onChange={(e) => handleWaterAction("equipment", "update", eq.id, 'name', e.target.value)} placeholder="e.g. 150L Solar Direct Thermosiphon" className="w-full text-sm border-slate-300 rounded shadow-sm p-2 border" />
+                                </div>
+                                <div className="md:col-span-4">
+                                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Declared Yield (Litres/day)</label>
+                                  <input type="number" min="0" step="1" value={eq.yield} onChange={(e) => handleWaterAction("equipment", "update", eq.id, 'yield', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-300 rounded shadow-sm p-2 border font-bold text-slate-700" />
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-2 items-center justify-center border-l pl-3 border-slate-100">
+                                <button onClick={() => handleWaterAction("equipment", "remove", eq.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="p-4 border-t border-slate-200 bg-white">
+                          <button onClick={() => handleWaterAction("equipment", "add")} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-300 text-slate-700 rounded-lg shadow-sm text-sm"><Plus className="w-4 h-4" /> Add Heating Equipment</button>
+                        </div>
+                      </div>
+
+                      {/* Pipes Section */}
+                      <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <div className="bg-slate-100 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                          <h2 className="font-semibold text-slate-800 text-lg flex items-center gap-2"><Maximize className="w-5 h-5 text-slate-600" /> Pipe Insulation Schedule</h2>
+                          <div className={`px-4 py-1.5 rounded-lg border text-sm font-bold shadow-sm ${waterData.pipesCompliant ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+                            {waterData.pipesCompliant ? 'Pipes Compliant' : 'Insulation Required'}
+                          </div>
+                        </div>
+                        <div className="p-4 space-y-3">
+                          {waterPipes.length === 0 ? <div className="text-center py-6 text-slate-400 text-sm">No pipes specified.</div> : waterPipes.map((p) => {
+                            const reqR = p.diameter <= 80 ? 1.00 : 1.50;
+                            return (
+                            <div key={p.id} className={`flex items-stretch gap-3 p-4 bg-white border rounded-xl shadow-sm ${p.insulated ? 'border-slate-200' : 'border-red-300 bg-red-50/20'}`}>
+                              <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                                <div className="md:col-span-5">
+                                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pipe Reference</label>
+                                  <input type="text" value={p.reference} onChange={(e) => handleWaterAction("pipes", "update", p.id, 'reference', e.target.value)} className="w-full text-sm border-slate-300 rounded shadow-sm p-2 border" />
+                                </div>
+                                <div className="md:col-span-3">
+                                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Int. Diameter (mm)</label>
+                                  <input type="number" min="0" step="1" value={p.diameter} onChange={(e) => handleWaterAction("pipes", "update", p.id, 'diameter', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-300 rounded shadow-sm p-2 border" />
+                                </div>
+                                <div className="md:col-span-4 flex items-center h-full pt-4">
+                                  <label className="flex items-center gap-3 cursor-pointer">
+                                    <input type="checkbox" checked={p.insulated} onChange={(e) => handleWaterAction("pipes", "update", p.id, 'insulated', e.target.checked)} className="w-5 h-5 text-emerald-600 rounded" />
+                                    <span className={`text-sm font-medium ${p.insulated ? 'text-slate-700' : 'text-red-600 font-bold'}`}>R-Value ≥ {reqR.toFixed(2)}</span>
+                                  </label>
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-2 items-center justify-center border-l pl-3 border-slate-100">
+                                <button onClick={() => handleWaterAction("pipes", "remove", p.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                              </div>
+                            </div>
+                            );
+                          })}
+                        </div>
+                        <div className="p-4 border-t border-slate-200 bg-white">
+                          <button onClick={() => handleWaterAction("pipes", "add")} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-300 text-slate-700 rounded-lg shadow-sm text-sm"><Plus className="w-4 h-4" /> Add Pipe</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* --- HVAC TAB --- */}
+              {activeTab === 'hvac' && (
+                <>
+                  <div className="flex flex-col lg:flex-row justify-between items-start gap-6 pb-6 border-b border-slate-100">
+                    <div className="flex-1 w-full space-y-4">
+                      <div><h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">HVAC Calculator</h1><p className="text-slate-500 mt-1">SANS 10400-XA:2026 (Table 11) Equipment Efficiency</p></div>
+                      
+                      <label className="flex items-center gap-3 cursor-pointer bg-slate-50 p-4 rounded-xl border border-slate-200 w-max hover:bg-slate-100 transition-colors shadow-sm">
+                        <input type="checkbox" checked={hvacExempt} onChange={(e) => setHvacExempt(e.target.checked)} className="w-5 h-5 text-blue-600 rounded border-slate-300 cursor-pointer" />
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-700">No Air-Conditioning (Natural Ventilation)</span>
+                          <span className="text-xs text-slate-500">Project does not use unitary or packaged HVAC equipment.</span>
+                        </div>
+                      </label>
+
+                      {hvacExempt && (
+                        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm p-4 rounded-xl flex items-start gap-2 shadow-sm">
+                          <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                          <div><strong>DEEMED TO COMPLY:</strong> The project is exempt from mechanical cooling/heating efficiency requirements.</div>
+                        </div>
+                      )}
+
+                      {!hvacExempt && !hvacData.isCompliant && hvacData.hasEquipment && (
+                         <div className="bg-red-50 border border-red-200 text-red-800 text-sm p-3 rounded-lg flex items-start gap-2 shadow-sm">
+                           <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                           <div><strong>COMPLIANCE FAILURE:</strong> One or more HVAC units do not meet the minimum COP requirements from Table 11.</div>
+                         </div>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
+                        <button onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg shadow-sm text-sm hover:bg-slate-700"><FileText className="w-4 h-4" /> Export Current Tab</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {!hvacExempt && (
+                    <div className="space-y-6">
+                      {hvacData.equipment.length === 0 && (
+                        <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
+                          No HVAC equipment added. Click the button below to start.
+                        </div>
+                      )}
+                      
+                      {hvacData.equipment.map((eq) => (
+                        <div key={eq.id} className={`flex flex-col md:flex-row gap-4 p-5 bg-white border rounded-xl shadow-sm relative ${eq.isCompliant ? 'border-slate-200' : 'border-red-300 bg-red-50/20'}`}>
+                          
+                          <div className="flex-1 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                              <div className="md:col-span-3"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Unit Reference</label><input type="text" value={eq.name} onChange={(e) => handleHvacAction("update", eq.id, 'name', e.target.value)} className="w-full text-sm font-semibold border-slate-300 rounded shadow-sm p-2 border text-slate-800" /></div>
+                              <div className="md:col-span-6">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Equipment Type (Table 11)</label>
+                                <select value={eq.type} onChange={(e) => handleHvacAction("update", eq.id, 'type', e.target.value)} className="w-full text-sm border-slate-300 rounded shadow-sm p-2 border bg-slate-50">
+                                  {HVAC_EQUIPMENT_TYPES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                </select>
+                              </div>
+                              <div className="md:col-span-3"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Capacity (kW)</label><input type="number" step="0.1" min="0" value={eq.capacity} onChange={(e) => handleHvacAction("update", eq.id, 'capacity', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-300 rounded shadow-sm p-2 border" /></div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 bg-slate-50/50 p-4 rounded-lg border border-slate-100 items-start">
+                              <div className="md:col-span-4">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Specified COP (Cooling)</label>
+                                <input type="number" step="0.1" min="0" value={eq.copC} onChange={(e) => handleHvacAction("update", eq.id, 'copC', parseFloat(e.target.value) || 0)} className={`w-full text-sm font-bold border-slate-300 rounded shadow-sm p-2 border ${eq.passC ? 'text-slate-800' : 'text-red-600 bg-red-50 border-red-300'}`} />
+                                <div className="text-[10px] text-slate-500 mt-1">Minimum required: <strong>{eq.limits.copC.toFixed(1)}</strong></div>
+                              </div>
+                              <div className="md:col-span-4">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Specified COP (Heating)</label>
+                                <input type="number" step="0.1" min="0" value={eq.copH} onChange={(e) => handleHvacAction("update", eq.id, 'copH', parseFloat(e.target.value) || 0)} disabled={!eq.limits.reqHeating} className={`w-full text-sm font-bold border-slate-300 rounded shadow-sm p-2 border ${!eq.limits.reqHeating ? 'bg-slate-200 text-slate-400 cursor-not-allowed line-through' : eq.passH ? 'text-slate-800' : 'text-red-600 bg-red-50 border-red-300'}`} />
+                                <div className="text-[10px] text-slate-500 mt-1">{eq.limits.reqHeating ? <>Minimum required: <strong>{eq.limits.copH.toFixed(1)}</strong></> : 'Heating efficiency not applicable.'}</div>
+                              </div>
+                              <div className="md:col-span-4 flex flex-col justify-center h-full">
+                                <label className="flex items-start gap-2 cursor-pointer p-2 hover:bg-slate-100 rounded-md transition-colors border border-transparent hover:border-slate-200">
+                                  <input type="checkbox" checked={eq.resViolation} onChange={(e) => handleHvacAction("update", eq.id, 'resViolation', e.target.checked)} className="mt-0.5 text-blue-600 rounded" />
+                                  <span className="text-[11px] font-medium text-slate-600 leading-tight">Resistance heating power exceeds cooling power</span>
+                                </label>
+                                {eq.resistanceFail && <div className="text-[10px] font-bold text-red-600 px-2 mt-1">Violates Note (a) (Capacity ≥ 10kW)</div>}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-2 items-center justify-center border-l border-slate-100 pl-4">
+                            <button onClick={() => handleHvacAction("remove", eq.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      <button onClick={() => handleHvacAction("add")} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-300 text-slate-700 rounded-lg shadow-sm text-sm hover:bg-slate-100 font-medium"><Plus className="w-4 h-4" /> Add HVAC Equipment</button>
+                    </div>
+                  )}
+                </>
+              )}
+
+            </div> {/* Closes the Active Tab Content div */}
+            {/* --- SETTINGS MODAL --- */}
+            {isSettingsModalOpen && (
+              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+                  <div className="bg-slate-100 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                    <h2 className="font-bold text-slate-800 flex items-center gap-2"><Settings className="w-5 h-5 text-indigo-600" /> Office Configuration</h2>
+                    <button onClick={() => setIsSettingsModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors"><X className="w-5 h-5" /></button>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Company Name</label>
+                      <input type="text" value={officeInfo.companyName} onChange={(e) => handleOfficeUpdate('companyName', e.target.value)} className="w-full text-sm border-slate-300 rounded-lg p-2.5 border" placeholder="Enter company name" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Registered Professional</label>
+                      <input type="text" value={officeInfo.registeredProfessional} onChange={(e) => handleOfficeUpdate('registeredProfessional', e.target.value)} className="w-full text-sm border-slate-300 rounded-lg p-2.5 border" placeholder="e.g. Jane Doe" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">SACAP Registration Number</label>
+                      <input type="text" value={officeInfo.sacapNumber} onChange={(e) => handleOfficeUpdate('sacapNumber', e.target.value)} className="w-full text-sm border-slate-300 rounded-lg p-2.5 border" placeholder="e.g. PrArch 12345" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Company Logo (Max 1MB)</label>
+                      <input type="file" accept="image/*" onChange={handleLogoUpload} className="w-full text-sm border-slate-300 rounded-lg p-2 border file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+                      {officeInfo.logoDataUrl && (
+                        <div className="mt-3 relative inline-block">
+                          <img src={officeInfo.logoDataUrl} alt="Logo Preview" className="h-12 object-contain border rounded p-1" />
+                          <button onClick={() => handleOfficeUpdate('logoDataUrl', '')} className="absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 hover:bg-red-200"><X className="w-3 h-3" /></button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end">
+                    <button onClick={() => setIsSettingsModalOpen(false)} className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-500">Save & Close</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* --- HELP MODAL --- */}
+            {isHelpModalOpen && (
+              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+                  <div className="bg-slate-100 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                    <h2 className="font-bold text-slate-800 flex items-center gap-2"><HelpCircle className="w-5 h-5 text-indigo-600" /> Help & About</h2>
+                    <button onClick={() => setIsHelpModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors"><X className="w-5 h-5" /></button>
+                  </div>
+                  <div className="p-6 space-y-4 text-sm text-slate-600">
+                    <p><strong>XA Express</strong> is a Deemed-to-Satisfy calculator designed for compliance with the SANS 10400-XA 2026 (3rd Edition) regulations.</p>
+                    <hr className="border-slate-200" />
+                    <h3 className="font-bold text-slate-800">Quick Tips:</h3>
+                    <ul className="list-disc pl-5 space-y-2">
+                      <li>Ensure your <strong>Climate Zone</strong> is set correctly on the Project tab, as it dictates all baseline performance targets.</li>
+                      <li>Use the <strong>Layer Builder</strong> in the Walls, Roofs, and Floors tabs to construct assemblies from outside to inside.</li>
+                      <li>If your project is in an <strong>SCCP Area</strong>, single Low-E glazing will automatically flag as non-compliant due to condensation risks.</li>
+                      <li>All data is saved locally in your browser cache. Clearing your browser data will reset the application.</li>
+                    </ul>
+                    <div className="mt-6 space-y-4">
+                      <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100 text-center transition-colors hover:bg-indigo-100/50">
+                        <a href="https://www.cpdcentral.co.za/courses/mastering-sans-10400-XA" target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-indigo-700 hover:text-indigo-800 flex items-center justify-center gap-1.5">
+                          Sign up for the Mastering SANS 10400-XA 3rd edition course on CPD Central <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row justify-between items-center gap-2 pt-4 border-t border-slate-100 text-xs text-slate-400">
+                        <span>Build Version: {BUILD_VERSION}</span>
+                        <span>
+                          &copy; 2026 <a href="https://peterleroux.co.za/sans-10400-xa/" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-600 hover:underline transition-colors">Peter le Roux</a>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end">
+                    <button onClick={() => setIsHelpModalOpen(false)} className="px-5 py-2 bg-slate-800 text-white rounded-lg text-sm font-bold shadow-sm hover:bg-slate-700">Close</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div> {/* Closes the max-w-5xl container div */}
+        </div>       ); // Closes the return statement
+    } // Closes the App() function
+
+    // Mount the React 18 Application
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
