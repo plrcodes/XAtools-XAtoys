@@ -1,0 +1,280 @@
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SANS 10400-XA Edition Comparison</title>
+    
+    <!-- Tailwind CSS (via CDN for standalone use) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM (via CDN for standalone use) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin=""></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin=""></script>
+    
+    <!-- Babel (Compiles JSX in the browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { margin: 0; padding: 0; background-color: #f8fafc; }
+    </style>
+
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- Inline Icon Components (Replacing Lucide for standalone functionality) ---
+        const FileText = ({ size = 24, strokeWidth = 2, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+        );
+        const Layers = ({ size = 24, strokeWidth = 2, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        );
+        const Wind = ({ size = 24, strokeWidth = 2, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg>
+        );
+        const Droplets = ({ size = 24, strokeWidth = 2, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7 2.99 7 2.99s-2.29 6.08-2.29 6.08C3.57 10.01 3 11.11 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M20 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S20 2.99 20 2.99s-2.29 6.08-2.29 6.08c-1.14.94-1.71 2.04-1.71 3.18 0 2.22 1.8 4.05 4 4.05z"/><path d="M13.5 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S13.5 2.99 13.5 2.99s-2.29 6.08-2.29 6.08c-1.14.94-1.71 2.04-1.71 3.18 0 2.22 1.8 4.05 4 4.05z"/></svg>
+        );
+        const Info = ({ size = 24, strokeWidth = 2, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        );
+        const Maximize2 = ({ size = 24, strokeWidth = 2, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        );
+        const Minimize2 = ({ size = 24, strokeWidth = 2, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        );
+        const ArrowRight = ({ size = 24, strokeWidth = 2, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        );
+
+        // --- Main Application ---
+        const App = () => {
+            const [activeTab, setActiveTab] = React.useState('framework');
+            const [expandedRow, setExpandedRow] = React.useState(null);
+
+            const tabs = [
+                { id: 'framework', label: 'Framework', icon: FileText },
+                { id: 'fenestration', label: 'Fenestration', icon: Layers },
+                { id: 'envelope', label: 'Building Envelope', icon: Wind },
+                { id: 'services', label: 'Services (H2O/Light)', icon: Droplets }
+            ];
+
+            const comparisonData = {
+                framework: [
+                {
+                    clause: "Clause 2: Normative References",
+                    ed2: "Referenced numerous standalone standards for solar and gas (e.g., SANS 151, 1307, 1539).",
+                    ed3: "Removed the standalone gas/solar references. Explicitly added SANS 6946 for thermal calculations.",
+                    impact: "Streamlines compliance by avoiding conflicts with primary plumbing codes, and standardizes thermal models under SANS 6946."
+                },
+                {
+                    clause: "Clause 3: Terms and Definitions",
+                    ed2: "Included a specific definition for 'Energy Efficiency Ratio (EER)'.",
+                    ed3: "Removed 'EER' definition. Added a new definition for 'C-value'.",
+                    impact: "Refines the terminology for thermal transmittance and ensures R-value calculations follow a unified national standard."
+                },
+                {
+                    clause: "Clause 4: Compliance Routes",
+                    ed2: "Pathways ordered as: Theoretical Energy, Reference Building, Deemed-to-Satisfy.",
+                    ed3: "Reordered for logical flow: Deemed-to-Satisfy is now 4.2, Theoretical Energy is 4.3.",
+                    impact: "The document structure now positions the DTS route as the primary foundational baseline."
+                },
+                {
+                    clause: "Energy Zones & General Scope",
+                    ed2: "Established the 8 Energy Zones map and theoretical energy demand tables.",
+                    ed3: "Maintains the 8 Energy Zones, orientation tables, and theoretical calculation parameters identically.",
+                    impact: "The geographical mapping and overarching theoretical targets remain completely stable."
+                }
+                ],
+                fenestration: [
+                {
+                    clause: "SHGC Calculation Structure",
+                    ed2: "Grouped Solar Heat Gain Coefficient (SHGC) rules generally by orientation.",
+                    ed3: "Explicitly splits rules into dedicated categories for 'Shaded', 'Unshaded', and 'Southern' windows.",
+                    impact: "Prevents a highly efficient window on one facade from improperly offsetting a poorly performing window on another."
+                },
+                {
+                    clause: "Shading & Latitude Multipliers",
+                    ed2: "Shading multipliers were present but applied within broader orientation groupings.",
+                    ed3: "Strict application of multipliers (P = H x M) based on latitude to classify 'Shaded' vs 'Unshaded'.",
+                    impact: "A window in Cape Town requires a significantly longer overhang than the exact same window in Polokwane to qualify as 'Shaded'."
+                },
+                {
+                    clause: "Averaging & Mixing Windows",
+                    ed2: "Calculations often performed as a broad average across a facade or storey.",
+                    ed3: "Introduces a specific formula for computing area-weighted averages per tenancy.",
+                    impact: "Ensures every individual tenant space meets a baseline of thermal efficiency, rather than just the building average."
+                },
+                {
+                    clause: "Roof Lights",
+                    ed2: "Allowed ≤ 1.5% of floor area without restriction, and up to 10% on a sliding thermal scale.",
+                    ed3: "Moved to Clause 5.3.9 but remains functionally identical. Same 1.5% and 10% thresholds apply.",
+                    impact: "No major design impact; designers can use the same roof light ratios as they did in Edition 2."
+                }
+                ],
+                envelope: [
+                {
+                    clause: "Roof Insulation Installation",
+                    ed2: "Provided basic guidelines and R-values for the 8 Energy Zones.",
+                    ed3: "Added expanded emphasis and detailed diagrams (Figures F.1–F.5) on preventing insulation compression.",
+                    impact: "Highlights that if bulk insulation is compressed, it fails to achieve its design R-value, leading to stricter site oversight."
+                },
+                {
+                    clause: "Wall & Floor Insulation R-Values",
+                    ed2: "Required specific minimum R-values based on the 8 Energy Zones.",
+                    ed3: "Unchanged. The tables dictating minimum R-values for masonry walls, non-masonry walls, and floors remain identical.",
+                    impact: "Architects and engineers will use the exact same R-value targets for walls and floors as they did in Edition 2."
+                }
+                ],
+                services: [
+                {
+                    clause: "Hot Water Sizing (Table 10)",
+                    ed2: "Contained 'Table 10' with rigid storage volumes based on occupancy class.",
+                    ed3: "Table 10 is completely removed. Sizing is now handled solely by SANS 10252-1.",
+                    impact: "Engineers must calculate actual building demand based on specific fixtures and population, rather than using generic XA tables."
+                },
+                {
+                    clause: "Heat Pumps & Alternative Tech",
+                    ed2: "Included explanatory notes detailing alternative technologies and the degradation of Energy Efficiency Ratios (EER).",
+                    ed3: "Removed all explanatory notes regarding alternative tech and EER degradation.",
+                    impact: "Removes explanatory thermodynamic theory, relying purely on the strict 50% non-resistance heating mandate."
+                },
+                {
+                    clause: "Pipe Insulation (Table 11)",
+                    ed2: "Contained Table 11, dictating exact minimum pipe insulation R-values.",
+                    ed3: "Table 11 was entirely removed. Pipe insulation requirements now defer completely to SANS 10252-1.",
+                    impact: "All physical installation rules for hot water reticulation are now centralized strictly within the plumbing code."
+                },
+                {
+                    clause: "Lighting Control (Sensors)",
+                    ed2: "General requirements for lighting power density with some sensor mandates.",
+                    ed3: "Explicitly mandates occupancy/daylight sensors for all occupancies except H3 & H4, with a strict max area of 100m² per sensor.",
+                    impact: "Significant increase in the required number of sensors for commercial spaces like large open-plan offices."
+                }
+                ]
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-800">
+                    <div className="max-w-5xl mx-auto">
+                        
+                        {/* Header & CTA */}
+                        <header className="mb-8 border-b border-slate-200 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                            <div>
+                                <h1 className="text-3xl font-bold text-slate-900 mb-2">
+                                    SANS 10400-XA Comparison
+                                </h1>
+                                <p className="text-slate-500">
+                                    Mapping technical transitions from Edition 2 (2021) to Edition 3 (2026)
+                                </p>
+                            </div>
+                            
+                            <a 
+                                href="https://www.cpdcentral.co.za/courses/mastering-sans-10400-XA" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 text-sm rounded-lg shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                            >
+                                Sign up for CPD course
+                                <ArrowRight size={16} />
+                            </a>
+                        </header>
+
+                        {/* Tab Navigation */}
+                        <div className="flex flex-wrap gap-2 mb-6 bg-white p-2 rounded-xl shadow-sm border border-slate-200">
+                            {tabs.map((tab) => {
+                                const Icon = tab.icon;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => {
+                                            setActiveTab(tab.id);
+                                            setExpandedRow(null);
+                                        }}
+                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 font-medium ${
+                                            activeTab === tab.id
+                                                ? 'bg-blue-600 text-white shadow-md'
+                                                : 'text-slate-600 hover:bg-slate-100'
+                                        }`}
+                                    >
+                                        <Icon size={18} />
+                                        {tab.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Comparison Table */}
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div className="hidden md:grid grid-cols-12 bg-slate-100 border-b border-slate-200 py-3 px-4 font-bold text-sm text-slate-600 uppercase tracking-wider">
+                                <div className="col-span-3">Feature / Clause</div>
+                                <div className="col-span-4 border-l border-slate-300 pl-4">Edition 2 (2021)</div>
+                                <div className="col-span-5 border-l border-slate-300 pl-4">Edition 3 (2026)</div>
+                            </div>
+
+                            <div className="divide-y divide-slate-100">
+                                {comparisonData[activeTab].map((item, index) => (
+                                    <div 
+                                        key={index}
+                                        className="group relative cursor-pointer hover:bg-blue-50/30 transition-colors"
+                                        onClick={() => setExpandedRow(expandedRow === index ? null : index)}
+                                    >
+                                        <div className="grid grid-cols-1 md:grid-cols-12 py-5 px-4 items-start gap-4">
+                                            <div className="col-span-1 md:col-span-3 flex items-start gap-3">
+                                                <div className={`mt-1 p-1 rounded shrink-0 ${expandedRow === index ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'}`}>
+                                                    {expandedRow === index ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+                                                </div>
+                                                <span className="font-semibold text-slate-900 leading-tight">
+                                                    {item.clause}
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="col-span-1 md:col-span-4 text-slate-600 text-sm leading-relaxed md:border-l border-slate-100 md:pl-4">
+                                                <span className="md:hidden text-xs font-bold text-slate-400 uppercase mb-1 block">Edition 2</span>
+                                                {item.ed2}
+                                            </div>
+                                            
+                                            <div className="col-span-1 md:col-span-5 text-slate-800 font-medium text-sm leading-relaxed md:border-l border-slate-100 md:pl-4">
+                                                <span className="md:hidden text-xs font-bold text-slate-400 uppercase mb-1 block">Edition 3</span>
+                                                {item.ed3}
+                                            </div>
+                                        </div>
+
+                                        {/* Expanded Details */}
+                                        {expandedRow === index && (
+                                            <div className="px-4 pb-5 md:ml-[25%] mr-4 animate-in fade-in duration-200">
+                                                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-start gap-3">
+                                                    <div className="bg-blue-600 text-white rounded-full p-1 mt-0.5 shrink-0">
+                                                        <Info size={14} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-bold text-blue-800 uppercase mb-1">Professional Impact</p>
+                                                        <p className="text-sm text-blue-900 leading-relaxed">{item.impact}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        {/* Footer Link */}
+                        <div className="mt-8 mb-4 text-center">
+                            <a 
+                                href="https://peterleroux.co.za/" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-sm font-medium text-slate-400 hover:text-blue-600 transition-colors"
+                            >
+                                https://peterleroux.co.za/
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
