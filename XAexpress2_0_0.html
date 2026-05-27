@@ -534,7 +534,7 @@ function App() {
           </head><body>
             ${(officeInfo.logoDataUrl || officeInfo.companyName) ? `<div style="margin-bottom: 30px; display: flex; align-items: center; gap: 20px;">${officeInfo.logoDataUrl ? `<img src="${officeInfo.logoDataUrl}" style="max-height: 60px; max-width: 250px; object-fit: contain;" />` : ''}${officeInfo.companyName ? `<h2 style="margin: 0; color: #334155; font-size: 20px; border:none; padding:0;">${officeInfo.companyName}</h2>` : ''}</div>` : ''}
             <div class="header"><div><h1>${title}</h1><p style="color: #0f172a; font-weight: bold; margin-bottom: 5px;">XA 2026 3rd edition deemed-to-satisfy calculator</p><p class="date">${reportDate} | ${projType}</p></div>
-              <div class="proj-details"><strong>${projectInfo.projectName || 'Untitled'}</strong><br/>Lat ${projectInfo.latitude}°S | Zone ${zone}<br/>${projectInfo.isSccp ? 'SCCP Active' : 'No SCCP'}</div>
+              <div class="proj-details"><strong>${projectInfo.projectName || 'Untitled'}${projectInfo.standNumber ? ` - Stand ${projectInfo.standNumber}` : ''}${projectInfo.township ? `, ${projectInfo.township}` : ''}</strong><br/>Lat ${projectInfo.latitude}°S | Zone ${zone}<br/>${projectInfo.isSccp ? 'SCCP Active' : 'No SCCP'}</div>
             </div>
             <div style="padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; margin-bottom: 30px;">
               <h3 style="margin-top: 0; color: #334155; font-size: 14px; text-transform: uppercase;">Project Parameters</h3>
@@ -549,7 +549,7 @@ function App() {
 
       const exportFullReport = () => {
         const fullContent = ['walls', 'roofs', 'floors', 'fenestration', 'skylights', 'lighting', 'water', 'hvac'].map(tab => `<div class="${tab !== 'walls' ? 'page-break' : ''}">${getTabHTML(tab)}</div>`).join('');
-        runReport('Comprehensive Compliance Report', fullContent);
+        runReport('Deemed to satisfy energy efficiency report', fullContent);
       };
 
       const exportPDF = () => {
