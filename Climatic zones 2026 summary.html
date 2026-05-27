@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SANS 10400-XA : 2026 - Climatic Zones</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen bg-white text-stone-800 p-8 font-sans selection:bg-stone-300">
+
+  <header class="max-w-6xl mx-auto mb-12 border-b border-stone-200 pb-8 flex flex-col md:flex-row justify-between items-end gap-6">
+    <div>
+      <h2 class="font-mono text-sm tracking-widest uppercase mb-2 text-stone-500">SANS 10400-XA : 2026</h2>
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-stone-900">Climatic Zones</h1>
+      <p class="mt-4 text-stone-600 max-w-xl leading-relaxed">
+        Architectural requirements vary drastically across South Africa. This schematic outlines the 7 distinct energy zones, their thermal loads, and the baseline architectural strategies required to meet the Deemed-to-Satisfy regulations.
+      </p>
+    </div>
+    <a 
+      href="https://csir.maps.arcgis.com/apps/webappviewer/index.html?id=79602766e2b54ede82625c939ac1814b"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors text-sm font-medium shadow-sm whitespace-nowrap mb-1"
+    >
+      <i data-lucide="map-pin" class="w-4 h-4"></i>
+      Detailed Energy Zone Map
+      <i data-lucide="external-link" class="w-3.5 h-3.5 ml-1 opacity-70"></i>
+    </a>
+  </header>
+
+  <main id="zone-grid" class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    </main>
+
+  <script>
+    // 1. Data Definition
+    const zones = [
+      {
+        id: '1',
+        name: 'Cold Interior',
+        icon: 'thermometer-snowflake',
+        cities: 'Johannesburg, Bloemfontein',
+        heatingLoad: 3,
+        coolingLoad: 3,
+        heatingText: 'MED',
+        coolingText: 'MED',
+        color: '#fbb044',
+        description: 'Characterised by distinct seasonal variations. Cold, dry winters require significant heating, while summers are generally warm but manageable.',
+        strategy: 'Prioritise north-facing glazing for winter solar heat gain. High levels of roof and ceiling insulation are essential, alongside rigorous draft-proofing and cavity walls to retain heat.'
+      },
+      {
+        id: '2',
+        name: 'Temperate Interior',
+        icon: 'cloud-sun',
+        cities: 'Caledon, Worcester',
+        heatingLoad: 3,
+        coolingLoad: 1,
+        heatingText: 'MED',
+        coolingText: 'LOW',
+        color: '#f9fb63',
+        description: 'Milder than Zone 1. Winters are chilly but shorter, and summers are warm. Balances moderate heating and cooling requirements.',
+        strategy: 'A balanced approach. Requires moderate roof insulation and strategic overhangs to shade northern glazing during summer while allowing winter sun penetration.'
+      },
+      {
+        id: '3',
+        name: 'Hot Interior',
+        icon: 'sun',
+        cities: 'Thohoyandou, Augrabies Falls',
+        heatingLoad: 1,
+        coolingLoad: 4,
+        heatingText: 'LOW',
+        coolingText: 'HIGH',
+        color: '#bfd489',
+        description: 'Intense summer heat dominates this climate. Winters are generally mild to warm. The primary architectural challenge is keeping the building cool.',
+        strategy: 'Cooling-dominated. High thermal mass walls to delay heat transfer, extensive shading of all glazing (especially west-facing), and light-colored, reflective roofs are critical.'
+      },
+      {
+        id: '4',
+        name: 'Temperate Coastal',
+        icon: 'wind',
+        cities: 'Cape Town, Bisho',
+        heatingLoad: 1,
+        coolingLoad: 1,
+        heatingText: 'LOW',
+        coolingText: 'LOW',
+        color: '#2593c6',
+        description: 'Coastal influence moderates extremes. Characterised by wet, cool winters and warm, dry, windy summers.',
+        strategy: 'Focus on moisture control and harnessing coastal breezes for summer cooling. Moderate insulation is required, with fenestration designed to limit western afternoon sun exposure.'
+      },
+      {
+        id: '5',
+        name: 'Sub-tropical',
+        icon: 'waves',
+        cities: 'Pretoria, East London',
+        heatingLoad: 1,
+        coolingLoad: 3,
+        heatingText: 'LOW',
+        coolingText: 'MED',
+        color: '#82afaa',
+        description: 'Hot and humid summers with very mild winters. The primary focus is dealing with the cooling load and basic moisture control.',
+        strategy: 'Lightweight construction (low thermal mass) is preferred to prevent heat trapping. Requires deep roof overhangs, reflective roofing, and maximum cross-ventilation.'
+      },
+      {
+        id: '5H',
+        name: 'Elevated Humidity',
+        icon: 'droplets',
+        cities: 'Durban, Port St Johns',
+        heatingLoad: 1,
+        coolingLoad: 3,
+        heatingText: 'LOW',
+        coolingText: 'MED',
+        color: '#82afaa',
+        hatch: true,
+        description: 'Similar to Zone 5 but subjected to significantly elevated humidity levels that impact thermal comfort and condensation.',
+        strategy: 'Maximise natural ventilation using stack-effect principles. Requires strict moisture barriers, breathable materials, and aggressive shading to manage intense heat and humidity.'
+      },
+      {
+        id: '6',
+        name: 'Arid Interior',
+        icon: 'sunset',
+        cities: 'Jamestown, Molteno',
+        heatingLoad: 4,
+        coolingLoad: 1,
+        heatingText: 'HIGH',
+        coolingText: 'LOW',
+        color: '#f96c2a',
+        description: 'Extreme diurnal temperature swings. Can be scorching hot during the summer days and freezing cold during winter nights.',
+        strategy: 'Heavy thermal mass (thick walls) is vital to flatten extreme day-night temperature swings. Combine with high-performance roof insulation and well-shaded living areas.'
+      },
+      {
+        id: '7',
+        name: 'Very Cold',
+        icon: 'snowflake',
+        cities: 'Fraserburg',
+        heatingLoad: 4,
+        coolingLoad: 3,
+        heatingText: 'HIGH',
+        coolingText: 'MED',
+        color: '#e500a9',
+        description: 'The harshest winter climate in South Africa. Characterised by extreme cold, snow, and severe frost.',
+        strategy: 'Heating-dominated. Maximum DTS insulation targets across roofs, walls, and floors. Double glazing is highly recommended, alongside maximized north-facing solar gain.'
+      }
+    ];
+
+    // 2. Helper Components
+    const generateLoadBar = (load, type, text) => {
+      const isHeating = type === 'heating';
+      const textColor = isHeating ? 'text-orange-700' : 'text-blue-700';
+      const highlightBg = isHeating ? 'bg-orange-500' : 'bg-blue-500';
+      const strongTextColor = isHeating ? 'text-orange-800' : 'text-blue-800';
+      
+      let blocksHtml = '';
+      for (let i = 0; i < 5; i++) {
+        const bgClass = i < load ? highlightBg : 'bg-stone-100';
+        blocksHtml += `<div class="h-3 w-4 border border-stone-800 ${bgClass}"></div>`;
+      }
+
+      return `
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-mono w-16 ${textColor}">
+              ${isHeating ? 'HEATING' : 'COOLING'}
+            </span>
+            <div class="flex gap-1">
+              ${blocksHtml}
+            </div>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-wide ${strongTextColor}">
+            ${text}
+          </span>
+        </div>
+      `;
+    };
+
+    const legendCardHtml = `
+      <div class="bg-stone-50 rounded-xl border-2 border-stone-200 border-dashed p-6 flex flex-col justify-center items-center text-center">
+        <div class="font-mono text-xs text-stone-500 mb-4 uppercase tracking-widest font-bold">
+          Energy Load Scale
+        </div>
+        <div class="space-y-4 text-left w-full max-w-[200px]">
+          <div>
+            <div class="flex gap-1 mb-1">
+              <div class="h-2 w-3 border border-stone-800 bg-stone-800"></div>
+              <div class="h-2 w-3 border border-stone-800 bg-stone-800"></div>
+              <div class="h-2 w-3 border border-stone-800 bg-stone-800"></div>
+              <div class="h-2 w-3 border border-stone-800 bg-stone-800"></div>
+              <div class="h-2 w-3 border border-stone-800 bg-stone-800"></div>
+            </div>
+            <span class="text-xs font-mono text-stone-600 font-bold">5 = V. HIGH</span>
+          </div>
+          <div>
+            <div class="flex gap-1 mb-1">
+              <div class="h-2 w-3 border border-stone-800 bg-stone-500"></div>
+              <div class="h-2 w-3 border border-stone-800 bg-stone-500"></div>
+              <div class="h-2 w-3 border border-stone-800 bg-stone-500"></div>
+              <div class="h-2 w-3 border border-stone-300 bg-transparent"></div>
+              <div class="h-2 w-3 border border-stone-300 bg-transparent"></div>
+            </div>
+            <span class="text-xs font-mono text-stone-600 font-bold">3 = MED</span>
+          </div>
+           <div>
+            <div class="flex gap-1 mb-1">
+              <div class="h-2 w-3 border border-stone-800 bg-stone-300"></div>
+              <div class="h-2 w-3 border border-stone-300 bg-transparent"></div>
+              <div class="h-2 w-3 border border-stone-300 bg-transparent"></div>
+              <div class="h-2 w-3 border border-stone-300 bg-transparent"></div>
+              <div class="h-2 w-3 border border-stone-300 bg-transparent"></div>
+            </div>
+            <span class="text-xs font-mono text-stone-600 font-bold">1 = LOW</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 3. Render Logic
+    const gridContainer = document.getElementById('zone-grid');
+    
+    let gridHtml = '';
+    zones.forEach(zone => {
+      // Fine black diagonal hatch for 5H
+      const bgStyle = `background-color: ${zone.color}; ${zone.hatch ? 'background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.2) 10px, rgba(0,0,0,0.2) 11px);' : ''}`;
+      
+      gridHtml += `
+        <div 
+          class="relative rounded-xl p-6 transition-all duration-300 border border-stone-300/50 shadow-md hover:shadow-xl hover:-translate-y-1 group"
+          style="${bgStyle}"
+        >
+          <div class="flex justify-between items-start mb-6">
+            <div class="p-3 rounded-lg bg-white/90 shadow-sm border border-white/50 text-stone-800 backdrop-blur-sm">
+              <i data-lucide="${zone.icon}" class="w-6 h-6" stroke-width="1.5"></i>
+            </div>
+            <div class="text-right">
+              <span class="font-mono text-xs text-stone-700 block">ZONE</span>
+              <span class="font-bold text-2xl font-mono text-stone-900">${zone.id}</span>
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <h3 class="text-xl font-bold mb-2 text-stone-900">${zone.name}</h3>
+            <div class="flex items-start gap-1.5 text-stone-800">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 mt-0.5 shrink-0"></i>
+              <span class="text-xs font-mono uppercase tracking-wider leading-tight font-semibold">
+                ${zone.cities}
+              </span>
+            </div>
+          </div>
+
+          <div class="mb-6 p-4 rounded-lg bg-white/95 shadow-sm border border-white/50 backdrop-blur-sm">
+            ${generateLoadBar(zone.heatingLoad, 'heating', zone.heatingText)}
+            ${generateLoadBar(zone.coolingLoad, 'cooling', zone.coolingText)}
+          </div>
+
+          <div class="text-sm text-stone-900 leading-relaxed mb-6 font-medium">
+            ${zone.description}
+          </div>
+
+          <div class="pt-4 border-t border-stone-900/20">
+            <div class="flex items-center gap-1.5 mb-2 text-stone-900 font-bold text-xs uppercase tracking-wider">
+              <i data-lucide="home" class="w-3.5 h-3.5"></i>
+              <span>DTS Strategy</span>
+            </div>
+            <p class="text-sm font-semibold text-stone-900 italic">
+              "${zone.strategy}"
+            </p>
+          </div>
+        </div>
+      `;
+    });
+
+    // Add cards and legend
+    gridContainer.innerHTML = gridHtml + legendCardHtml;
+
+    // 4. Initialize Lucide Icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>
