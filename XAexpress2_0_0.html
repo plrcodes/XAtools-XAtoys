@@ -796,16 +796,16 @@ return (
                         <div className="text-2xl font-black tracking-tight text-slate-700">{fenestrationData.global.ratio.toFixed(1)}%</div>
                         <div className="text-[10px] font-medium mt-1 text-slate-500">Tier: {fenestrationData.global.exempt ? '≤ 20%' : fenestrationData.global.ratio > 60 ? '> 60%' : `≤ ${Math.ceil(fenestrationData.global.ratio / 5) * 5}%`}</div>
                       </div>
-                      <div className={`border rounded-xl p-3 min-w-[140px] text-center transition-opacity ${fenestrationData.global.exempt ? 'bg-slate-100 border-slate-200 opacity-70' : fenestrationData.global.aggU <= fenestrationData.global.maxU ? 'bg-slate-50 border-slate-200' : 'bg-orange-50 border-orange-200'}`}>
-                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Global Agg U</div>
-                        <div className={`text-2xl font-black tracking-tight ${fenestrationData.global.exempt ? 'text-slate-400' : fenestrationData.global.aggU <= fenestrationData.global.maxU ? 'text-slate-700' : 'text-orange-700'}`}>{fenestrationData.global.aggU.toFixed(2)}</div>
-                        <div className="text-[10px] font-medium mt-1 text-slate-500">Target: {fenestrationData.global.exempt ? 'N/A' : `≤ ${fenestrationData.global.maxU.toFixed(2)}`}</div>
-                      </div>
-                      <div className={`border rounded-xl p-3 min-w-[140px] text-center transition-opacity ${fenestrationData.global.exempt ? 'bg-slate-100 border-slate-200 opacity-70' : fenestrationData.global.aggSHGC <= fenestrationData.global.maxSHGC ? 'bg-slate-50 border-slate-200' : 'bg-orange-50 border-orange-200'}`}>
-                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Blended SHGC</div>
-                        <div className={`text-2xl font-black tracking-tight ${fenestrationData.global.exempt ? 'text-slate-400' : fenestrationData.global.aggSHGC <= fenestrationData.global.maxSHGC ? 'text-slate-700' : 'text-orange-700'}`}>{fenestrationData.global.aggSHGC.toFixed(2)}</div>
-                        <div className="text-[10px] font-medium mt-1 text-slate-500">Target: {fenestrationData.global.exempt ? 'N/A' : `≤ ${fenestrationData.global.maxSHGC.toFixed(2)}`}</div>
-                      </div>
+                      <div className={`border rounded-xl p-3 min-w-[140px] text-center transition-opacity ${fenestrationData.global.exempt ? 'bg-slate-100 border-slate-200 opacity-70' : fenestrationData.global.aggU <= fenestrationData.global.maxU ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Global Agg U</div>
+                      <div className={`text-2xl font-black tracking-tight ${fenestrationData.global.exempt ? 'text-slate-400' : fenestrationData.global.aggU <= fenestrationData.global.maxU ? 'text-emerald-700' : 'text-red-700'}`}>{fenestrationData.global.aggU.toFixed(2)}</div>
+                      <div className="text-[10px] font-medium mt-1 text-slate-500">Target: {fenestrationData.global.exempt ? 'N/A' : `≤ ${fenestrationData.global.maxU.toFixed(2)}`}</div>
+                    </div>
+                    <div className={`border rounded-xl p-3 min-w-[140px] text-center transition-opacity ${fenestrationData.global.exempt ? 'bg-slate-100 border-slate-200 opacity-70' : fenestrationData.global.aggSHGC <= fenestrationData.global.maxSHGC ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Blended SHGC</div>
+                      <div className={`text-2xl font-black tracking-tight ${fenestrationData.global.exempt ? 'text-slate-400' : fenestrationData.global.aggSHGC <= fenestrationData.global.maxSHGC ? 'text-emerald-700' : 'text-red-700'}`}>{fenestrationData.global.aggSHGC.toFixed(2)}</div>
+                      <div className="text-[10px] font-medium mt-1 text-slate-500">Target: {fenestrationData.global.exempt ? 'N/A' : `≤ ${fenestrationData.global.maxSHGC.toFixed(2)}`}</div>
+                    </div>
                     </div>
                   </div>
 
