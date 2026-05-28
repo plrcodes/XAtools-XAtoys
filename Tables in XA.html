@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SANS 10400-XA (Ed 3) Table Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        .expand-transition {
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden bg-slate-50">
+
+    <!-- Header / Navigation -->
+    <header class="bg-white shadow-sm px-6 md:px-8 py-5 flex flex-col md:flex-row md:items-center justify-between gap-4 z-20 shrink-0 border-b border-slate-200">
+        <div>
+            <div class="flex items-center gap-3 mb-1">
+                <i data-lucide="book-open" class="w-6 h-6 text-blue-600"></i>
+                <h1 class="text-2xl font-bold text-slate-800 tracking-tight" id="currentCategoryTitle">All Tables</h1>
+            </div>
+            <div class="flex items-center text-sm text-slate-500">
+                <span class="font-medium uppercase tracking-wider text-[11px] mr-2 border-r border-slate-300 pr-2">SANS 10400-XA (Ed 3)</span>
+                <span id="resultCount" class="font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded mr-1">17</span> tables found
+            </div>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+            <!-- Search -->
+            <div class="relative w-full sm:w-64">
+                <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                <input type="text" id="searchInput" placeholder="Search tables..." 
+                    class="w-full bg-slate-50 text-sm text-slate-900 placeholder-slate-400 rounded-lg pl-9 pr-4 py-2.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors">
+            </div>
+            
+            <!-- Category Combobox -->
+            <div class="relative w-full sm:w-56">
+                <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                    <i data-lucide="filter" class="w-4 h-4 text-slate-400"></i>
+                </div>
+                <select id="categorySelect" onchange="filterCategory(this.value)"
+                    class="w-full bg-slate-50 text-sm font-medium text-slate-800 rounded-lg pl-9 pr-8 py-2.5 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 border border-slate-200 transition-colors cursor-pointer hover:bg-slate-100">
+                    <option value="All">All Categories</option>
+                    <option value="Energy Limits">Energy Limits</option>
+                    <option value="Fenestration">Fenestration & Shading</option>
+                    <option value="Building Envelope">Building Envelope</option>
+                    <option value="Services">Building Services</option>
+                    <option value="Modelling">Modelling Annexures</option>
+                </select>
+                <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden">
+        
+        <!-- Data Table Container -->
+        <div class="flex-1 p-6 md:p-8 overflow-hidden flex flex-col">
+            
+            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex-1 flex flex-col relative">
+                <div class="overflow-auto flex-1">
+                    <table class="w-full text-left border-collapse min-w-[800px]" id="mainTable">
+                        <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+                            <tr>
+                                <th class="py-3 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">ID</th>
+                                <th class="py-3 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Title & Description</th>
+                                <th class="py-3 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider w-48">Category</th>
+                                <th class="py-3 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider w-64">Referenced In</th>
+                                <th class="py-3 px-6 w-12"></th> <!-- For Chevron -->
+                            </tr>
+                        </thead>
+                        <tbody id="tableGrid" class="divide-y divide-slate-100">
+                            <!-- Rows will be injected here via JavaScript -->
+                        </tbody>
+                    </table>
+                    
+                    <!-- Empty State -->
+                    <div id="emptyState" class="hidden flex-col items-center justify-center h-full min-h-[300px] text-center p-8 absolute inset-0 bg-white">
+                        <div class="bg-slate-100 p-4 rounded-full mb-4">
+                            <i data-lucide="search-x" class="w-8 h-8 text-slate-400"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-slate-800">No tables found</h3>
+                        <p class="text-slate-500 text-sm mt-1 max-w-sm">We couldn't find any tables matching your search criteria. Try adjusting your keywords.</p>
+                        <button onclick="clearSearch()" class="mt-4 text-blue-600 text-sm font-medium hover:underline">Clear search</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Database of all tables extracted from SANS 10400-XA Edition 3
+        const tableData = [
+            {
+                id: 'Table 1',
+                title: 'Maximum annual energy consumption',
+                subtitle: 'per building classification for each energy zone (kWh/m²/a)',
+                category: 'Energy Limits',
+                icon: 'zap',
+                pertainsTo: 'The maximum allowable energy consumption per year based on the building\'s occupancy class and its specific climatic energy zone.',
+                clauses: ['Clause 4.3', 'Annex A.2']
+            },
+            {
+                id: 'Table 2',
+                title: 'Maximum Annual demand intensity',
+                subtitle: 'per building classification for each energy zone (VA/m²)',
+                category: 'Energy Limits',
+                icon: 'activity',
+                pertainsTo: 'The peak electrical demand limits allowed per square meter, categorized by occupancy class and energy zone.',
+                clauses: ['Clause 4.3']
+            },
+            {
+                id: 'Table 3',
+                title: 'Multiplier for shading projection',
+                subtitle: 'on facades with West, North-West, North, North-East and East sector orientation',
+                category: 'Fenestration',
+                icon: 'sun-dim',
+                pertainsTo: 'A multiplier based on geographical latitude used to calculate the necessary minimum shading projection (overhang) for specific window orientations to be considered "shaded".',
+                clauses: ['Clause 5.2.2']
+            },
+            {
+                id: 'Table 4',
+                title: 'Area weighted average maximum whole fenestration element performance',
+                subtitle: 'values for vertical fenestration',
+                category: 'Fenestration',
+                icon: 'layout-template',
+                pertainsTo: 'The maximum allowed U-Values and Solar Heat Gain Coefficients (SHGC) for vertical windows, dictating performance based on the total fenestration percentage of a storey and shading conditions.',
+                clauses: ['Clause 5.3.4', 'Clause 5.3.5', 'Clause 5.3.6', 'Annex E']
+            },
+            {
+                id: 'Table 5',
+                title: 'Roof lights',
+                subtitle: 'thermal performance of fenestration',
+                category: 'Fenestration',
+                icon: 'sun',
+                pertainsTo: 'Required U-Values and SHGC limits for roof lights, dictated by the ratio of fenestration area to the total floor space served.',
+                clauses: ['Clause 5.3.9']
+            },
+            {
+                id: 'Table 6',
+                title: 'Minimum R-value requirements (Heavy Walls)',
+                subtitle: 'for walls with a surface density equal or greater than 270 kg/m²',
+                category: 'Building Envelope',
+                icon: 'brick-wall',
+                pertainsTo: 'Thermal resistance requirements and standard construction methods (like 50 mm cavity walls) for heavy, high-density exterior walls across different energy zones.',
+                clauses: ['Clause 5.5.1']
+            },
+            {
+                id: 'Table 7',
+                title: 'Minimum R-value requirements (Light Walls)',
+                subtitle: 'for walls with a surface density less than 270 kg/m²',
+                category: 'Building Envelope',
+                icon: 'panel-top',
+                pertainsTo: 'The required thermal resistance (R-Value) and time constant (CR-Value) for lighter/low-density exterior wall assemblies.',
+                clauses: ['Section 5.5']
+            },
+            {
+                id: 'Table 8',
+                title: 'Minimum total R-values of roofs assemblies',
+                subtitle: 'and levels of thermal insulation',
+                category: 'Building Envelope',
+                icon: 'home',
+                pertainsTo: 'Required total roof R-values by energy zone, detailing the necessary installation thicknesses for various bulk insulation materials (e.g., cellulose, glass wool, EPS).',
+                clauses: ['Clause 5.6.2']
+            },
+            {
+                id: 'Table 9',
+                title: 'R-values achieved by reflective foil laminates',
+                subtitle: 'Based on direction of heat flow and pitch',
+                category: 'Building Envelope',
+                icon: 'layers',
+                pertainsTo: 'The thermal resistance (R-value) added to a roof assembly by reflective foil insulation, which varies significantly by heat flow direction (up vs. down), roof pitch, and material emissivity.',
+                clauses: ['Clause 5.6.2 (Note 2)']
+            },
+            {
+                id: 'Table 10',
+                title: 'Maximum lighting power density',
+                subtitle: 'for the class of occupancy (W/m²)',
+                category: 'Services',
+                icon: 'lightbulb',
+                pertainsTo: 'The maximum permitted electrical power for lighting per square meter (W/m²) tailored to specific building uses (e.g., offices, hospitals, residences).',
+                clauses: ['Clause 6.2.1', 'Clause 6.2.2']
+            },
+            {
+                id: 'Table 11',
+                title: 'Minimum coefficient of performance (COP)',
+                subtitle: 'cooling mode (COPC) and heating mode (COPH) of HVAC',
+                category: 'Services',
+                icon: 'wind',
+                pertainsTo: 'The minimum energy efficiency standards for various air-conditioning, unitary, and chiller systems.',
+                clauses: ['Clause 6.3']
+            },
+            {
+                id: 'Table A.1',
+                title: 'Intended energy trajectory',
+                subtitle: 'normalized to 2021',
+                category: 'Energy Limits',
+                icon: 'trending-down',
+                pertainsTo: 'The targeted percentage reductions in building energy usage over 15 years, stepping down towards stricter requirements in 2030.',
+                clauses: ['Annex A.2', 'Annex A.4']
+            },
+            {
+                id: 'Table B.1',
+                title: 'Internal heat gains',
+                subtitle: 'for appliances and equipment',
+                category: 'Modelling',
+                icon: 'plug',
+                pertainsTo: 'Standardized internal heat load values (W/m²) representing plug loads, used when generating theoretical energy models for different occupancies.',
+                clauses: ['Annex B.2']
+            },
+            {
+                id: 'Table B.2',
+                title: 'Design utilization rates',
+                subtitle: 'Occupancy hours of the day',
+                category: 'Modelling',
+                icon: 'clock',
+                pertainsTo: 'Standardized fractional schedules for occupancy, lighting, and equipment usage across different hours of the day and week, used for software energy modeling.',
+                clauses: ['Annex B.1', 'Annex B.2']
+            },
+            {
+                id: 'Table B.3',
+                title: 'Design hot water consumption rates',
+                subtitle: '(stored at 60ºC for health reasons)',
+                category: 'Services',
+                icon: 'droplets',
+                pertainsTo: 'Modeling assumptions for average daily hot water usage (liters per capita per day) categorized by building type, replacing the prescriptive sizing tables of Edition 2.',
+                clauses: ['Annex B.3']
+            },
+            {
+                id: 'Table C.1',
+                title: 'List of cities and towns by energy zones',
+                subtitle: 'Coordinates and SCCP status',
+                category: 'Modelling',
+                icon: 'map-pin',
+                pertainsTo: 'A comprehensive geographical index of South African towns, detailing their longitude, latitude, energy zones, and whether they fall into the Southern Cape Condensation Problem Area (SCCP).',
+                clauses: ['Clause 4.2', 'Clause 5.2.2', 'Clause 5.3.7', 'Annex C']
+            },
+            {
+                id: 'Table E.1',
+                title: 'Indicative ranges of whole glazing element performance',
+                subtitle: 'Default values for glass and frames',
+                category: 'Fenestration',
+                icon: 'layout-panel-top',
+                pertainsTo: 'Standard industry ranges for U-values and SHGC based on glass type (clear, tinted, coated) and framing materials (metal, timber, thermally broken).',
+                clauses: ['Clause 5.3.1', 'Annex E']
+            }
+        ];
+
+        let currentCategory = 'All';
+
+        function renderTables(tables) {
+            const grid = document.getElementById('tableGrid');
+            const emptyState = document.getElementById('emptyState');
+            const resultCount = document.getElementById('resultCount');
+            const mainTable = document.getElementById('mainTable');
+            
+            grid.innerHTML = '';
+            
+            if (tables.length === 0) {
+                mainTable.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                mainTable.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+                
+                tables.forEach((table, index) => {
+                    const clausesHtml = table.clauses.map(c => 
+                        `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">${c}</span>`
+                    ).join(' ');
+
+                    const rowHtml = `
+                        <!-- Main Clickable Row -->
+                        <tr class="hover:bg-blue-50/50 cursor-pointer group transition-colors" onclick="toggleRow(${index})">
+                            <td class="py-4 px-6 whitespace-nowrap text-sm font-bold text-slate-900 border-b border-transparent">
+                                ${table.id}
+                            </td>
+                            <td class="py-4 px-6 border-b border-transparent">
+                                <div class="text-sm font-semibold text-slate-800">${table.title}</div>
+                                <div class="text-xs text-slate-500 mt-0.5">${table.subtitle}</div>
+                            </td>
+                            <td class="py-4 px-6 whitespace-nowrap border-b border-transparent">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="${table.icon}" class="w-4 h-4 text-blue-500"></i>
+                                    <span class="text-sm text-slate-600 font-medium">${table.category}</span>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6 border-b border-transparent">
+                                <div class="flex flex-wrap gap-1">
+                                    ${clausesHtml}
+                                </div>
+                            </td>
+                            <td class="py-4 px-6 text-right border-b border-transparent text-slate-400 group-hover:text-blue-600">
+                                <i data-lucide="chevron-down" id="icon-${index}" class="w-5 h-5 inline-block transition-transform duration-200"></i>
+                            </td>
+                        </tr>
+                        <!-- Hidden Details Row -->
+                        <tr id="details-${index}" class="hidden bg-slate-50/80">
+                            <td colspan="5" class="px-6 pb-6 pt-2 border-b border-slate-200">
+                                <div class="flex gap-4 ml-[72px]"> <!-- Aligns with the title column -->
+                                    <div class="flex-1">
+                                        <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1">Pertains To</h4>
+                                        <p class="text-sm text-slate-600 leading-relaxed max-w-4xl">${table.pertainsTo}</p>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    grid.insertAdjacentHTML('beforeend', rowHtml);
+                });
+            }
+            
+            resultCount.textContent = tables.length;
+            lucide.createIcons();
+        }
+
+        function toggleRow(index) {
+            const detailsRow = document.getElementById(`details-${index}`);
+            const icon = document.getElementById(`icon-${index}`);
+            
+            if (detailsRow.classList.contains('hidden')) {
+                // Open it
+                detailsRow.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+                
+                // Add a border to the active main row for visual grouping
+                const mainRow = detailsRow.previousElementSibling;
+                mainRow.classList.add('bg-blue-50/30');
+            } else {
+                // Close it
+                detailsRow.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+                
+                const mainRow = detailsRow.previousElementSibling;
+                mainRow.classList.remove('bg-blue-50/30');
+            }
+        }
+
+        function filterAndSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filtered = tableData.filter(table => {
+                const matchesCategory = currentCategory === 'All' || table.category === currentCategory;
+                const matchesSearch = 
+                    table.title.toLowerCase().includes(searchTerm) || 
+                    table.subtitle.toLowerCase().includes(searchTerm) ||
+                    table.id.toLowerCase().includes(searchTerm) ||
+                    table.pertainsTo.toLowerCase().includes(searchTerm) ||
+                    table.clauses.some(c => c.toLowerCase().includes(searchTerm));
+                
+                return matchesCategory && matchesSearch;
+            });
+            
+            renderTables(filtered);
+        }
+
+        function filterCategory(category) {
+            currentCategory = category;
+            document.getElementById('currentCategoryTitle').textContent = category === 'All' ? 'All Tables' : `${category} Tables`;
+            
+            // Sync combobox if called programmatically (e.g. from clearSearch)
+            document.getElementById('categorySelect').value = category;
+            
+            filterAndSearch();
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            filterCategory('All');
+        }
+
+        // Event Listeners
+        document.getElementById('searchInput').addEventListener('input', filterAndSearch);
+
+        // Initialize
+        lucide.createIcons();
+        renderTables(tableData);
+    </script>
+</body>
+</html>
