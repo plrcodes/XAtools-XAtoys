@@ -49,7 +49,7 @@
     const Wand = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 4 2 2"></path><path d="m17.7 5.2-1.2 1.2"></path><path d="m2.1 21.9 8.8-8.8"></path><path d="m10.1 13.1 3.8-3.8"></path><path d="m13.9 9.3 2.5-2.5"></path><path d="m20.1 3.9-2.4 2.4"></path><path d="m21.9 2.1-1.8 1.8"></path><path d="M8.8 14.9 3.1 20.6"></path><path d="m4.4 19.1 1.5 1.5"></path><path d="m6.1 17.4 1.5 1.5"></path><path d="m16.2 4.1 3.7 3.7"></path></svg>;
 
     // --- COMPRESSED CONFIGURATIONS ---
-    const BUILD_VERSION = "2.0.0 (Stable Full PDF Rendering)";
+    const BUILD_VERSION = "2.0.1 (REVISED LIST OF TOWN AND CITY NAMES, ADDED SUPPORT FOR MULTIPLE ROOF AND FLOOR TYPES)";
     const FENESTRATION_TARGETS = [{maxRatio:20,maxU:null,maxShgcUnshaded:null,maxShgcShaded:null},{maxRatio:25,maxU:5.20,maxShgcUnshaded:0.66,maxShgcShaded:0.49},{maxRatio:30,maxU:4.40,maxShgcUnshaded:0.53,maxShgcShaded:0.44},{maxRatio:35,maxU:3.80,maxShgcUnshaded:0.49,maxShgcShaded:0.40},{maxRatio:40,maxU:3.30,maxShgcUnshaded:0.35,maxShgcShaded:0.44},{maxRatio:45,maxU:3.00,maxShgcUnshaded:0.40,maxShgcShaded:0.33},{maxRatio:50,maxU:2.60,maxShgcUnshaded:0.35,maxShgcShaded:0.30},{maxRatio:55,maxU:2.40,maxShgcUnshaded:0.33,maxShgcShaded:0.28},{maxRatio:60,maxU:2.20,maxShgcUnshaded:0.30,maxShgcShaded:0.25},{maxRatio:100,maxU:2.00,maxShgcUnshaded:0.28,maxShgcShaded:0.22}];
     const getFenestrationTargets = (r) => r <= 0 ? FENESTRATION_TARGETS[0] : (FENESTRATION_TARGETS.find(t => r <= t.maxRatio) || FENESTRATION_TARGETS[9]);
     const LIGHTING_LIMITS={'A1':2,'A2':8,'A3':10,'A4':4,'C1':10,'C2':4,'E1':4,'E2':8,'E3':8,'E4':8,'F1':20,'F2':8,'F3':8,'G1':8,'H1':4,'H2':4,'H3':4,'H4':4,'H5':4,'J1':2,'J2':2,'J3':2,'J4':2};
@@ -57,9 +57,399 @@
     const WATER_DEMAND_RATES=[{label:"H4/H3 - Dwelling House (All other)",rate:115},{label:"H4/H3 - Dwelling House (Category 1)",rate:64},{label:"H1/H5 - Hotel / Hospitality",rate:140},{label:"H2 - Dormitory",rate:100},{label:"E3/E4 - Institutional / Health Care",rate:120},{label:"E2 - Hospital (General/Clinic w/beds)",rate:130},{label:"E2 - Day Hospital",rate:65},{label:"G1 - Office (with canteens)",rate:28},{label:"G1/F1/F2/F3/A3/C1/C2 - Commercial",rate:10},{label:"A1/A2 - Entertainment/Sport (Active)",rate:40},{label:"A1/A2 - Entertainment/Sport (Sedentary)",rate:10},{label:"E1 - Detention (Awaiting trial)",rate:140},{label:"E1 - Detention (Convicted)",rate:52}];
     const WINDOW_PRESETS=[{name:'Clear (Aluminium)',uValue:7.90,shgc:0.81,type:'single'},{name:'Clear (Timber/uPVC)',uValue:5.60,shgc:0.76,type:'single'},{name:'Low-E (Aluminium)',uValue:5.50,shgc:0.65,type:'single_low_e'},{name:'Low-E (Timber/uPVC)',uValue:4.50,shgc:0.60,type:'single_low_e'},{name:'Double Glazed Clear (Aluminium)',uValue:4.50,shgc:0.70,type:'double'},{name:'Double Glazed Low-E (uPVC)',uValue:2.80,shgc:0.55,type:'double'}];
     const MATERIAL_PRESETS=[{name:'Custom Material',type:'material',kValue:0.1,density:1000,specificHeat:1000},{name:'Custom Resistance / Air Gap',type:'resistance',rValue:0.18,density:1.2,specificHeat:1000},{name:'Clay Brick (Solid)',type:'material',kValue:0.77,density:1700,specificHeat:800,defaultThickness:110},{name:'Concrete Plaster / Render',type:'material',kValue:1.20,density:1800,specificHeat:1000,defaultThickness:15},{name:'EPS Insulation',type:'material',kValue:0.038,density:15,specificHeat:1450,defaultThickness:40},{name:'Glasswool Insulation',type:'material',kValue:0.040,density:12,specificHeat:840,defaultThickness:50},{name:'Corrugated Steel Sheeting',type:'resistance',rValue:0.01,density:7850,specificHeat:450,defaultThickness:1},{name:'Concrete Roof Tile',type:'material',kValue:1.50,density:2100,specificHeat:1000,defaultThickness:15},{name:'Unventilated Air Gap',type:'resistance',rValue:0.18,rValueUp:0.18,rValueDown:0.25,density:1.2,specificHeat:1000,defaultThickness:25},{name:'Ceramic Floor Tiles',type:'material',kValue:1.30,density:2000,specificHeat:800,defaultThickness:10},{name:'Concrete (Dense)',type:'material',kValue:1.40,density:2400,specificHeat:1000,defaultThickness:100},{name:'Compacted Fill / Hardcore',type:'material',kValue:1.30,density:1900,specificHeat:1000,defaultThickness:150},{name:'Soil / Earth',type:'material',kValue:1.50,density:1500,specificHeat:1000,defaultThickness:100},{name:'Reflective Foil (Radiant Barrier)',type:'resistance',rValue:0.0,rValueUp:0.40,rValueDown:0.92,density:100,specificHeat:1000,defaultThickness:1},{name:'Gypsum Plasterboard (Ceiling)',type:'material',kValue:0.25,density:900,specificHeat:1000,defaultThickness:10}];
-    const CLIMATE_ZONES=[{id:'1',name:'Zone 1: Cold Interior'},{id:'2',name:'Zone 2: Temperate Interior'},{id:'3',name:'Zone 3: Hot Interior'},{id:'4',name:'Zone 4: Temperate Coastal'},{id:'5',name:'Zone 5: Sub-Tropical Coastal'},{id:'5H',name:'Zone 5H: High Humidity'},{id:'6',name:'Zone 6: Hot Arid'},{id:'7',name:'Zone 7: Warm Temperate'}];
+    const CLIMATE_ZONES=[{id:'1',name:'Zone 1 (Medium, Medium)'},{id:'2',name:'Zone 2 (Medium, Low)'},{id:'3',name:'Zone 3 (Low, High)'},{id:'4',name:'Zone 4 (Low, Low)'},{id:'5',name:'Zone 5 (Low, Medium)'},{id:'5H',name:'Zone 5H High Humidity (Low, Medium)'},{id:'6',name:'Zone 6 (High, Low)'},{id:'7',name:'Zone 7 (High, Medium)'}];
     const OCCUPANCY_CLASSES=[{id:'A1',name:'A1 - Entertainment'},{id:'A2',name:'A2 - Theatrical/Sport'},{id:'A3',name:'A3 - Instruction'},{id:'A4',name:'A4 - Worship'},{id:'A5',name:'A5 - Outdoor sport'},{id:'B1',name:'B1 - High risk commercial'},{id:'B2',name:'B2 - Moderate risk commercial'},{id:'B3',name:'B3 - Low risk commercial'},{id:'C1',name:'C1 - Exhibition hall'},{id:'C2',name:'C2 - Museum'},{id:'D1',name:'D1 - High risk industrial'},{id:'D2',name:'D2 - Mod risk industrial'},{id:'D3',name:'D3 - Low risk industrial'},{id:'D4',name:'D4 - Plant room'},{id:'E1',name:'E1 - Detention'},{id:'E2',name:'E2 - Hospital'},{id:'E3',name:'E3 - Institutional'},{id:'E4',name:'E4 - Health care'},{id:'F1',name:'F1 - Large shop'},{id:'F2',name:'F2 - Small shop'},{id:'F3',name:'F3 - Wholesalers'},{id:'G1',name:'G1 - Offices'},{id:'H1',name:'H1 - Hotel'},{id:'H2',name:'H2 - Dormitory'},{id:'H3',name:'H3 - Domestic residence'},{id:'H4',name:'H4 - Dwelling house'},{id:'H5',name:'H5 - Hospitality work'},{id:'J1',name:'J1 - High risk storage'},{id:'J2',name:'J2 - Mod risk storage'},{id:'J3',name:'J3 - Low risk storage'},{id:'J4',name:'J4 - Parking garage'}];
-    const SA_TOWNS=[{name:'Beaufort West',zone:'6',lat:32.3,sccp:false},{name:'Bloemfontein',zone:'1',lat:29.1,sccp:false},{name:'Cape Town',zone:'4',lat:33.9,sccp:false},{name:'Durban',zone:'5H',lat:29.9,sccp:false},{name:'East London',zone:'4',lat:33.0,sccp:false},{name:'George',zone:'7',lat:33.9,sccp:true},{name:'Gqeberha (PE)',zone:'4',lat:33.9,sccp:true},{name:'Johannesburg',zone:'1',lat:26.2,sccp:false},{name:'Kimberley',zone:'6',lat:28.7,sccp:false},{name:'Klerksdorp',zone:'1',lat:26.8,sccp:false},{name:'Knysna',zone:'7',lat:34.0,sccp:true},{name:'Mahikeng',zone:'2',lat:25.8,sccp:false},{name:'Mbombela',zone:'3',lat:25.4,sccp:false},{name:'Mossel Bay',zone:'7',lat:34.1,sccp:true},{name:'Mthatha',zone:'4',lat:31.5,sccp:false},{name:'Pietermaritzburg',zone:'2',lat:29.6,sccp:false},{name:'Polokwane',zone:'2',lat:23.9,sccp:false},{name:'Pretoria',zone:'2',lat:25.7,sccp:false},{name:'Richards Bay',zone:'5H',lat:28.7,sccp:false},{name:'Rustenburg',zone:'2',lat:25.6,sccp:false},{name:'Upington',zone:'6',lat:28.4,sccp:false},{name:'Vereeniging',zone:'1',lat:26.6,sccp:false}];
+    const SA_TOWNS = [
+{name:'Aberdeen',zone:'1',lat:32.476,sccp:false},
+{name:'Acornhoek',zone:'5',lat:24.597,sccp:false},
+{name:'Addo',zone:'5',lat:33.541,sccp:true},
+{name:'Adelaide',zone:'2',lat:32.706,sccp:false},
+{name:'Adendorp',zone:'1',lat:32.301,sccp:false},
+{name:'Albertinia',zone:'4',lat:34.197,sccp:true},
+{name:'Alexander Bay',zone:'4',lat:28.609,sccp:false},
+{name:'Alexandria',zone:'4',lat:33.654,sccp:true},
+{name:'Algoa',zone:'5',lat:33.826,sccp:false},
+{name:'Alice',zone:'4',lat:32.778,sccp:false},
+{name:'Alicedale',zone:'4',lat:33.317,sccp:true},
+{name:'Aliwal North',zone:'2',lat:30.688,sccp:false},
+{name:'Allanridge',zone:'1',lat:27.754,sccp:false},
+{name:'Amatikulu',zone:'5H',lat:29.043,sccp:false},
+{name:'Amersfoort',zone:'2',lat:27.005,sccp:false},
+{name:'Arlington',zone:'2',lat:28.029,sccp:false},
+{name:'Asbesberge',zone:'1',lat:28.812,sccp:false},
+{name:'Ashton',zone:'1',lat:33.835,sccp:false},
+{name:'Askham',zone:'3',lat:26.983,sccp:false},
+{name:'Augrabies falls',zone:'3',lat:28.591,sccp:false},
+{name:'Barberton',zone:'5',lat:25.79,sccp:false},
+{name:'Barkly East',zone:'6',lat:30.967,sccp:false},
+{name:'Barkly West',zone:'1',lat:28.537,sccp:false},
+{name:'Baroe',zone:'1',lat:33.225,sccp:false},
+{name:'Bathurst',zone:'5',lat:33.503,sccp:true},
+{name:'Beaufort West',zone:'1',lat:33.341,sccp:false},
+{name:'Bedford',zone:'2',lat:32.678,sccp:false},
+{name:'Beestekraal',zone:'5',lat:25.375,sccp:false},
+{name:'Belfast',zone:'5',lat:24.491,sccp:false},
+{name:'Bergville',zone:'2',lat:28.731,sccp:false},
+{name:'Bethal',zone:'2',lat:26.454,sccp:false},
+{name:'Bethlehem',zone:'2',lat:28.231,sccp:false},
+{name:'Bethulie',zone:'1',lat:30.495,sccp:false},
+{name:'Biesiesfontein',zone:'5',lat:31.016,sccp:false},
+{name:'Bisho',zone:'4',lat:32.848,sccp:false},
+{name:'Bitterfontein',zone:'5',lat:31.041,sccp:false},
+{name:'Bizana',zone:'2',lat:30.858,sccp:false},
+{name:'Bloemfontein',zone:'1',lat:29.113,sccp:false},
+{name:'Bloemhof',zone:'1',lat:27.652,sccp:false},
+{name:'Boshof',zone:'1',lat:28.54,sccp:false},
+{name:'Bothaville',zone:'1',lat:27.394,sccp:false},
+{name:'Brandfort',zone:'1',lat:28.702,sccp:false},
+{name:'Brandvlei',zone:'1',lat:30.466,sccp:false},
+{name:'Bredasdorp',zone:'4',lat:34.532,sccp:true},
+{name:'Breyten',zone:'2',lat:26.302,sccp:false},
+{name:'Brits',zone:'5',lat:25.63,sccp:false},
+{name:'Britstown',zone:'1',lat:30.59,sccp:false},
+{name:'Bronkhorstspruit',zone:'1',lat:25.809,sccp:false},
+{name:'Bultfontein',zone:'1',lat:28.287,sccp:false},
+{name:'Burgersdorp',zone:'6',lat:30.996,sccp:false},
+{name:'Butterworth',zone:'4',lat:32.33,sccp:false},
+{name:'Caledon',zone:'2',lat:34.231,sccp:true},
+{name:'Calitzdorp',zone:'2',lat:33.53,sccp:false},
+{name:'Calvinia',zone:'1',lat:31.473,sccp:false},
+{name:'Campbell',zone:'1',lat:28.799,sccp:false},
+{name:'Cape Agulhas',zone:'4',lat:34.531,sccp:true},
+{name:'Cape Town',zone:'4',lat:33.915,sccp:true},
+{name:'Carletonville',zone:'1',lat:26.368,sccp:false},
+{name:'Carnarvon',zone:'1',lat:30.969,sccp:false},
+{name:'Cathcart',zone:'2',lat:32.297,sccp:false},
+{name:'Cedarville',zone:'6',lat:30.387,sccp:false},
+{name:'Ceres',zone:'2',lat:33.369,sccp:true},
+{name:'Charlestown',zone:'2',lat:27.407,sccp:false},
+{name:'Christiana',zone:'1',lat:27.913,sccp:false},
+{name:'Citrusdal',zone:'1',lat:32.594,sccp:false},
+{name:'Clanwilliam',zone:'5',lat:32.175,sccp:false},
+{name:'Clocolan',zone:'2',lat:28.915,sccp:false},
+{name:'Colenso',zone:'5',lat:28.745,sccp:false},
+{name:'Colesberg',zone:'1',lat:30.707,sccp:false},
+{name:'Coligny',zone:'1',lat:26.311,sccp:false},
+{name:'Cookhouse',zone:'2',lat:32.748,sccp:false},
+{name:'Cradock',zone:'2',lat:32.17,sccp:false},
+{name:'Danielskuil',zone:'1',lat:28.186,sccp:false},
+{name:'Dannhauser',zone:'1',lat:28.014,sccp:false},
+{name:'Darlington',zone:'2',lat:32.463,sccp:false},
+{name:'Darnall',zone:'5H',lat:29.268,sccp:false},
+{name:'De Aar',zone:'1',lat:30.65,sccp:false},
+{name:'Dealesville',zone:'1',lat:28.674,sccp:false},
+{name:'Delareyville',zone:'5',lat:26.688,sccp:false},
+{name:'Delportshoop',zone:'1',lat:28.415,sccp:false},
+{name:'Derdepoort',zone:'5',lat:24.639,sccp:false},
+{name:'Dewetsdorp',zone:'2',lat:29.582,sccp:false},
+{name:'Dimabaza',zone:'4',lat:32.837,sccp:false},
+{name:'Donnybrook',zone:'2',lat:29.928,sccp:false},
+{name:'Dordrecht',zone:'6',lat:31.377,sccp:false},
+{name:'Doringbos',zone:'5',lat:31.971,sccp:false},
+{name:'Douglas',zone:'1',lat:29.052,sccp:false},
+{name:'Duiwelskloof',zone:'5',lat:23.695,sccp:false},
+{name:'Dullstroom',zone:'2',lat:25.417,sccp:false},
+{name:'Durban',zone:'5H',lat:29.847,sccp:false},
+{name:'East London',zone:'5',lat:33.014,sccp:false},
+{name:'Edenburg',zone:'1',lat:26.051,sccp:false},
+{name:'Edenville',zone:'2',lat:27.555,sccp:false},
+{name:'Elliot',zone:'6',lat:31.333,sccp:false},
+{name:'Elliotdale',zone:'5',lat:31.966,sccp:false},
+{name:'Emalahleni',zone:'2',lat:25.872,sccp:false},
+{name:'Emmaus',zone:'2',lat:28.86,sccp:false},
+{name:'Empangeni',zone:'5H',lat:28.741,sccp:false},
+{name:'Engcobo',zone:'2',lat:31.673,sccp:false},
+{name:'Erfenisdam',zone:'1',lat:28.502,sccp:false},
+{name:'Ermelo',zone:'2',lat:26.525,sccp:false},
+{name:'Eshowe',zone:'5H',lat:28.89,sccp:false},
+{name:'Estcourt',zone:'2',lat:29.006,sccp:false},
+{name:'False Bay',zone:'5H',lat:27.968,sccp:false},
+{name:'Fauresmith',zone:'1',lat:29.748,sccp:false},
+{name:'Ficksburg',zone:'2',lat:28.876,sccp:false},
+{name:'Fort Beaufort',zone:'4',lat:32.78,sccp:false},
+{name:'Fouriesburg',zone:'6',lat:28.621,sccp:false},
+{name:'Frankfort',zone:'2',lat:27.277,sccp:false},
+{name:'Fraserburg',zone:'7',lat:31.016,sccp:false},
+{name:'Gamtoos',zone:'4',lat:33.961,sccp:true},
+{name:'Gariep',zone:'4',lat:28.627,sccp:false},
+{name:'Garies',zone:'1',lat:30.565,sccp:false},
+{name:'Gatyana',zone:'5',lat:32.401,sccp:false},
+{name:'Gcuwa',zone:'4',lat:32.331,sccp:false},
+{name:'George',zone:'4',lat:33.951,sccp:true},
+{name:'Germiston',zone:'1',lat:26.209,sccp:false},
+{name:'Gingindlovu',zone:'5H',lat:29.031,sccp:false},
+{name:'Glencoe',zone:'5',lat:28.179,sccp:false},
+{name:'Gourits',zone:'4',lat:34.337,sccp:true},
+{name:'Graaff-Reinet',zone:'1',lat:32.251,sccp:false},
+{name:'Grahamstown',zone:'4',lat:33.307,sccp:false},
+{name:'Graskop',zone:'5',lat:24.934,sccp:false},
+{name:'Greytown',zone:'4',lat:29.064,sccp:false},
+{name:'Griekwastad',zone:'1',lat:28.848,sccp:false},
+{name:'Groblersdal',zone:'5',lat:25.168,sccp:false},
+{name:'Grootdrink',zone:'5',lat:26.495,sccp:false},
+{name:'Groot-Kei',zone:'5',lat:32.68,sccp:false},
+{name:'Grootvloer',zone:'1',lat:31.146,sccp:false},
+{name:'Hanover',zone:'1',lat:31.072,sccp:false},
+{name:'Harding',zone:'5H',lat:30.572,sccp:false},
+{name:'Harrismith',zone:'2',lat:28.271,sccp:false},
+{name:'Hartbees',zone:'3',lat:28.759,sccp:false},
+{name:'Hartswater',zone:'1',lat:27.754,sccp:false},
+{name:'Hebertsdale',zone:'4',lat:34.015,sccp:true},
+{name:'Heidelberg',zone:'4',lat:34.089,sccp:false},
+{name:'Heidelberg',zone:'2',lat:26.499,sccp:false},
+{name:'Heilbron',zone:'2',lat:27.294,sccp:false},
+{name:'Hennenman',zone:'1',lat:27.972,sccp:false},
+{name:'Hermanus',zone:'2',lat:34.42,sccp:true},
+{name:'Hertzogville',zone:'1',lat:28.128,sccp:false},
+{name:'Hlobane',zone:'4',lat:27.711,sccp:false},
+{name:'Hluhluwe',zone:'5',lat:28.021,sccp:false},
+{name:'Hondeklipbaai',zone:'4',lat:30.318,sccp:false},
+{name:'Hoopstad',zone:'1',lat:27.833,sccp:false},
+{name:'Hopefield',zone:'4',lat:33.058,sccp:false},
+{name:'Hopetown',zone:'1',lat:29.624,sccp:false},
+{name:'Hotazel',zone:'5',lat:27.203,sccp:false},
+{name:'Houtkraal',zone:'1',lat:30.393,sccp:false},
+{name:'Idutywa',zone:'4',lat:32.099,sccp:false},
+{name:'Ingwavuma',zone:'5',lat:27.133,sccp:false},
+{name:'Ixopo',zone:'5H',lat:30.153,sccp:false},
+{name:'Jagersfontein',zone:'1',lat:29.761,sccp:false},
+{name:'Jamestown',zone:'6',lat:31.131,sccp:false},
+{name:'Johannesburg',zone:'1',lat:26.202,sccp:false},
+{name:'Kakamas',zone:'3',lat:28.768,sccp:false},
+{name:'Kamieskroon',zone:'1',lat:30.212,sccp:false},
+{name:'Kareeberge',zone:'1',lat:30.714,sccp:false},
+{name:'Keimoes',zone:'5',lat:28.722,sccp:false},
+{name:'Kendrew',zone:'5',lat:32.493,sccp:false},
+{name:'Kenhardt',zone:'5',lat:29.348,sccp:false},
+{name:'Kestell',zone:'1',lat:28.307,sccp:false},
+{name:'Kimberley',zone:'1',lat:28.741,sccp:false},
+{name:'King William\'s Town',zone:'4',lat:32.879,sccp:false},
+{name:'Kirkwood',zone:'5',lat:33.401,sccp:false},
+{name:'Klawer',zone:'5',lat:31.779,sccp:false},
+{name:'Klerksdorp',zone:'1',lat:26.867,sccp:false},
+{name:'Klipdale',zone:'4',lat:34.306,sccp:true},
+{name:'Klipplaat',zone:'5',lat:33.016,sccp:false},
+{name:'Knysna',zone:'4',lat:34.035,sccp:true},
+{name:'Koffiefontein',zone:'1',lat:29.407,sccp:false},
+{name:'Kokstad',zone:'2',lat:30.539,sccp:false},
+{name:'Komatipoort',zone:'3',lat:25.43,sccp:false},
+{name:'Kompasberg',zone:'6',lat:31.765,sccp:false},
+{name:'Komsberg',zone:'6',lat:32.692,sccp:false},
+{name:'Koppies',zone:'1',lat:27.242,sccp:false},
+{name:'Koster',zone:'1',lat:25.869,sccp:false},
+{name:'Kraai',zone:'1',lat:32.484,sccp:false},
+{name:'Kranskop',zone:'5H',lat:28.967,sccp:false},
+{name:'Krugersdorp',zone:'1',lat:26.103,sccp:false},
+{name:'Kruisfontein',zone:'4',lat:34.007,sccp:true},
+{name:'Kuruman',zone:'1',lat:27.433,sccp:false},
+{name:'Kwabhaca',zone:'2',lat:30.901,sccp:false},
+{name:'Kwadukuza',zone:'5H',lat:29.328,sccp:false},
+{name:'KwaMashu',zone:'5H',lat:29.751,sccp:false},
+{name:'Kwa-Nobuhle',zone:'4',lat:33.818,sccp:false},
+{name:'Ladismith',zone:'2',lat:33.498,sccp:false},
+{name:'Lady Grey',zone:'6',lat:30.711,sccp:false},
+{name:'Ladysmith',zone:'5',lat:28.559,sccp:false},
+{name:'Laingsburg',zone:'2',lat:33.193,sccp:false},
+{name:'Lambert\'s Bay',zone:'5',lat:32.095,sccp:false},
+{name:'Langebaan',zone:'4',lat:33.081,sccp:false},
+{name:'Langeberg',zone:'2',lat:33.782,sccp:false},
+{name:'Langklip',zone:'3',lat:28.213,sccp:false},
+{name:'Leeu Gamka',zone:'1',lat:32.777,sccp:false},
+{name:'Lepalale',zone:'3',lat:23.687,sccp:false},
+{name:'Letaba',zone:'5',lat:23.9,sccp:false},
+{name:'Letjiesbos',zone:'1',lat:32.563,sccp:false},
+{name:'Libode',zone:'4',lat:32.553,sccp:false},
+{name:'Lichtenburg',zone:'1',lat:26.151,sccp:false},
+{name:'Loeriesfontein',zone:'1',lat:30.953,sccp:false},
+{name:'Loskop Dam',zone:'5',lat:25.429,sccp:false},
+{name:'Lothair',zone:'2',lat:26.391,sccp:false},
+{name:'Louis Trichardt',zone:'5',lat:23.046,sccp:false},
+{name:'Louwsburg',zone:'5',lat:27.576,sccp:false},
+{name:'Loxton',zone:'1',lat:30.941,sccp:false},
+{name:'Luckhoff',zone:'1',lat:29.748,sccp:false},
+{name:'Lutzputs',zone:'3',lat:28.387,sccp:false},
+{name:'Luvuvhu',zone:'3',lat:22.402,sccp:false},
+{name:'Maclear',zone:'2',lat:31.07,sccp:false},
+{name:'Madadeni',zone:'2',lat:27.752,sccp:false},
+{name:'Magaliesburg',zone:'1',lat:25.989,sccp:false},
+{name:'Mahikeng',zone:'5',lat:25.857,sccp:false},
+{name:'Makwassie',zone:'1',lat:27.319,sccp:false},
+{name:'Malmesbury',zone:'1',lat:33.463,sccp:true},
+{name:'Mangaung',zone:'1',lat:29.322,sccp:false},
+{name:'Maretsane',zone:'5',lat:26.142,sccp:false},
+{name:'Margate',zone:'5H',lat:30.854,sccp:false},
+{name:'Marquard',zone:'2',lat:28.665,sccp:false},
+{name:'Matatiele',zone:'6',lat:30.346,sccp:false},
+{name:'Matjiesfontein',zone:'2',lat:33.228,sccp:false},
+{name:'Matroosberg',zone:'6',lat:33.374,sccp:false},
+{name:'Maxesibenj',zone:'2',lat:30.855,sccp:false},
+{name:'Mbashe',zone:'2',lat:31.728,sccp:false},
+{name:'Mbombela',zone:'5',lat:25.469,sccp:false},
+{name:'Mdantsane',zone:'5',lat:32.968,sccp:false},
+{name:'Memel',zone:'2',lat:27.681,sccp:false},
+{name:'Middelburg',zone:'2',lat:31.493,sccp:false},
+{name:'Middelburg',zone:'2',lat:25.763,sccp:false},
+{name:'Middelwit',zone:'5',lat:24.852,sccp:false},
+{name:'Mkomazi',zone:'2',lat:29.633,sccp:false},
+{name:'Mkuze',zone:'5',lat:27.617,sccp:false},
+{name:'Mmabatho',zone:'5',lat:25.834,sccp:false},
+{name:'Modderrivier',zone:'1',lat:29.022,sccp:false},
+{name:'Modimolle',zone:'5',lat:24.701,sccp:false},
+{name:'Mogalakwena',zone:'5',lat:24.193,sccp:false},
+{name:'Molteno',zone:'6',lat:31.393,sccp:false},
+{name:'Mooi River',zone:'2',lat:29.207,sccp:false},
+{name:'Moorreesburg',zone:'5',lat:33.138,sccp:true},
+{name:'Mopane',zone:'3',lat:22.623,sccp:false},
+{name:'Morgenzon',zone:'2',lat:26.731,sccp:false},
+{name:'Mosselbaai',zone:'4',lat:34.129,sccp:true},
+{name:'Mount Fletcher',zone:'6',lat:30.69,sccp:false},
+{name:'Mqanduli',zone:'5',lat:31.819,sccp:false},
+{name:'Mtubatuba',zone:'5H',lat:28.416,sccp:false},
+{name:'Mtwalume',zone:'5H',lat:30.491,sccp:false},
+{name:'Murraysburg',zone:'1',lat:31.967,sccp:false},
+{name:'Musina',zone:'3',lat:22.33,sccp:false},
+{name:'Mzimvubu',zone:'5H',lat:31.615,sccp:false},
+{name:'Nababeep',zone:'1',lat:29.589,sccp:false},
+{name:'Nelspoort',zone:'1',lat:32.116,sccp:false},
+{name:'New Hanover',zone:'4',lat:29.354,sccp:false},
+{name:'Newcastle',zone:'2',lat:27.755,sccp:false},
+{name:'Niekerkshoop',zone:'1',lat:29.327,sccp:false},
+{name:'Nieuwoudtville',zone:'5',lat:31.372,sccp:false},
+{name:'Nigel',zone:'2',lat:26.423,sccp:false},
+{name:'Nkandla',zone:'5',lat:28.586,sccp:false},
+{name:'Nongoma',zone:'5',lat:27.896,sccp:false},
+{name:'Northam',zone:'5',lat:24.953,sccp:false},
+{name:'Noupoort',zone:'2',lat:31.178,sccp:false},
+{name:'Nqutu',zone:'4',lat:28.206,sccp:false},
+{name:'Nuwerus',zone:'5',lat:31.149,sccp:false},
+{name:'Odendaalsrus',zone:'1',lat:27.88,sccp:false},
+{name:'Okiep',zone:'1',lat:29.594,sccp:false},
+{name:'Olifantshoek',zone:'1',lat:27.941,sccp:false},
+{name:'Orkney',zone:'1',lat:27.008,sccp:false},
+{name:'Osizweni',zone:'2',lat:27.786,sccp:false},
+{name:'Ottosdal',zone:'1',lat:26.812,sccp:false},
+{name:'Paarl',zone:'2',lat:33.764,sccp:true},
+{name:'Pakhuis',zone:'5',lat:32.139,sccp:false},
+{name:'Pampoenpoort',zone:'1',lat:31.061,sccp:false},
+{name:'Park Rynie',zone:'5H',lat:30.317,sccp:false},
+{name:'Parys',zone:'1',lat:26.898,sccp:false},
+{name:'Patensie',zone:'4',lat:33.758,sccp:false},
+{name:'Paulpietersburg',zone:'4',lat:27.428,sccp:false},
+{name:'Peddie',zone:'5',lat:33.198,sccp:false},
+{name:'Pella',zone:'5',lat:29.034,sccp:false},
+{name:'Pepani',zone:'5',lat:26.251,sccp:false},
+{name:'Petrus Steyn',zone:'2',lat:27.649,sccp:false},
+{name:'Petrusburg',zone:'1',lat:29.115,sccp:false},
+{name:'Philippolis',zone:'1',lat:30.266,sccp:false},
+{name:'Philipstown',zone:'1',lat:30.437,sccp:false},
+{name:'Pienaarsrivier',zone:'5',lat:25.208,sccp:false},
+{name:'Piet Retief',zone:'4',lat:27.005,sccp:false},
+{name:'Pietermaritzburg',zone:'4',lat:29.601,sccp:false},
+{name:'Piketberg',zone:'5',lat:32.908,sccp:false},
+{name:'Pilgrim\'s Rest',zone:'1',lat:24.907,sccp:false},
+{name:'Pinetown',zone:'5H',lat:29.813,sccp:false},
+{name:'Pofadder',zone:'5',lat:29.125,sccp:false},
+{name:'Polokwane',zone:'5',lat:23.909,sccp:false},
+{name:'Port Alfred',zone:'5',lat:33.588,sccp:true},
+{name:'Port Elizabeth',zone:'4',lat:33.962,sccp:true},
+{name:'Port Nolloth',zone:'4',lat:29.257,sccp:false},
+{name:'Port Shepstone',zone:'5H',lat:30.739,sccp:false},
+{name:'Port St Johns',zone:'5H',lat:31.621,sccp:false},
+{name:'Porterville',zone:'1',lat:33.015,sccp:true},
+{name:'Postmasburg',zone:'1',lat:28.331,sccp:false},
+{name:'Potchefstroom',zone:'1',lat:26.719,sccp:false},
+{name:'Pretoria',zone:'5',lat:25.744,sccp:false},
+{name:'Prieska',zone:'1',lat:29.666,sccp:false},
+{name:'Prince Albert',zone:'2',lat:33.214,sccp:false},
+{name:'Punda Maria',zone:'3',lat:22.691,sccp:false},
+{name:'Queenstown',zone:'2',lat:31.895,sccp:false},
+{name:'Qumbu',zone:'2',lat:31.16,sccp:false},
+{name:'Quoin Point',zone:'4',lat:34.781,sccp:true},
+{name:'Randfontein',zone:'1',lat:26.173,sccp:false},
+{name:'Reddersburg',zone:'1',lat:29.651,sccp:false},
+{name:'Reitz',zone:'2',lat:27.801,sccp:false},
+{name:'Reivilo',zone:'1',lat:27.565,sccp:false},
+{name:'Richards Bay',zone:'5H',lat:28.75,sccp:false},
+{name:'Riebeek -Oos',zone:'5',lat:33.202,sccp:false},
+{name:'Riversdale',zone:'4',lat:34.042,sccp:true},
+{name:'Robertson',zone:'2',lat:33.799,sccp:true},
+{name:'Roodepoort',zone:'1',lat:26.16,sccp:false},
+{name:'Rosmead',zone:'2',lat:31.491,sccp:false},
+{name:'Rouxville',zone:'2',lat:30.416,sccp:false},
+{name:'Rustenburg',zone:'5',lat:25.635,sccp:false},
+{name:'Sakrivier',zone:'1',lat:30.882,sccp:false},
+{name:'Saldanha Bay',zone:'4',lat:33.007,sccp:false},
+{name:'Sannaspos',zone:'1',lat:29.16,sccp:false},
+{name:'Sannieshof',zone:'1',lat:26.531,sccp:false},
+{name:'Seekoei',zone:'1',lat:30.308,sccp:false},
+{name:'Senekal',zone:'2',lat:28.321,sccp:false},
+{name:'Settlers',zone:'5',lat:24.957,sccp:false},
+{name:'Simonstown',zone:'4',lat:34.193,sccp:true},
+{name:'Sishen',zone:'5',lat:27.783,sccp:false},
+{name:'Smithfield',zone:'1',lat:30.212,sccp:false},
+{name:'Soekmekaar',zone:'5',lat:24.493,sccp:false},
+{name:'Springbok',zone:'1',lat:29.665,sccp:false},
+{name:'Springs',zone:'2',lat:26.256,sccp:false},
+{name:'Standerton',zone:'2',lat:26.954,sccp:false},
+{name:'Stellenbosch',zone:'2',lat:33.931,sccp:true},
+{name:'Tarkastad',zone:'2',lat:32.006,sccp:false},
+{name:'Theunissen',zone:'1',lat:28.4,sccp:false},
+{name:'Thohoyandou',zone:'3',lat:22.977,sccp:false},
+{name:'Tom Burke',zone:'3',lat:23.07,sccp:false},
+{name:'Tongaat',zone:'5H',lat:29.543,sccp:false},
+{name:'Touws',zone:'2',lat:33.79,sccp:true},
+{name:'Tsineng',zone:'5',lat:27.088,sccp:false},
+{name:'Tsolo',zone:'2',lat:31.309,sccp:false},
+{name:'Tulbagh',zone:'1',lat:33.284,sccp:true},
+{name:'Tzaneen',zone:'5',lat:23.821,sccp:false},
+{name:'Ubombo',zone:'5',lat:27.563,sccp:false},
+{name:'Ugie',zone:'2',lat:31.194,sccp:false},
+{name:'Uitenhage',zone:'4',lat:33.757,sccp:true},
+{name:'Ulco',zone:'1',lat:28.335,sccp:false},
+{name:'Umkomaas',zone:'5H',lat:30.207,sccp:false},
+{name:'Umtata',zone:'4',lat:31.592,sccp:false},
+{name:'Umzimvubu',zone:'2',lat:30.902,sccp:false},
+{name:'Uniondale',zone:'2',lat:33.659,sccp:false},
+{name:'Upington',zone:'5',lat:28.459,sccp:false},
+{name:'Utrecht',zone:'2',lat:27.656,sccp:false},
+{name:'Vaalwater',zone:'5',lat:24.299,sccp:false},
+{name:'Vanderbijlpark',zone:'1',lat:26.697,sccp:false},
+{name:'Vanrhynsdorp',zone:'5',lat:31.609,sccp:false},
+{name:'Vanwyksvlei',zone:'1',lat:30.366,sccp:false},
+{name:'Ventersburg',zone:'1',lat:28.086,sccp:false},
+{name:'Venterstad',zone:'1',lat:30.778,sccp:false},
+{name:'Vereeninging',zone:'1',lat:26.675,sccp:false},
+{name:'Verneukpan',zone:'1',lat:30.133,sccp:false},
+{name:'Victoria West',zone:'1',lat:31.404,sccp:false},
+{name:'Villiers',zone:'2',lat:27.028,sccp:false},
+{name:'Virginia',zone:'1',lat:28.098,sccp:false},
+{name:'Volksrust',zone:'2',lat:27.367,sccp:false},
+{name:'Vredefort',zone:'1',lat:27.006,sccp:false},
+{name:'Vredenburg',zone:'4',lat:32.906,sccp:false},
+{name:'Vrendendal',zone:'5',lat:31.664,sccp:false},
+{name:'Vryburg',zone:'1',lat:26.955,sccp:false},
+{name:'Vryheid',zone:'4',lat:27.767,sccp:false},
+{name:'Wakkerstroom',zone:'2',lat:27.349,sccp:false},
+{name:'Warden',zone:'2',lat:27.854,sccp:false},
+{name:'Warrenton',zone:'1',lat:28.109,sccp:false},
+{name:'Wasbank',zone:'5',lat:28.314,sccp:false},
+{name:'Waterberge',zone:'5',lat:24.331,sccp:false},
+{name:'Waterval-Boven',zone:'2',lat:25.643,sccp:false},
+{name:'Waterval-Onder',zone:'2',lat:25.648,sccp:false},
+{name:'Weenen',zone:'2',lat:28.851,sccp:false},
+{name:'Welkom',zone:'1',lat:27.978,sccp:false},
+{name:'Wepener',zone:'2',lat:29.729,sccp:false},
+{name:'Wilge',zone:'2',lat:25.976,sccp:false},
+{name:'Wiliston',zone:'1',lat:31.34,sccp:false},
+{name:'Willowmore',zone:'2',lat:33.295,sccp:false},
+{name:'Windsorton',zone:'1',lat:28.331,sccp:false},
+{name:'Wolmaransstad',zone:'1',lat:27.2,sccp:false},
+{name:'Wolseley',zone:'2',lat:33.414,sccp:true},
+{name:'Worcester',zone:'2',lat:33.646,sccp:false},
+{name:'Xora',zone:'5',lat:31.953,sccp:false},
+{name:'Zebediela',zone:'5',lat:24.301,sccp:false},
+{name:'Zeerust',zone:'5',lat:25.544,sccp:false}
+];
 function App() {
       const [activeTab, setActiveTab] = useState('project');
       const [projectInfo, setProjectInfo] = useState({ projectName:'', projectType:'new', location:'Johannesburg', customLocation:false, latitude:26.2, isSccp:false, storeys:1, standNumber: '', township: '', zone:'1', occupancy:'H4' });
@@ -125,16 +515,14 @@ function App() {
       const zone = projectInfo.zone;
       const occupancy = projectInfo.occupancy;
 
-      const [floorType, setFloorType] = useState('ground'); 
-      const [floorHeating, setFloorHeating] = useState(false);
-      const [isPitchedRoof, setIsPitchedRoof] = useState(true);
-
       const [assemblies, setAssemblies] = useState({
         walls: [{ id: 'wall-1', name: 'External Cavity Wall', includeSurfaces: true, layers: [{ id: 'w1', name: 'Concrete Plaster / Render', type: 'material', thickness: 20, kValue: 1.20, rValue: 0, density: 1800, specificHeat: 1000 }, { id: 'w2', name: 'Clay Brick (Solid)', type: 'material', thickness: 115, kValue: 0.77, rValue: 0, density: 1700, specificHeat: 800 }, { id: 'w3', name: 'Unventilated Air Gap / Cavity', type: 'resistance', thickness: 50, rValue: 0.18, density: 1.2, specificHeat: 1000 }, { id: 'w4', name: 'Clay Brick (Solid)', type: 'material', thickness: 115, kValue: 0.77, rValue: 0, density: 1700, specificHeat: 800 }, { id: 'w5', name: 'Concrete Plaster / Render', type: 'material', thickness: 20, kValue: 1.20, rValue: 0, density: 1800, specificHeat: 1000 }] }],
-        roofs: { includeSurfaces: true, layers: [{ id: 'r1', name: 'Concrete Roof Tile', type: 'material', thickness: 15, kValue: 1.50, rValue: 0, density: 2100, specificHeat: 1000 }, { id: 'r2', name: 'Unventilated Air Gap / Cavity', type: 'resistance', thickness: 20, rValue: 0.18, rValueUp: 0.18, rValueDown: 0.25, density: 1.2, specificHeat: 1000 }, { id: 'r3', name: 'Reflective Foil (Radiant Barrier)', type: 'resistance', thickness: 1, rValue: 0, rValueUp: 0.40, rValueDown: 0.92, density: 100, specificHeat: 1000 }, { id: 'r4', name: 'Unventilated Air Gap / Cavity', type: 'resistance', thickness: 50, rValue: 0.18, rValueUp: 0.18, rValueDown: 0.25, density: 1.2, specificHeat: 1000 }, { id: 'r5', name: 'Glasswool Insulation', type: 'material', thickness: 50, kValue: 0.040, rValue: 0, density: 12, specificHeat: 840 }, { id: 'r6', name: 'Gypsum Plasterboard (Ceiling)', type: 'material', thickness: 10, kValue: 0.25, rValue: 0, density: 900, specificHeat: 1000 }] },
-        floors: { includeSurfaces: true, layers: [{ id: 'f1', name: 'Concrete (Dense)', type: 'material', thickness: 150, kValue: 1.40, rValue: 0, density: 2400, specificHeat: 1000 }] }
+        roofs: [{ id: 'roof-1', name: 'Main Roof', includeSurfaces: true, isPitchedRoof: true, layers: [{ id: 'r1', name: 'Concrete Roof Tile', type: 'material', thickness: 15, kValue: 1.50, rValue: 0, density: 2100, specificHeat: 1000 }, { id: 'r2', name: 'Unventilated Air Gap / Cavity', type: 'resistance', thickness: 20, rValue: 0.18, rValueUp: 0.18, rValueDown: 0.25, density: 1.2, specificHeat: 1000 }, { id: 'r3', name: 'Reflective Foil (Radiant Barrier)', type: 'resistance', thickness: 1, rValue: 0, rValueUp: 0.40, rValueDown: 0.92, density: 100, specificHeat: 1000 }, { id: 'r4', name: 'Unventilated Air Gap / Cavity', type: 'resistance', thickness: 50, rValue: 0.18, rValueUp: 0.18, rValueDown: 0.25, density: 1.2, specificHeat: 1000 }, { id: 'r5', name: 'Glasswool Insulation', type: 'material', thickness: 50, kValue: 0.040, rValue: 0, density: 12, specificHeat: 840 }, { id: 'r6', name: 'Gypsum Plasterboard (Ceiling)', type: 'material', thickness: 10, kValue: 0.25, rValue: 0, density: 900, specificHeat: 1000 }] }],
+        floors: [{ id: 'floor-1', name: 'Ground Floor', includeSurfaces: false, floorType: 'ground', floorHeating: false, layers: [{ id: 'f1', name: 'Concrete (Dense)', type: 'material', thickness: 150, kValue: 1.40, rValue: 0, density: 2400, specificHeat: 1000 }] }]
       });
       const [activeWallIndex, setActiveWallIndex] = useState(0);
+      const [activeRoofIndex, setActiveRoofIndex] = useState(0);
+      const [activeFloorIndex, setActiveFloorIndex] = useState(0);
       const [fenestration, setFenestration] = useState({
         windows: [{ id: 'win1', reference: 'W1', storey: 0, name: 'Lounge Double Door', qty: 1, width: 2.4, height: 2.1, uValue: 5.20, shgc: 0.60, shadingStatus: 'unshaded', glazingType: 'single_low_e' }, { id: 'win2', reference: 'W2', storey: 0, name: 'Bedroom Windows', qty: 3, width: 1.2, height: 1.2, uValue: 5.20, shgc: 0.60, shadingStatus: 'south', glazingType: 'single_low_e' }]
       });
@@ -168,14 +556,18 @@ function App() {
         return { R: 0, R_up: 0, R_down: 0 };
       };
 
-      const currentAssembly = activeTab === 'walls' ? (assemblies.walls[activeWallIndex] || assemblies.walls[0]) : ['roofs', 'floors'].includes(activeTab) ? assemblies[activeTab] : null;
+      const currentAssembly = activeTab === 'walls' ? (assemblies.walls[activeWallIndex] || assemblies.walls[0]) : activeTab === 'roofs' ? (assemblies.roofs[activeRoofIndex] || assemblies.roofs[0]) : activeTab === 'floors' ? (assemblies.floors[activeFloorIndex] || assemblies.floors[0]) : null;
       const layers = currentAssembly?.layers || [];
       const includeSurfaces = currentAssembly?.includeSurfaces ?? true;
+      
+      const isPitchedRoof = currentAssembly?.isPitchedRoof ?? true;
+      const floorType = currentAssembly?.floorType ?? 'ground';
+      const floorHeating = currentAssembly?.floorHeating ?? false;
+
       const params = activeTab === 'roofs' ? { flow: 'Upward & Downward', outLabel: 'OUTSIDE (ROOF)', inLabel: 'INSIDE (CEILING)', isVertical: false, rSe: 0.04, rSiUp: 0.10, rSiDown: 0.16 } : activeTab === 'floors' ? { flow: (!floorHeating && floorType === 'ground') ? 'Downward' : 'Upward', outLabel: 'INSIDE (TOP)', inLabel: floorType === 'ground' ? 'OUTSIDE (GROUND)' : 'OUTSIDE (CRAWLSPACE)', isVertical: false, rSe: floorType === 'ground' ? 0.00 : 0.04, rSi: (!floorHeating && floorType === 'ground') ? 0.17 : 0.10 } : { flow: 'Horizontal', outLabel: 'OUTSIDE', inLabel: 'INSIDE', isVertical: true, rSe: 0.04, rSi: 0.13 };
       
       const [totals, setTotals] = useState({ R: 0, R_up: 0, R_down: 0, mass: 0, surfaceMass: 0, lag: 0 });
       useEffect(() => { if (!['walls', 'roofs', 'floors'].includes(activeTab)) return; setTotals(calculateAssemblyPhysics(layers, activeTab, includeSurfaces, isPitchedRoof, floorType, floorHeating)); }, [layers, includeSurfaces, activeTab, floorType, floorHeating, isPitchedRoof]);
-
       const fenestrationData = useMemo(() => {
         let globalWinArea = 0; let globalUA = 0; let globalSHGCA = 0; let globalUnshadedArea = 0; let globalShadedArea = 0; let sccpViolation = false;
         const storeys = derivedFloorAreas.map((floorArea, index) => {
@@ -251,8 +643,14 @@ function App() {
       const isCompliant = activeTab === 'roofs' ? (totals.R_up >= targets.R_up && totals.R_down >= targets.R_down) : activeTab === 'fenestration' ? fenestrationData.global.isCompliant : activeTab === 'skylights' ? skylightData.global.isCompliant : activeTab === 'water' ? waterData.isCompliant : (totals.R >= targets.R);
       const totalThickness = layers.reduce((acc, l) => acc + Number(l.thickness || 0), 0);
 
-      const updateCurrentAssembly = (updater) => { setAssemblies(prev => { if (activeTab === 'walls') { const newWalls = [...prev.walls]; newWalls[activeWallIndex] = updater(newWalls[activeWallIndex]); return { ...prev, walls: newWalls }; } else { return { ...prev, [activeTab]: updater(prev[activeTab]) }; } }); };
-      
+      const updateCurrentAssembly = (updater) => { 
+        setAssemblies(prev => { 
+          const tabArray = [...prev[activeTab]];
+          const activeIdx = activeTab === 'walls' ? activeWallIndex : activeTab === 'roofs' ? activeRoofIndex : activeFloorIndex;
+          tabArray[activeIdx] = updater(tabArray[activeIdx]);
+          return { ...prev, [activeTab]: tabArray }; 
+        }); 
+      };
       const handleLayerAction = (action, id, field, value, index) => {
         updateCurrentAssembly(prev => {
           let newLayers = [...prev.layers];
@@ -272,10 +670,17 @@ function App() {
       };
 
       const toggleSurfaces = (checked) => updateCurrentAssembly(prev => ({ ...prev, includeSurfaces: checked }));
+      
       const addWallType = () => { setAssemblies(prev => ({ ...prev, walls: [...prev.walls, { id: Math.random().toString(36).substr(2, 9), name: `External Cavity Wall ${prev.walls.length + 1}`, includeSurfaces: true, layers: [ { id: Math.random().toString(36).substr(2, 9), name: 'Concrete Plaster / Render', type: 'material', thickness: 20, kValue: 1.20, rValue: 0, density: 1800, specificHeat: 1000 }, { id: Math.random().toString(36).substr(2, 9), name: 'Clay Brick (Solid)', type: 'material', thickness: 115, kValue: 0.77, rValue: 0, density: 1700, specificHeat: 800 }, { id: Math.random().toString(36).substr(2, 9), name: 'Unventilated Air Gap / Cavity', type: 'resistance', thickness: 50, rValue: 0.18, density: 1.2, specificHeat: 1000 }, { id: Math.random().toString(36).substr(2, 9), name: 'Clay Brick (Solid)', type: 'material', thickness: 115, kValue: 0.77, rValue: 0, density: 1700, specificHeat: 800 }, { id: Math.random().toString(36).substr(2, 9), name: 'Concrete Plaster / Render', type: 'material', thickness: 20, kValue: 1.20, rValue: 0, density: 1800, specificHeat: 1000 } ] }] })); setActiveWallIndex(assemblies.walls.length); };
       const removeWallType = (indexToRemove) => { if (assemblies.walls.length <= 1) return; setAssemblies(prev => ({ ...prev, walls: prev.walls.filter((_, idx) => idx !== indexToRemove) })); if (activeWallIndex >= indexToRemove && activeWallIndex > 0) setActiveWallIndex(prev => prev - 1); };
-      const updateWallName = (name) => setAssemblies(prev => { const newWalls = [...prev.walls]; newWalls[activeWallIndex] = { ...newWalls[activeWallIndex], name }; return { ...prev, walls: newWalls }; });
+      
+      const addRoofType = () => { setAssemblies(prev => ({ ...prev, roofs: [...prev.roofs, { id: Math.random().toString(36).substr(2, 9), name: `Roof ${prev.roofs.length + 1}`, includeSurfaces: true, isPitchedRoof: true, layers: [...prev.roofs[0].layers] }] })); setActiveRoofIndex(assemblies.roofs.length); };
+      const removeRoofType = (indexToRemove) => { if (assemblies.roofs.length <= 1) return; setAssemblies(prev => ({ ...prev, roofs: prev.roofs.filter((_, idx) => idx !== indexToRemove) })); if (activeRoofIndex >= indexToRemove && activeRoofIndex > 0) setActiveRoofIndex(prev => prev - 1); };
+      
+      const addFloorType = () => { setAssemblies(prev => ({ ...prev, floors: [...prev.floors, { id: Math.random().toString(36).substr(2, 9), name: `Floor ${prev.floors.length + 1}`, includeSurfaces: false, floorType: 'ground', floorHeating: false, layers: [...prev.floors[0].layers] }] })); setActiveFloorIndex(assemblies.floors.length); };
+      const removeFloorType = (indexToRemove) => { if (assemblies.floors.length <= 1) return; setAssemblies(prev => ({ ...prev, floors: prev.floors.filter((_, idx) => idx !== indexToRemove) })); if (activeFloorIndex >= indexToRemove && activeFloorIndex > 0) setActiveFloorIndex(prev => prev - 1); };
 
+      const updateAssemblyName = (name) => updateCurrentAssembly(prev => ({ ...prev, name }));
       const solveCompliance = (layerId) => {
         const layer = layers.find(l => l.id === layerId);
         if (!layer || layer.type !== 'material' || layer.kValue <= 0) return;
@@ -425,22 +830,35 @@ function App() {
             });
         }
         else if (tab === 'roofs') {
-            const p = calculateAssemblyPhysics(assemblies.roofs.layers, 'roofs', assemblies.roofs.includeSurfaces, isPitchedRoof);
-            const t = getTargetRequirements('roofs', 0, zone);
-            const pass = p.R_up >= t.R_up && p.R_down >= t.R_down;
-            h += `<h2>Roof Assembly Schedule</h2><div class="box"><p>Profile: ${isPitchedRoof ? 'Pitched' : 'Flat'}</p><table><tr><th>Direction</th><th>Target R</th><th>Total R</th></tr><tr><td>WINTER (Up)</td><td>${t.R_up.toFixed(2)}</td><td>${p.R_up.toFixed(2)}</td></tr><tr><td>SUMMER (Down)</td><td>${t.R_down.toFixed(2)}</td><td>${p.R_down.toFixed(2)}</td></tr></table><p class="${pass?'pass':'fail'}">Status: ${pass?'COMPLIANT':'NON-COMPLIANT'}</p>
-            <h4 style="margin-top:15px; margin-bottom:5px; font-size:12px; color:#64748b; text-transform:uppercase;">Assembly Cross-Section</h4>
-            ${generateVisualizerHtml(assemblies.roofs.layers, assemblies.roofs.includeSurfaces, false, 'OUTSIDE (ROOF)', 'INSIDE (CEILING)')}
-            </div>`;
+            h += '<h2>Roof Assembly Schedule</h2>';
+            assemblies.roofs.forEach(r => {
+                const p = calculateAssemblyPhysics(r.layers, 'roofs', r.includeSurfaces, r.isPitchedRoof);
+                const t = getTargetRequirements('roofs', 0, zone);
+                const pass = p.R_up >= t.R_up && p.R_down >= t.R_down;
+                h += `<div class="box" style="margin-bottom:20px;">
+                    <h4>${r.name}</h4>
+                    <p>Profile: ${r.isPitchedRoof ? 'Pitched' : 'Flat'}</p>
+                    <table><tr><th>Direction</th><th>Target R</th><th>Total R</th></tr><tr><td>WINTER (Up)</td><td>${t.R_up.toFixed(2)}</td><td>${p.R_up.toFixed(2)}</td></tr><tr><td>SUMMER (Down)</td><td>${t.R_down.toFixed(2)}</td><td>${p.R_down.toFixed(2)}</td></tr></table><p class="${pass?'pass':'fail'}">Status: ${pass?'COMPLIANT':'NON-COMPLIANT'}</p>
+                    <h4 style="margin-top:15px; margin-bottom:5px; font-size:12px; color:#64748b; text-transform:uppercase;">Assembly Cross-Section</h4>
+                    ${generateVisualizerHtml(r.layers, r.includeSurfaces, false, 'OUTSIDE (ROOF)', 'INSIDE (CEILING)')}
+                </div>`;
+            });
         }
         else if (tab === 'floors') {
-            const p = calculateAssemblyPhysics(assemblies.floors.layers, 'floors', assemblies.floors.includeSurfaces, false, floorType, floorHeating);
-            const t = getTargetRequirements('floors', 0, zone, floorType, floorHeating);
-            const pass = p.R >= t.R;
-            h += `<h2>Floor Assembly Schedule</h2><div class="box"><p>System: ${floorType === 'suspended' ? 'Suspended Slab' : 'Slab on Ground'} ${floorHeating ? '(Heated)' : ''}</p><p>Target R-Value: ${t.R.toFixed(2)}</p><p>Total R-Value: <span class="${pass?'pass':'fail'}">${p.R.toFixed(2)}</span></p>
-            <h4 style="margin-top:15px; margin-bottom:5px; font-size:12px; color:#64748b; text-transform:uppercase;">Assembly Cross-Section</h4>
-            ${generateVisualizerHtml(assemblies.floors.layers, assemblies.floors.includeSurfaces, false, 'INSIDE (TOP)', floorType === 'ground' ? 'OUTSIDE (GROUND)' : 'OUTSIDE (CRAWLSPACE)')}
-            </div>`;
+            h += '<h2>Floor Assembly Schedule</h2>';
+            assemblies.floors.forEach(f => {
+                const p = calculateAssemblyPhysics(f.layers, 'floors', f.includeSurfaces, false, f.floorType, f.floorHeating);
+                const t = getTargetRequirements('floors', 0, zone, f.floorType, f.floorHeating);
+                const pass = p.R >= t.R;
+                h += `<div class="box" style="margin-bottom:20px;">
+                    <h4>${f.name}</h4>
+                    <p>System: ${f.floorType === 'suspended' ? 'Suspended Slab' : 'Slab on Ground'} ${f.floorHeating ? '(Heated)' : ''}</p>
+                    <p>Target R-Value: ${t.R.toFixed(2)}</p>
+                    <p>Total R-Value: <span class="${pass?'pass':'fail'}">${p.R.toFixed(2)}</span></p>
+                    <h4 style="margin-top:15px; margin-bottom:5px; font-size:12px; color:#64748b; text-transform:uppercase;">Assembly Cross-Section</h4>
+                    ${generateVisualizerHtml(f.layers, f.includeSurfaces, false, 'INSIDE (TOP)', f.floorType === 'ground' ? 'OUTSIDE (GROUND)' : 'OUTSIDE (CRAWLSPACE)')}
+                </div>`;
+            });
         }
         else if (tab === 'fenestration') {
             h += '<h2>Fenestration Schedule</h2>';
@@ -624,8 +1042,8 @@ return (
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">City / Location</label>
                         <select value={projectInfo.customLocation ? 'CUSTOM' : projectInfo.location} onChange={handleLocationChange} className="w-full text-sm font-medium border-slate-300 rounded-lg shadow-sm focus:border-indigo-500 p-2.5 border bg-white">
                           <option value="" disabled>Select a location...</option>
-                          {SA_TOWNS.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
                           <option value="CUSTOM">Other (Manual Entry)...</option>
+                          {SA_TOWNS.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
                         </select>
                         <a href="https://csir.maps.arcgis.com/apps/webappviewer/index.html?id=79602766e2b54ede82625c939ac1814b" target="_blank" rel="noreferrer" className="text-xs text-indigo-600 hover:text-indigo-800 mt-2 inline-flex items-center gap-1 font-medium bg-indigo-100/50 px-2 py-1 rounded w-max transition-colors">
                            <ExternalLink className="w-3 h-3"/> Verify climate zone on the CSIR Energy Demand Map
@@ -679,27 +1097,32 @@ return (
               {/* --- ENVELOPE TABS (WALLS, ROOFS, FLOORS) --- */}
               {['walls', 'roofs', 'floors'].includes(activeTab) && (
                 <>
-                  {activeTab === 'walls' && (
-                    <div className="flex flex-wrap gap-2 mb-6 pb-6 border-b border-slate-100 items-center">
-                      {assemblies.walls.map((wall, idx) => (
-                        <div key={wall.id} className="flex rounded-lg shadow-sm">
-                          <button onClick={() => setActiveWallIndex(idx)} className={`px-4 py-2 rounded-l-lg text-sm font-semibold border ${activeWallIndex === idx ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-300'}`}>{wall.name}</button>
-                          <button onClick={() => removeWallType(idx)} disabled={assemblies.walls.length <= 1} className={`px-2 py-2 rounded-r-lg border-y border-r ${assemblies.walls.length <= 1 ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : activeWallIndex === idx ? 'bg-blue-700 text-blue-200' : 'bg-white text-slate-400 hover:text-red-500'}`}><X className="w-4 h-4" /></button>
+                  <div className="flex flex-wrap gap-2 mb-6 pb-6 border-b border-slate-100 items-center">
+                    {assemblies[activeTab].map((item, idx) => {
+                      const activeIdx = activeTab === 'walls' ? activeWallIndex : activeTab === 'roofs' ? activeRoofIndex : activeFloorIndex;
+                      const setIdx = activeTab === 'walls' ? setActiveWallIndex : activeTab === 'roofs' ? setActiveRoofIndex : setActiveFloorIndex;
+                      const removeFn = activeTab === 'walls' ? removeWallType : activeTab === 'roofs' ? removeRoofType : removeFloorType;
+                      return (
+                        <div key={item.id} className="flex rounded-lg shadow-sm">
+                          <button onClick={() => setIdx(idx)} className={`px-4 py-2 rounded-l-lg text-sm font-semibold border ${activeIdx === idx ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-300'}`}>{item.name}</button>
+                          <button onClick={() => removeFn(idx)} disabled={assemblies[activeTab].length <= 1} className={`px-2 py-2 rounded-r-lg border-y border-r ${assemblies[activeTab].length <= 1 ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : activeIdx === idx ? 'bg-blue-700 text-blue-200' : 'bg-white text-slate-400 hover:text-red-500'}`}><X className="w-4 h-4" /></button>
                         </div>
-                      ))}
-                      <button onClick={addWallType} className="px-3 py-2 rounded-lg text-sm font-semibold text-blue-600 bg-blue-50 border border-blue-200 flex items-center gap-1 shadow-sm ml-2"><Plus className="w-4 h-4" /> Add Wall Type</button>
-                    </div>
-                  )}
+                      );
+                    })}
+                    <button onClick={activeTab === 'walls' ? addWallType : activeTab === 'roofs' ? addRoofType : addFloorType} className="px-3 py-2 rounded-lg text-sm font-semibold text-blue-600 bg-blue-50 border border-blue-200 flex items-center gap-1 shadow-sm ml-2">
+                      <Plus className="w-4 h-4" /> Add {activeTab === 'walls' ? 'Wall' : activeTab === 'roofs' ? 'Roof' : 'Floor'} Type
+                    </button>
+                  </div>
 
                   <div className="flex flex-col lg:flex-row justify-between items-start gap-6 pb-6 border-b border-slate-100">
                     <div className="flex-1 w-full space-y-4">
-                      <div><h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2 capitalize">{activeTab === 'walls' && currentAssembly ? currentAssembly.name : `${activeTab} Assembly`}</h1><p className="text-slate-500 mt-1">SANS 10400-XA Performance Metrics</p></div>
-                      {activeTab === 'walls' && currentAssembly && (<div className="max-w-sm mt-2"><input type="text" value={currentAssembly.name} onChange={(e) => updateWallName(e.target.value)} className="w-full text-sm border-slate-300 rounded-lg shadow-sm focus:border-blue-500 p-2 border bg-white" placeholder="e.g. North Facing Cavity Wall" /></div>)}
-                      {activeTab === 'roofs' && (<div className="flex flex-col md:flex-row md:items-center gap-4 bg-orange-50 p-3 rounded-lg border border-orange-200 w-max"><span className="text-sm font-semibold text-orange-800">Roof Profile:</span><label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={isPitchedRoof} onChange={(e) => setIsPitchedRoof(e.target.checked)} className="w-4 h-4 text-orange-600 rounded border-slate-300" /><span className="text-sm font-medium text-stone-700">Pitched Roof (≥ 30°)</span></label></div>)}
+                      <div><h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2 capitalize">{currentAssembly ? currentAssembly.name : `${activeTab} Assembly`}</h1><p className="text-slate-500 mt-1">SANS 10400-XA Performance Metrics</p></div>
+                      {currentAssembly && (<div className="max-w-sm mt-2"><input type="text" value={currentAssembly.name} onChange={(e) => updateAssemblyName(e.target.value)} className="w-full text-sm border-slate-300 rounded-lg shadow-sm focus:border-blue-500 p-2 border bg-white" placeholder={`e.g. New ${activeTab} type`} /></div>)}
+                      {activeTab === 'roofs' && (<div className="flex flex-col md:flex-row md:items-center gap-4 bg-orange-50 p-3 rounded-lg border border-orange-200 w-max"><span className="text-sm font-semibold text-orange-800">Roof Profile:</span><label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={isPitchedRoof} onChange={(e) => updateCurrentAssembly(prev => ({ ...prev, isPitchedRoof: e.target.checked }))} className="w-4 h-4 text-orange-600 rounded border-slate-300" /><span className="text-sm font-medium text-stone-700">Pitched Roof (≥ 30°)</span></label></div>)}
                       {activeTab === 'floors' && (
                         <div className="flex flex-col md:flex-row md:items-center gap-4 bg-stone-50 p-3 rounded-lg border border-stone-200">
-                          <div className="flex items-center gap-3"><span className="text-sm font-semibold text-stone-800">Floor System:</span><select value={floorType} onChange={(e) => setFloorType(e.target.value)} className="text-sm border-slate-300 rounded shadow-sm py-1.5 pl-2 pr-8"><option value="ground">Slab on Ground</option><option value="suspended">Suspended Floor</option></select></div>
-                          <label className="flex items-center gap-2 cursor-pointer w-max"><input type="checkbox" checked={floorHeating} onChange={(e) => setFloorHeating(e.target.checked)} className="w-4 h-4 text-orange-600 rounded border-slate-300" /><span className="text-sm font-medium text-stone-700 flex items-center gap-1.5"><Thermometer className="w-4 h-4 text-orange-500" /> Underfloor Heating</span></label>
+                          <div className="flex items-center gap-3"><span className="text-sm font-semibold text-stone-800">Floor System:</span><select value={floorType} onChange={(e) => updateCurrentAssembly(prev => ({ ...prev, floorType: e.target.value }))} className="text-sm border-slate-300 rounded shadow-sm py-1.5 pl-2 pr-8"><option value="ground">Slab on Ground</option><option value="suspended">Suspended Floor</option></select></div>
+                          <label className="flex items-center gap-2 cursor-pointer w-max"><input type="checkbox" checked={floorHeating} onChange={(e) => updateCurrentAssembly(prev => ({ ...prev, floorHeating: e.target.checked }))} className="w-4 h-4 text-orange-600 rounded border-slate-300" /><span className="text-sm font-medium text-stone-700 flex items-center gap-1.5"><Thermometer className="w-4 h-4 text-orange-500" /> Underfloor Heating</span></label>
                         </div>
                       )}
                       <div className="flex flex-wrap items-center gap-3 pt-2"><button onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg shadow-sm text-sm"><FileText className="w-4 h-4" /> Export Current Tab</button></div>
@@ -727,7 +1150,15 @@ return (
                   </div>
 
                   <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden">
-                    <div className="bg-slate-100 px-6 py-4 border-b border-slate-200 flex justify-between items-center"><h2 className="font-semibold text-slate-700 flex items-center gap-2"><Layers className="w-5 h-5" /> Layer Builder</h2><label className="flex items-center gap-2 cursor-pointer w-max"><input type="checkbox" checked={includeSurfaces} onChange={(e) => toggleSurfaces(e.target.checked)} className="w-4 h-4 text-blue-600 rounded border-slate-300" /><span className="font-medium text-slate-600 text-xs uppercase tracking-wider">Include Air Films</span></label></div>
+                    <div className="bg-slate-100 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                      <h2 className="font-semibold text-slate-700 flex items-center gap-2"><Layers className="w-5 h-5" /> Layer Builder</h2>
+                      {activeTab !== 'floors' && (
+                        <label className="flex items-center gap-2 cursor-pointer w-max">
+                          <input type="checkbox" checked={includeSurfaces} onChange={(e) => toggleSurfaces(e.target.checked)} className="w-4 h-4 text-blue-600 rounded border-slate-300" />
+                          <span className="font-medium text-slate-600 text-xs uppercase tracking-wider">Include Air Films</span>
+                        </label>
+                      )}
+                    </div>
                     <div className="p-4 space-y-3">
                       {layers.map((layer, index) => (
                         <div key={layer.id} className="flex items-stretch gap-3 p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
