@@ -49,7 +49,7 @@
     const Wand = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 4 2 2"></path><path d="m17.7 5.2-1.2 1.2"></path><path d="m2.1 21.9 8.8-8.8"></path><path d="m10.1 13.1 3.8-3.8"></path><path d="m13.9 9.3 2.5-2.5"></path><path d="m20.1 3.9-2.4 2.4"></path><path d="m21.9 2.1-1.8 1.8"></path><path d="M8.8 14.9 3.1 20.6"></path><path d="m4.4 19.1 1.5 1.5"></path><path d="m6.1 17.4 1.5 1.5"></path><path d="m16.2 4.1 3.7 3.7"></path></svg>;
 
     // --- COMPRESSED CONFIGURATIONS ---
-    const BUILD_VERSION = "2.0.1 (REVISED LIST OF TOWN AND CITY NAMES, ADDED SUPPORT FOR MULTIPLE ROOF AND FLOOR TYPES)";
+    const BUILD_VERSION = "2.0.3 (LOCAL SAVING IMPLEMENTED)";
     const FENESTRATION_TARGETS = [{maxRatio:20,maxU:null,maxShgcUnshaded:null,maxShgcShaded:null},{maxRatio:25,maxU:5.20,maxShgcUnshaded:0.66,maxShgcShaded:0.49},{maxRatio:30,maxU:4.40,maxShgcUnshaded:0.53,maxShgcShaded:0.44},{maxRatio:35,maxU:3.80,maxShgcUnshaded:0.49,maxShgcShaded:0.40},{maxRatio:40,maxU:3.30,maxShgcUnshaded:0.35,maxShgcShaded:0.44},{maxRatio:45,maxU:3.00,maxShgcUnshaded:0.40,maxShgcShaded:0.33},{maxRatio:50,maxU:2.60,maxShgcUnshaded:0.35,maxShgcShaded:0.30},{maxRatio:55,maxU:2.40,maxShgcUnshaded:0.33,maxShgcShaded:0.28},{maxRatio:60,maxU:2.20,maxShgcUnshaded:0.30,maxShgcShaded:0.25},{maxRatio:100,maxU:2.00,maxShgcUnshaded:0.28,maxShgcShaded:0.22}];
     const getFenestrationTargets = (r) => r <= 0 ? FENESTRATION_TARGETS[0] : (FENESTRATION_TARGETS.find(t => r <= t.maxRatio) || FENESTRATION_TARGETS[9]);
     const LIGHTING_LIMITS={'A1':2,'A2':8,'A3':10,'A4':4,'C1':10,'C2':4,'E1':4,'E2':8,'E3':8,'E4':8,'F1':20,'F2':8,'F3':8,'G1':8,'H1':4,'H2':4,'H3':4,'H4':4,'H5':4,'J1':2,'J2':2,'J3':2,'J4':2};
@@ -450,23 +450,36 @@
 {name:'Zebediela',zone:'5',lat:24.301,sccp:false},
 {name:'Zeerust',zone:'5',lat:25.544,sccp:false}
 ];
+
+// --- CUSTOM HOOK FOR LOCAL STORAGE PERSISTENCE ---
+function useStickyState(defaultValue, key) {
+  const [value, setValue] = React.useState(() => {
+    const stickyValue = window.localStorage.getItem(key);
+    return stickyValue !== null ? JSON.parse(stickyValue) : defaultValue;
+  });
+  React.useEffect(() => {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  }, [key, value]);
+  return [value, setValue];
+}
+
 function App() {
-      const [activeTab, setActiveTab] = useState('project');
-      const [projectInfo, setProjectInfo] = useState({ projectName:'', projectType:'new', location:'Johannesburg', customLocation:false, latitude:26.2, isSccp:false, storeys:1, standNumber: '', township: '', zone:'1', occupancy:'H4' });
+      const [activeTab, setActiveTab] = useStickyState('project', 'xa_activeTab');
+      const [projectInfo, setProjectInfo] = useStickyState({ projectName:'', projectType:'new', location:'Johannesburg', customLocation:false, latitude:26.2, isSccp:false, storeys:1, standNumber: '', township: '', zone:'1', occupancy:'H4', referencedDrawings: '' }, 'xa_projectInfo');
       const [isExempt, setIsExempt] = useState(false);
       
       useEffect(() => { setIsExempt(['J3', 'A5', 'D4'].includes(projectInfo.occupancy)); }, [projectInfo.occupancy]);
 
-      const [spaces, setSpaces] = useState([{ id: 'sp-1', name: 'Main Living Area', storey: 0, area: 150 }]);
-      const [skylights, setSkylights] = useState([]);
-      const [lightingFixtures, setLightingFixtures] = useState([{ id: 'lf-1', spaceId: 'sp-1', name: 'LED Downlight', type: 'LED', qty: 12, watts: 8 }]);
-      const [hvacExempt, setHvacExempt] = useState(false);
-      const [hvacEquipment, setHvacEquipment] = useState([{ id: 'hvac-1', name: 'Main Office AC', type: 'unitary_split', capacity: 12, copC: 3.2, copH: 3.3, resViolation: false }]);
-      const [waterExempt, setWaterExempt] = useState(false);
-      const [waterPop, setWaterPop] = useState(4);
-      const [waterRate, setWaterRate] = useState(115); 
-      const [waterEquipment, setWaterEquipment] = useState([{ id: 'weq-1', name: 'Solar Water Heater', yield: 200 }]);
-      const [waterPipes, setWaterPipes] = useState([{ id: 'wp-1', reference: 'Main Hot Water Ring', diameter: 22, insulated: true }]);
+      const [spaces, setSpaces] = useStickyState([{ id: 'sp-1', name: 'Main Living Area', storey: 0, area: 150 }], 'xa_spaces');
+      const [skylights, setSkylights] = useStickyState([], 'xa_skylights');
+      const [lightingFixtures, setLightingFixtures] = useStickyState([{ id: 'lf-1', spaceId: 'sp-1', name: 'LED Downlight', type: 'LED', qty: 12, watts: 8 }], 'xa_lightingFixtures');
+      const [hvacExempt, setHvacExempt] = useStickyState(false, 'xa_hvacExempt');
+      const [hvacEquipment, setHvacEquipment] = useStickyState([{ id: 'hvac-1', name: 'Main Office AC', type: 'unitary_split', capacity: 12, copC: 3.2, copH: 3.3, resViolation: false }], 'xa_hvacEquipment');
+      const [waterExempt, setWaterExempt] = useStickyState(false, 'xa_waterExempt');
+      const [waterPop, setWaterPop] = useStickyState(4, 'xa_waterPop');
+      const [waterRate, setWaterRate] = useStickyState(115, 'xa_waterRate'); 
+      const [waterEquipment, setWaterEquipment] = useStickyState([{ id: 'weq-1', name: 'Solar Water Heater', yield: 200 }], 'xa_waterEquipment');
+      const [waterPipes, setWaterPipes] = useStickyState([{ id: 'wp-1', reference: 'Main Hot Water Ring', diameter: 22, insulated: true }], 'xa_waterPipes');
 
       const [officeInfo, setOfficeInfo] = useState({ companyName: '', registeredProfessional: '', sacapNumber: '', logoDataUrl: '' });
       const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -515,38 +528,61 @@ function App() {
       const zone = projectInfo.zone;
       const occupancy = projectInfo.occupancy;
 
-      const [assemblies, setAssemblies] = useState({
+      const [assemblies, setAssemblies] = useStickyState({
         walls: [{ id: 'wall-1', name: 'External Cavity Wall', includeSurfaces: true, layers: [{ id: 'w1', name: 'Concrete Plaster / Render', type: 'material', thickness: 20, kValue: 1.20, rValue: 0, density: 1800, specificHeat: 1000 }, { id: 'w2', name: 'Clay Brick (Solid)', type: 'material', thickness: 115, kValue: 0.77, rValue: 0, density: 1700, specificHeat: 800 }, { id: 'w3', name: 'Unventilated Air Gap / Cavity', type: 'resistance', thickness: 50, rValue: 0.18, density: 1.2, specificHeat: 1000 }, { id: 'w4', name: 'Clay Brick (Solid)', type: 'material', thickness: 115, kValue: 0.77, rValue: 0, density: 1700, specificHeat: 800 }, { id: 'w5', name: 'Concrete Plaster / Render', type: 'material', thickness: 20, kValue: 1.20, rValue: 0, density: 1800, specificHeat: 1000 }] }],
         roofs: [{ id: 'roof-1', name: 'Main Roof', includeSurfaces: true, isPitchedRoof: true, layers: [{ id: 'r1', name: 'Concrete Roof Tile', type: 'material', thickness: 15, kValue: 1.50, rValue: 0, density: 2100, specificHeat: 1000 }, { id: 'r2', name: 'Unventilated Air Gap / Cavity', type: 'resistance', thickness: 20, rValue: 0.18, rValueUp: 0.18, rValueDown: 0.25, density: 1.2, specificHeat: 1000 }, { id: 'r3', name: 'Reflective Foil (Radiant Barrier)', type: 'resistance', thickness: 1, rValue: 0, rValueUp: 0.40, rValueDown: 0.92, density: 100, specificHeat: 1000 }, { id: 'r4', name: 'Unventilated Air Gap / Cavity', type: 'resistance', thickness: 50, rValue: 0.18, rValueUp: 0.18, rValueDown: 0.25, density: 1.2, specificHeat: 1000 }, { id: 'r5', name: 'Glasswool Insulation', type: 'material', thickness: 50, kValue: 0.040, rValue: 0, density: 12, specificHeat: 840 }, { id: 'r6', name: 'Gypsum Plasterboard (Ceiling)', type: 'material', thickness: 10, kValue: 0.25, rValue: 0, density: 900, specificHeat: 1000 }] }],
         floors: [{ id: 'floor-1', name: 'Ground Floor', includeSurfaces: false, floorType: 'ground', floorHeating: false, layers: [{ id: 'f1', name: 'Concrete (Dense)', type: 'material', thickness: 150, kValue: 1.40, rValue: 0, density: 2400, specificHeat: 1000 }] }]
-      });
-      const [activeWallIndex, setActiveWallIndex] = useState(0);
-      const [activeRoofIndex, setActiveRoofIndex] = useState(0);
-      const [activeFloorIndex, setActiveFloorIndex] = useState(0);
-      const [fenestration, setFenestration] = useState({
+      }, 'xa_assemblies');
+      
+      const [activeWallIndex, setActiveWallIndex] = useStickyState(0, 'xa_activeWallIndex');
+      const [activeRoofIndex, setActiveRoofIndex] = useStickyState(0, 'xa_activeRoofIndex');
+      const [activeFloorIndex, setActiveFloorIndex] = useStickyState(0, 'xa_activeFloorIndex');
+      
+      const [fenestration, setFenestration] = useStickyState({
         windows: [{ id: 'win1', reference: 'W1', storey: 0, name: 'Lounge Double Door', qty: 1, width: 2.4, height: 2.1, uValue: 5.20, shgc: 0.60, shadingStatus: 'unshaded', glazingType: 'single_low_e' }, { id: 'win2', reference: 'W2', storey: 0, name: 'Bedroom Windows', qty: 3, width: 1.2, height: 1.2, uValue: 5.20, shgc: 0.60, shadingStatus: 'south', glazingType: 'single_low_e' }]
-      });
+      }, 'xa_fenestration');
 
       const calculateAssemblyPhysics = (layerArray, type, incSurfaces, pitched = false, fType = 'ground', fHeating = false) => {
         let sumR = 0, sumR_up = 0, sumR_down = 0, sumMass = 0, sumSurfaceMass = 0;
+        let breakdown = [], breakdownUp = [], breakdownDown = []; // NEW: Array containers for math summary
+        
         let p = {};
         if (type === 'roofs') p = { flow: 'Upward & Downward', rSe: 0.04, rSiUp: 0.10, rSiDown: 0.16 };
         else if (type === 'floors') { const fDown = !fHeating && fType === 'ground'; p = { flow: fDown ? 'Downward' : 'Upward', rSe: fType === 'ground' ? 0.00 : 0.04, rSi: fDown ? 0.17 : 0.10 }; } 
         else { p = { flow: 'Horizontal', rSe: 0.04, rSi: 0.13 }; }
 
-        if (incSurfaces) { if (type === 'roofs') { sumR_up += p.rSe + p.rSiUp; sumR_down += p.rSe + p.rSiDown; } else { sumR += p.rSe + p.rSi; } }
+        if (incSurfaces) { 
+            if (type === 'roofs') { 
+                sumR_up += p.rSe + p.rSiUp; sumR_down += p.rSe + p.rSiDown; 
+                breakdownUp.push(`Air Films (${(p.rSe + p.rSiUp).toFixed(2)})`);
+                breakdownDown.push(`Air Films (${(p.rSe + p.rSiDown).toFixed(2)})`);
+            } else { 
+                sumR += p.rSe + p.rSi; 
+                breakdown.push(`Air Films (${(p.rSe + p.rSi).toFixed(2)})`);
+            } 
+        }
+        
         layerArray.forEach(layer => {
           const thicknessM = (layer.thickness || 0) / 1000;
-          if (layer.type === 'material') { const r = layer.kValue > 0 ? thicknessM / layer.kValue : 0; sumR += r; sumR_up += r; sumR_down += r; } 
+          if (layer.type === 'material') { 
+            const r = layer.kValue > 0 ? thicknessM / layer.kValue : 0; 
+            sumR += r; sumR_up += r; sumR_down += r; 
+            const str = `${layer.name} (${r.toFixed(2)})`;
+            breakdown.push(str); breakdownUp.push(str); breakdownDown.push(str);
+          } 
           else {
             const rStd = parseFloat(layer.rValue) || 0; let rUp = layer.rValueUp !== undefined ? layer.rValueUp : rStd; let rDown = layer.rValueDown !== undefined ? layer.rValueDown : rStd;
             if (type === 'roofs' && pitched) { if (layer.rValueUpPitched !== undefined) rUp = layer.rValueUpPitched; if (layer.rValueDownPitched !== undefined) rDown = layer.rValueDownPitched; }
             sumR += rStd; sumR_up += rUp; sumR_down += rDown;
+            breakdown.push(`${layer.name} (${rStd.toFixed(2)})`);
+            breakdownUp.push(`${layer.name} (${rUp.toFixed(2)})`);
+            breakdownDown.push(`${layer.name} (${rDown.toFixed(2)})`);
           }
           sumMass += (thicknessM * (layer.density || 0) * (layer.specificHeat || 0)) / 1000;
           sumSurfaceMass += thicknessM * (layer.density || 0);
         });
-        return { R: sumR, R_up: sumR_up, R_down: sumR_down, mass: sumMass, surfaceMass: sumSurfaceMass };
+        
+        return { R: sumR, R_up: sumR_up, R_down: sumR_down, mass: sumMass, surfaceMass: sumSurfaceMass, breakdown, breakdownUp, breakdownDown };
       };
 
       const getTargetRequirements = (type, surfaceMass, projZone, fType, fHeating) => {
@@ -780,7 +816,9 @@ function App() {
 
           layersToRender.forEach(layer => {
               const r = totThick > 0 ? (layer.thickness / totThick) * 100 : 0;
-              const bg = getLayerStyle(layer.name);
+              const bg = getLayerStyle(layer.appearance || layer.name);
+              
+              const rVal = layer.type === 'material' ? (layer.kValue > 0 ? (layer.thickness / 1000) / layer.kValue : 0) : parseFloat(layer.rValue) || 0;
               
               let sStr = Object.entries(bg).map(([k, v]) => {
                   const kb = k.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
@@ -793,7 +831,7 @@ function App() {
                   html += `<div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 4px;">
                       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 280px; max-width: 280px; text-align: center; ${isVert ? 'transform: rotate(-90deg);' : ''}">
                           <span style="font-size: 10px; font-weight: bold; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${layer.name}</span>
-                          <span style="font-size: 9px; font-weight: bold; color: #64748b; margin-top: 2px;">${layer.thickness}mm</span>
+                          <span style="font-size: 9px; font-weight: bold; color: #64748b; margin-top: 2px;">${layer.thickness}mm | R-${rVal.toFixed(2)}</span>
                       </div>
                   </div>`;
               }
@@ -815,7 +853,11 @@ function App() {
         let h = '';
         if (tab === 'walls') {
             h += '<h2>Walls Assembly Schedule</h2>';
-            assemblies.walls.forEach(w => {
+            assemblies.walls.forEach((w, index) => {
+                // Force a page break before every wall type except the first one
+                if (index > 0) {
+                    h += `<div class="page-break"></div>`;
+                }
                 const phys = calculateAssemblyPhysics(w.layers, 'walls', w.includeSurfaces);
                 const tgt = getTargetRequirements('walls', phys.surfaceMass, zone);
                 const pass = phys.R >= tgt.R;
@@ -826,12 +868,20 @@ function App() {
                     <p>Total R-Value: <span class="${pass?'pass':'fail'}">${phys.R.toFixed(2)}</span></p>
                     <h4 style="margin-top:15px; margin-bottom:5px; font-size:12px; color:#64748b; text-transform:uppercase;">Assembly Cross-Section</h4>
                     ${generateVisualizerHtml(w.layers, w.includeSurfaces, true, 'OUTSIDE', 'INSIDE')}
+                    
+                    <div style="font-size:12px; color:#475569; margin-top:10px; padding: 10px; background-color: #f1f5f9; border-radius: 6px; border: 1px solid #e2e8f0;">
+                        <strong>R-Value Calculation:</strong> ${phys.breakdown.join(' + ')} = <strong style="color: #0f172a;">Total R ${phys.R.toFixed(2)}</strong>
+                    </div>
                 </div>`;
             });
         }
         else if (tab === 'roofs') {
             h += '<h2>Roof Assembly Schedule</h2>';
-            assemblies.roofs.forEach(r => {
+            assemblies.roofs.forEach((r, index) => {
+                // Force a page break before every roof type except the first one
+                if (index > 0) {
+                    h += `<div class="page-break"></div>`;
+                }
                 const p = calculateAssemblyPhysics(r.layers, 'roofs', r.includeSurfaces, r.isPitchedRoof);
                 const t = getTargetRequirements('roofs', 0, zone);
                 const pass = p.R_up >= t.R_up && p.R_down >= t.R_down;
@@ -841,12 +891,21 @@ function App() {
                     <table><tr><th>Direction</th><th>Target R</th><th>Total R</th></tr><tr><td>WINTER (Up)</td><td>${t.R_up.toFixed(2)}</td><td>${p.R_up.toFixed(2)}</td></tr><tr><td>SUMMER (Down)</td><td>${t.R_down.toFixed(2)}</td><td>${p.R_down.toFixed(2)}</td></tr></table><p class="${pass?'pass':'fail'}">Status: ${pass?'COMPLIANT':'NON-COMPLIANT'}</p>
                     <h4 style="margin-top:15px; margin-bottom:5px; font-size:12px; color:#64748b; text-transform:uppercase;">Assembly Cross-Section</h4>
                     ${generateVisualizerHtml(r.layers, r.includeSurfaces, false, 'OUTSIDE (ROOF)', 'INSIDE (CEILING)')}
+                    
+                    <div style="font-size:12px; color:#475569; margin-top:10px; padding: 10px; background-color: #f1f5f9; border-radius: 6px; border: 1px solid #e2e8f0;">
+                        <div style="margin-bottom:4px;"><strong>WINTER (Up) Calculation:</strong> ${p.breakdownUp.join(' + ')} = <strong style="color: #0f172a;">Total R ${p.R_up.toFixed(2)}</strong></div>
+                        <div><strong>SUMMER (Down) Calculation:</strong> ${p.breakdownDown.join(' + ')} = <strong style="color: #0f172a;">Total R ${p.R_down.toFixed(2)}</strong></div>
+                    </div>
                 </div>`;
             });
         }
         else if (tab === 'floors') {
             h += '<h2>Floor Assembly Schedule</h2>';
-            assemblies.floors.forEach(f => {
+            assemblies.floors.forEach((f, index) => {
+                // Force a page break before every floor type except the first one
+                if (index > 0) {
+                    h += `<div class="page-break"></div>`;
+                }
                 const p = calculateAssemblyPhysics(f.layers, 'floors', f.includeSurfaces, false, f.floorType, f.floorHeating);
                 const t = getTargetRequirements('floors', 0, zone, f.floorType, f.floorHeating);
                 const pass = p.R >= t.R;
@@ -857,6 +916,10 @@ function App() {
                     <p>Total R-Value: <span class="${pass?'pass':'fail'}">${p.R.toFixed(2)}</span></p>
                     <h4 style="margin-top:15px; margin-bottom:5px; font-size:12px; color:#64748b; text-transform:uppercase;">Assembly Cross-Section</h4>
                     ${generateVisualizerHtml(f.layers, f.includeSurfaces, false, 'INSIDE (TOP)', f.floorType === 'ground' ? 'OUTSIDE (GROUND)' : 'OUTSIDE (CRAWLSPACE)')}
+                    
+                    <div style="font-size:12px; color:#475569; margin-top:10px; padding: 10px; background-color: #f1f5f9; border-radius: 6px; border: 1px solid #e2e8f0;">
+                        <strong>R-Value Calculation:</strong> ${p.breakdown.join(' + ')} = <strong style="color: #0f172a;">Total R ${p.R.toFixed(2)}</strong>
+                    </div>
                 </div>`;
             });
         }
@@ -864,30 +927,72 @@ function App() {
             h += '<h2>Fenestration Schedule</h2>';
             if (fenestrationData.global.totalWinArea === 0) return h + '<p>No fenestration specified.</p>';
             const g = fenestrationData.global;
-            h += `<div class="box"><p>Total Area: ${g.totalWinArea.toFixed(2)} m² (${g.ratio.toFixed(1)}%)</p><p>Global U: ${g.aggU.toFixed(2)}</p><p>Global SHGC: ${g.aggSHGC.toFixed(2)}</p><p class="${g.isCompliant?'pass':'fail'}">Status: ${g.isCompliant?'COMPLIANT':'NON-COMPLIANT'}</p></div>`;
+            
+            h += `<div class="box">
+                <p><strong>Total Area:</strong> ${g.totalWinArea.toFixed(2)} m² (Ratio: ${g.ratio.toFixed(1)}%)</p>
+                <p><strong>Global U-Value:</strong> ${g.aggU.toFixed(2)} <span style="color:#64748b; font-size: 12px;">(Target: ${g.exempt ? 'Exempt ≤ 20%' : '≤ ' + g.maxU.toFixed(2)})</span></p>
+                <p><strong>Global SHGC:</strong> ${g.aggSHGC.toFixed(2)} <span style="color:#64748b; font-size: 12px;">(Target: ${g.exempt ? 'Exempt ≤ 20%' : '≤ ' + g.maxSHGC.toFixed(2)})</span></p>
+                <p style="margin-top: 10px;" class="${g.isCompliant?'pass':'fail'}"><strong>Status:</strong> ${g.isCompliant?'COMPLIANT':'NON-COMPLIANT'}</p>
+            </div>`;
+            
             fenestrationData.storeys.filter(s => s.windows.length > 0).forEach(s => {
-                h += `<div class="storey-header">Storey ${s.storeyIndex + 1}</div><table><thead><tr><th>Ref</th><th>Description</th><th>Shading</th><th>Qty</th><th>W x H</th><th>Area (m²)</th><th>U</th><th>SHGC</th></tr></thead><tbody>`;
-                s.windows.forEach(w => { h += `<tr><td>${w.reference}</td><td>${w.name}</td><td style="text-transform:capitalize;">${w.shadingStatus}</td><td>${w.qty}</td><td>${w.width}x${w.height}</td><td>${(w.qty*w.width*w.height).toFixed(2)}</td><td>${w.uValue.toFixed(2)}</td><td>${w.shadingStatus==='south'?'0.00':w.shgc.toFixed(2)}</td></tr>`; });
+                h += `<div class="storey-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Storey ${s.storeyIndex + 1}</span>
+                        <span style="font-size:12px; font-weight:normal; color:#475569;">Ratio: ${s.ratio.toFixed(1)}% | Agg U: ${s.aggU.toFixed(2)} | Agg SHGC: ${s.aggSHGC.toFixed(2)}</span>
+                      </div>
+                      <table><thead><tr><th>Ref</th><th>Description</th><th>Shading</th><th>Qty</th><th>W x H</th><th>Area (A)</th><th>U</th><th>U × A</th><th>SHGC</th><th>SHGC × A</th></tr></thead><tbody>`;
+                s.windows.forEach(w => { 
+                    const area = w.qty * w.width * w.height;
+                    const uA = area * w.uValue;
+                    const activeShgc = w.shadingStatus === 'south' ? 0 : w.shgc;
+                    const shgcA = area * activeShgc;
+                    h += `<tr><td>${w.reference}</td><td>${w.name}</td><td style="text-transform:capitalize;">${w.shadingStatus}</td><td>${w.qty}</td><td>${w.width}x${w.height}</td><td>${area.toFixed(2)}</td><td>${w.uValue.toFixed(2)}</td><td style="color:#475569; background:#f8fafc;">${uA.toFixed(2)}</td><td>${activeShgc.toFixed(2)}</td><td style="color:#475569; background:#f8fafc;">${shgcA.toFixed(2)}</td></tr>`; 
+                });
                 h += `</tbody></table>`;
             });
         }
         else if (tab === 'skylights') {
             h += '<h2>Skylights Schedule</h2>';
             if (skylightData.global.totalSkyArea === 0) return h + '<p>No skylights specified.</p>';
-            h += `<div class="box"><p>Total Area: ${skylightData.global.totalSkyArea.toFixed(2)} m² (${skylightData.global.ratio.toFixed(1)}%)</p><p class="${skylightData.global.isCompliant?'pass':'fail'}">Status: ${skylightData.global.isCompliant?'ALL SPACES COMPLIANT':'NON-COMPLIANT SPACES FOUND'}</p></div>`;
+            
+            h += `<div class="box">
+                <p><strong>Total Project Rooflight Area:</strong> ${skylightData.global.totalSkyArea.toFixed(2)} m² (Ratio: ${skylightData.global.ratio.toFixed(1)}%)</p>
+                <p style="margin-top: 10px;" class="${skylightData.global.isCompliant?'pass':'fail'}"><strong>Status:</strong> ${skylightData.global.isCompliant?'ALL SPACES COMPLIANT':'NON-COMPLIANT SPACES FOUND'}</p>
+            </div>`;
+            
             skylightData.spaces.filter(s => s.skylights.length > 0).forEach(s => {
-                h += `<div class="storey-header">${s.name}</div><table><thead><tr><th>Ref</th><th>Description</th><th>Qty</th><th>W x H</th><th>Area (m²)</th><th>U</th><th>SHGC</th></tr></thead><tbody>`;
-                s.skylights.forEach(sky => { h += `<tr><td>${sky.reference}</td><td>${sky.name}</td><td>${sky.qty}</td><td>${sky.width}x${sky.height}</td><td>${(sky.qty*sky.width*sky.height).toFixed(2)}</td><td>${sky.uValue.toFixed(2)}</td><td>${sky.shgc.toFixed(2)}</td></tr>`; });
+                h += `<div class="storey-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>${s.name} <span style="font-size:12px; font-weight:normal; color:#64748b;">(Storey ${s.storey + 1})</span></span>
+                        <span style="font-size:12px; font-weight:normal; color:#475569;">Ratio: ${s.ratio.toFixed(1)}% | Agg U: ${s.aggU.toFixed(2)} / ${s.exempt ? 'NA' : s.maxU.toFixed(2)} | Agg SHGC: ${s.aggSHGC.toFixed(2)} / ${s.exempt ? 'NA' : s.maxSHGC.toFixed(2)}</span>
+                      </div>
+                      <table><thead><tr><th>Ref</th><th>Description</th><th>Qty</th><th>W x L</th><th>Area (A)</th><th>U</th><th>U × A</th><th>SHGC</th><th>SHGC × A</th></tr></thead><tbody>`;
+                s.skylights.forEach(sky => { 
+                    const area = sky.qty * sky.width * sky.height;
+                    const uA = area * sky.uValue;
+                    const shgcA = area * sky.shgc;
+                    h += `<tr><td>${sky.reference}</td><td>${sky.name}</td><td>${sky.qty}</td><td>${sky.width}x${sky.height}</td><td>${area.toFixed(2)}</td><td>${sky.uValue.toFixed(2)}</td><td style="color:#475569; background:#f8fafc;">${uA.toFixed(2)}</td><td>${sky.shgc.toFixed(2)}</td><td style="color:#475569; background:#f8fafc;">${shgcA.toFixed(2)}</td></tr>`; 
+                });
                 h += `</tbody></table>`;
             });
         }
         else if (tab === 'lighting') {
             h += '<h2>Lighting Power Density Schedule</h2>';
             if (!lightingData.hasFixtures) return h + '<p>No fixtures specified.</p>';
-            h += `<div class="box"><p>Total Power: ${lightingData.globalWatts.toFixed(1)} W</p><p>Global LPD: ${lightingData.globalLpd.toFixed(2)} W/m²</p><p>Target: ${lightingData.targetLPD} W/m²</p><p class="${lightingData.isCompliant || lightingData.isResidentialExempt?'pass':'fail'}">Status: ${lightingData.isCompliant || lightingData.isResidentialExempt?'COMPLIANT':'NON-COMPLIANT'}</p></div>`;
+            
+            h += `<div class="box">
+                <p><strong>Total Installed Power:</strong> ${lightingData.globalWatts.toFixed(1)} W</p>
+                <p><strong>Calculated Global LPD:</strong> ${lightingData.globalLpd.toFixed(2)} W/m²</p>
+                <p><strong>Target Limit (Table 10):</strong> ${lightingData.targetLPD} W/m²</p>
+                <p style="margin-top: 10px;" class="${lightingData.isCompliant || lightingData.isResidentialExempt?'pass':'fail'}"><strong>Status:</strong> ${lightingData.isCompliant || lightingData.isResidentialExempt?'COMPLIANT':'NON-COMPLIANT'}</p>
+            </div>`;
+            
             lightingData.spaces.filter(s => s.fixtures.length > 0).forEach(s => {
-                h += `<div class="storey-header">${s.name}</div><table><thead><tr><th>Description</th><th>Type</th><th>Qty</th><th>Watts</th><th>Total</th></tr></thead><tbody>`;
-                s.fixtures.forEach(f => { h += `<tr><td>${f.name}</td><td>${f.type}</td><td>${f.qty}</td><td>${f.watts} W</td><td>${(f.qty*f.watts).toFixed(1)} W</td></tr>`; });
+                h += `<div class="storey-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>${s.name}</span>
+                        <span style="font-size:12px; font-weight:normal; color:#475569;">Area: ${s.area} m² | Space Power: ${s.spaceWatts} W | Space LPD: ${s.spaceLpd.toFixed(2)} W/m²</span>
+                      </div>
+                      <table><thead><tr><th>Description</th><th>Type</th><th>Qty</th><th>Watts / Unit</th><th>Total Watts</th></tr></thead><tbody>`;
+                s.fixtures.forEach(f => { h += `<tr><td>${f.name}</td><td>${f.type}</td><td>${f.qty}</td><td>${f.watts} W</td><td style="font-weight:bold;">${(f.qty*f.watts).toFixed(1)} W</td></tr>`; });
                 h += `</tbody></table>`;
             });
         }
@@ -964,10 +1069,79 @@ function App() {
         const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
         window.open(URL.createObjectURL(blob), '_blank');
       }
-
+      const handleGlobalReset = () => {
+        if (window.confirm("Are you sure you want to completely reset this project? All unexported data will be permanently lost. (Office settings and logos will be preserved).")) {
+          // Find all keys starting with 'xa_' and remove them
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('xa_')) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach(key => localStorage.removeItem(key));
+          
+          // Reload the page to cleanly reset all state to defaults
+          window.location.reload();
+        }
+      };
       const exportFullReport = () => {
-        const fullContent = ['walls', 'roofs', 'floors', 'fenestration', 'skylights', 'lighting', 'water', 'hvac'].map(tab => `<div class="${tab !== 'walls' ? 'page-break' : ''}">${getTabHTML(tab)}</div>`).join('');
-        runReport('Deemed to satisfy energy efficiency report', fullContent);
+        // Evaluate Envelope Compliance for the Matrix
+        const wallsCompliant = assemblies.walls.every(w => { const p = calculateAssemblyPhysics(w.layers, 'walls', w.includeSurfaces); const t = getTargetRequirements('walls', p.surfaceMass, zone); return p.R >= t.R; });
+        const roofsCompliant = assemblies.roofs.every(r => { const p = calculateAssemblyPhysics(r.layers, 'roofs', r.includeSurfaces, r.isPitchedRoof); const t = getTargetRequirements('roofs', 0, zone); return p.R_up >= t.R_up && p.R_down >= t.R_down; });
+        const floorsCompliant = assemblies.floors.every(f => { const p = calculateAssemblyPhysics(f.layers, 'floors', f.includeSurfaces, false, f.floorType, f.floorHeating); const t = getTargetRequirements('floors', 0, zone, f.floorType, f.floorHeating); return p.R >= t.R; });
+        const envelopeCompliant = wallsCompliant && roofsCompliant && floorsCompliant;
+
+        const coverPageHTML = `
+          <div style="margin-bottom: 40px;">
+            <h2 style="border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 20px; color: #1e293b;">Master Compliance Matrix</h2>
+            <table>
+              <thead><tr><th>Building System</th><th>SANS 10400-XA Reference</th><th>Compliance Status</th></tr></thead>
+              <tbody>
+                <tr><td>Building Envelope (Walls, Roofs, Floors)</td><td>Clause 5.2</td><td class="${isExempt ? 'pass' : envelopeCompliant ? 'pass' : 'fail'}">${isExempt ? 'EXEMPT' : envelopeCompliant ? 'COMPLIANT' : 'NON-COMPLIANT'}</td></tr>
+                <tr><td>Fenestration & Glazing</td><td>Clause 5.3</td><td class="${isExempt ? 'pass' : fenestrationData.global.isCompliant ? 'pass' : 'fail'}">${isExempt ? 'EXEMPT' : fenestrationData.global.isCompliant ? 'COMPLIANT' : 'NON-COMPLIANT'}</td></tr>
+                <tr><td>Skylights & Rooflights</td><td>Clause 5.4</td><td class="${isExempt ? 'pass' : skylightData.global.isCompliant ? 'pass' : 'fail'}">${isExempt ? 'EXEMPT' : skylightData.global.isCompliant ? 'COMPLIANT' : 'NON-COMPLIANT'}</td></tr>
+                <tr><td>Lighting Power Density</td><td>Clause 6.2</td><td class="${isExempt ? 'pass' : lightingData.isCompliant || lightingData.isResidentialExempt ? 'pass' : 'fail'}">${isExempt ? 'EXEMPT' : lightingData.isCompliant || lightingData.isResidentialExempt ? 'COMPLIANT' : 'NON-COMPLIANT'}</td></tr>
+                <tr><td>Water Heating Services</td><td>Clause 6.4</td><td class="${isExempt || waterExempt ? 'pass' : waterData.isCompliant ? 'pass' : 'fail'}">${isExempt || waterExempt ? 'EXEMPT' : waterData.isCompliant ? 'COMPLIANT' : 'NON-COMPLIANT'}</td></tr>
+                <tr><td>HVAC Equipment Efficiency</td><td>Clause 6.5</td><td class="${isExempt || hvacExempt ? 'pass' : hvacData.isCompliant ? 'pass' : 'fail'}">${isExempt || hvacExempt ? 'EXEMPT' : hvacData.isCompliant ? 'COMPLIANT' : 'NON-COMPLIANT'}</td></tr>
+              </tbody>
+            </table>
+            
+            <div style="margin-top: 30px; padding: 20px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;">
+              <p style="margin: 0; font-size: 15px;"><strong>Statutory Compliance Route:</strong> Calculations performed in accordance with SANS 10400-XA:2026 Edition 3, satisfying the requirements via the <strong>Deemed-to-Satisfy (Clause 4.2)</strong> route. Rational design energy modeling is not required.</p>
+            </div>
+            
+            ${projectInfo.referencedDrawings ? `
+            <div style="margin-top: 20px; padding: 20px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;">
+              <p style="margin: 0; font-size: 15px;"><strong>Referenced Drawings:</strong> ${projectInfo.referencedDrawings}</p>
+              <p style="margin: 8px 0 0 0; font-size: 13px; color: #64748b;">The element references in these schedules correspond directly to the tags utilized on the drawings listed above.</p>
+            </div>` : ''}
+
+            <div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: flex-start;">
+              <div style="width: 50%;">
+                <div style="border-top: 1px solid #cbd5e1; padding-top: 20px; display: flex; justify-content: space-between; gap: 20px;">
+                    <div style="flex: 1;">
+                        <div style="border-bottom: 1px solid #000; height: 40px; margin-bottom: 5px;"></div>
+                        <p style="margin: 0; font-size: 12px; color: #475569;">Registered Professional Signature</p>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="border-bottom: 1px solid #000; height: 40px; margin-bottom: 5px;"></div>
+                        <p style="margin: 0; font-size: 12px; color: #475569;">Date</p>
+                    </div>
+                </div>
+              </div>
+              <div style="width: 250px; height: 150px; border: 2px dashed #cbd5e1; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #94a3b8; text-transform: uppercase; font-size: 12px; font-weight: bold; background: white;">
+                Municipal Stamp Area
+              </div>
+            </div>
+          </div>
+          <div class="page-break"></div>
+        `;
+
+        const schedulesHTML = ['walls', 'roofs', 'floors', 'fenestration', 'skylights', 'lighting', 'water', 'hvac']
+          .map((tab, idx) => `<div class="${idx !== 0 ? 'page-break' : ''}">${getTabHTML(tab)}</div>`).join('');
+        
+        runReport('SANS 10400-XA:2026 Deemed-to-Satisfy Compliance Report', coverPageHTML + schedulesHTML);
       };
 
       const exportPDF = () => {
@@ -998,6 +1172,9 @@ return (
                 <div className="flex items-center gap-2 w-full md:w-auto mt-2">
                   <button onClick={exportFullReport} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-sm text-sm font-bold transition-colors">
                     <FileText className="w-4 h-4" /> Export Full Report
+                  </button>
+                  <button onClick={handleGlobalReset} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg shadow-sm text-sm font-bold transition-colors" title="Reset Project">
+                    <Trash2 className="w-4 h-4" /> Reset
                   </button>
                   <button onClick={() => setIsSettingsModalOpen(true)} className="p-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 transition-colors shadow-sm" title="Office Configuration">
                     <Settings className="w-5 h-5" />
@@ -1075,6 +1252,7 @@ return (
                     <div><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Stand / Erf Number</label><input type="text" value={projectInfo.standNumber} onChange={(e) => handleProjectUpdate('standNumber', e.target.value)} className="w-full text-sm border-slate-300 rounded-lg p-2.5 border" /></div>
                     <div><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Township / Suburb</label><input type="text" value={projectInfo.township} onChange={(e) => handleProjectUpdate('township', e.target.value)} className="w-full text-sm border-slate-300 rounded-lg p-2.5 border" /></div>
                     <div><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Number of Storeys</label><input type="number" min="1" value={projectInfo.storeys} onChange={(e) => handleStoreysChange(e.target.value)} className="w-full text-sm border-slate-300 rounded-lg p-2.5 border" /></div>
+                    <div className="md:col-span-2"><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Referenced Drawings</label><input type="text" value={projectInfo.referencedDrawings} onChange={(e) => handleProjectUpdate('referencedDrawings', e.target.value)} className="w-full text-sm border-slate-300 rounded-lg p-2.5 border bg-white" placeholder="e.g. Architectural Floor Plans A100 - A105" /></div>
                   </div>
                   
                   {/* Spaces Conf */}
@@ -1165,7 +1343,9 @@ return (
                           <div className="flex flex-col gap-1 items-center justify-center text-slate-400"><button onClick={() => handleLayerAction('move', layer.id, null, 'up', index)} disabled={index === 0} className="hover:text-blue-600 disabled:opacity-30"><ArrowUp className="w-4 h-4" /></button><GripVertical className="w-4 h-4 opacity-30" /><button onClick={() => handleLayerAction('move', layer.id, null, 'down', index)} disabled={index === layers.length - 1} className="hover:text-blue-600 disabled:opacity-30"><ArrowDown className="w-4 h-4" /></button></div>
                           <div className="flex-1 flex flex-col gap-3">
                             <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                              <div className="md:col-span-5"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Material</label><select value={layer.name} onChange={(e) => handleLayerAction('preset', layer.id, null, e.target.value)} className="w-full text-sm border-slate-300 rounded-md p-2 border"><option value="Custom Material">Custom Material</option>{MATERIAL_PRESETS.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}</select></div>
+                              <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Name</label><input type="text" value={layer.name} onChange={(e) => handleLayerAction('update', layer.id, 'name', e.target.value)} className="w-full text-sm border-slate-300 rounded-md p-2 border font-semibold text-slate-700" placeholder="Custom Material" /></div>
+                              <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Appearance</label><select value={layer.appearance || ''} onChange={(e) => handleLayerAction('update', layer.id, 'appearance', e.target.value)} className="w-full text-sm border-slate-300 rounded-md p-2 border bg-white"><option value="">Auto (from Name)</option><option value="brick">Brick</option><option value="concrete">Concrete</option><option value="plaster">Plaster / Screed</option><option value="insulation">Insulation</option><option value="timber">Timber / Wood</option><option value="steel">Steel / Iron</option><option value="board">Gypsum / Board</option><option value="air">Air Cavity</option><option value="foil">Foil / Radiant</option><option value="default">Default Plain</option></select></div>
+                              <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Load Preset</label><select defaultValue="" onChange={(e) => { handleLayerAction('preset', layer.id, null, e.target.value); e.target.value=""; }} className="w-full text-sm border-slate-300 rounded-md p-2 border bg-slate-50 text-slate-500"><option value="" disabled>Load...</option>{MATERIAL_PRESETS.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}</select></div>
                               <div className="md:col-span-2">
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Thick (mm)</label>
                                 <div className="relative">
@@ -1177,7 +1357,7 @@ return (
                                   )}
                                 </div>
                               </div>
-                              <div className="md:col-span-3"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{layer.type === 'material' ? 'k-value' : 'Fixed R-value'}</label><input type="number" step="0.001" min="0" value={layer.type === 'material' ? layer.kValue : layer.rValue} onChange={(e) => handleLayerAction('update', layer.id, layer.type === 'material' ? 'kValue' : 'rValue', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-300 rounded-md p-2 border" /></div>
+                              <div className="md:col-span-2"><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{layer.type === 'material' ? 'k-value' : 'Fixed R-value'}</label><input type="number" step="0.001" min="0" value={layer.type === 'material' ? layer.kValue : layer.rValue} onChange={(e) => handleLayerAction('update', layer.id, layer.type === 'material' ? 'kValue' : 'rValue', parseFloat(e.target.value) || 0)} className="w-full text-sm border-slate-300 rounded-md p-2 border" /></div>
                               <div className="md:col-span-2 flex items-center justify-end gap-2 pb-1 relative group"><span className="text-xs font-mono font-medium text-slate-700 bg-slate-100 px-2 py-1.5 rounded whitespace-nowrap">R: {(layer.type === 'material' ? (layer.kValue > 0 ? (layer.thickness / 1000) / layer.kValue : 0) : parseFloat(layer.rValue) || 0).toFixed(3)}</span></div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-slate-50/50 p-3 rounded-lg border border-slate-100">
