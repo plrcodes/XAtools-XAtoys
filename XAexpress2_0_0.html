@@ -9,45 +9,61 @@
   <script src="https://unpkg.com/@babel/standalone@7.23.10/babel.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 14px; color: #1e293b; }
+    html, body, #root { width: 100%; height: 100%; }
+    body { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1e293b; font-size: 14px; line-height: 1.5; }
     
-    @media print { 
-      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } 
-      body { background-color: white; } 
-      .page-break { page-break-before: always; break-before: page; margin-top: 40px; padding-top: 20px; border-top: 2px dashed #cbd5e1; } 
-    }
-
-    /* Layout */
-    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    /* Tailwind utility classes */
+    .container { max-width: 1400px; margin: 0 auto; }
     .flex { display: flex; }
     .flex-col { flex-direction: column; }
-    .flex-row { flex-direction: row; }
-    .items-center { align-items: center; }
+    .flex-wrap { flex-wrap: wrap; }
     .items-start { align-items: flex-start; }
+    .items-center { align-items: center; }
     .items-end { align-items: flex-end; }
-    .justify-between { justify-content: space-between; }
-    .justify-center { justify-content: center; }
     .justify-start { justify-content: flex-start; }
+    .justify-center { justify-content: center; }
+    .justify-between { justify-content: space-between; }
     .justify-end { justify-content: flex-end; }
+    .gap-1 { gap: 4px; }
     .gap-2 { gap: 8px; }
     .gap-3 { gap: 12px; }
     .gap-4 { gap: 16px; }
     .gap-6 { gap: 24px; }
-
-    /* Spacing */
+    .gap-8 { gap: 32px; }
+    .gap-x-2 { column-gap: 8px; }
+    .gap-y-2 { row-gap: 8px; }
+    .gap-y-4 { row-gap: 16px; }
+    .p-1 { padding: 4px; }
+    .p-2 { padding: 8px; }
+    .p-3 { padding: 12px; }
+    .p-4 { padding: 16px; }
+    .p-6 { padding: 24px; }
+    .px-2 { padding-left: 8px; padding-right: 8px; }
+    .px-3 { padding-left: 12px; padding-right: 12px; }
+    .px-4 { padding-left: 16px; padding-right: 16px; }
+    .py-1 { padding-top: 4px; padding-bottom: 4px; }
+    .py-2 { padding-top: 8px; padding-bottom: 8px; }
+    .py-3 { padding-top: 12px; padding-bottom: 12px; }
+    .py-4 { padding-top: 16px; padding-bottom: 16px; }
+    .pt-1 { padding-top: 4px; }
+    .pt-2 { padding-top: 8px; }
+    .pt-3 { padding-top: 12px; }
+    .pt-4 { padding-top: 16px; }
+    .pb-2 { padding-bottom: 8px; }
+    .pb-3 { padding-bottom: 12px; }
+    .pb-4 { padding-bottom: 16px; }
     .m-0 { margin: 0; }
     .m-1 { margin: 4px; }
     .m-2 { margin: 8px; }
     .m-3 { margin: 12px; }
     .m-4 { margin: 16px; }
     .m-6 { margin: 24px; }
-    .mt-0 { margin-top: 0; }
     .mt-1 { margin-top: 4px; }
     .mt-2 { margin-top: 8px; }
     .mt-3 { margin-top: 12px; }
     .mt-4 { margin-top: 16px; }
     .mt-6 { margin-top: 24px; }
-    .mb-0 { margin-bottom: 0; }
+    .mt-8 { margin-top: 32px; }
     .mb-1 { margin-bottom: 4px; }
     .mb-2 { margin-bottom: 8px; }
     .mb-3 { margin-bottom: 12px; }
@@ -58,113 +74,99 @@
     .ml-4 { margin-left: 16px; }
     .mr-2 { margin-right: 8px; }
     .mr-3 { margin-right: 12px; }
+    .mr-4 { margin-right: 16px; }
     .mx-auto { margin-left: auto; margin-right: auto; }
     .my-2 { margin-top: 8px; margin-bottom: 8px; }
-    .my-3 { margin-top: 12px; margin-bottom: 12px; }
     .my-4 { margin-top: 16px; margin-bottom: 16px; }
-
-    .p-0 { padding: 0; }
-    .p-2 { padding: 8px; }
-    .p-3 { padding: 12px; }
-    .p-4 { padding: 16px; }
-    .p-6 { padding: 24px; }
-    .pt-2 { padding-top: 8px; }
-    .pt-3 { padding-top: 12px; }
-    .pt-4 { padding-top: 16px; }
-    .pb-2 { padding-bottom: 8px; }
-    .pb-3 { padding-bottom: 12px; }
-    .pb-4 { padding-bottom: 16px; }
-    .px-2 { padding-left: 8px; padding-right: 8px; }
-    .px-3 { padding-left: 12px; padding-right: 12px; }
-    .px-4 { padding-left: 16px; padding-right: 16px; }
-    .py-2 { padding-top: 8px; padding-bottom: 8px; }
-    .py-3 { padding-top: 12px; padding-bottom: 12px; }
-    .py-4 { padding-top: 16px; padding-bottom: 16px; }
-
-    /* Display */
+    
     .w-full { width: 100%; }
     .w-1\/2 { width: 50%; }
     .w-1\/3 { width: 33.333%; }
     .h-full { height: 100%; }
     .h-screen { height: 100vh; }
-    .overflow-hidden { overflow: hidden; }
-    .overflow-auto { overflow: auto; }
-    .overflow-x-auto { overflow-x: auto; }
-
-    /* Borders & Shadows */
-    .border { border: 1px solid #e2e8f0; }
-    .border-b { border-bottom: 1px solid #e2e8f0; }
-    .border-t { border-top: 1px solid #e2e8f0; }
-    .border-r { border-right: 1px solid #e2e8f0; }
-    .border-l { border-left: 1px solid #e2e8f0; }
-    .border-2 { border: 2px solid #cbd5e1; }
-    .border-dashed { border-style: dashed; }
-    .border-gray-300 { border-color: #cbd5e1; }
-    .border-gray-400 { border-color: #a1acb8; }
+    .min-h-screen { min-height: 100vh; }
+    .max-w-7xl { max-width: 80rem; }
+    
     .rounded { border-radius: 4px; }
     .rounded-md { border-radius: 6px; }
     .rounded-lg { border-radius: 8px; }
     .rounded-full { border-radius: 9999px; }
-    .shadow { box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-    .shadow-md { box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .shadow-lg { box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
-
-    /* Colors - Background */
+    
+    .border { border: 1px solid #e2e8f0; }
+    .border-2 { border: 2px solid #cbd5e1; }
+    .border-b { border-bottom: 1px solid #e2e8f0; }
+    .border-t { border-top: 1px solid #e2e8f0; }
+    .border-r { border-right: 1px solid #e2e8f0; }
+    .border-l { border-left: 1px solid #e2e8f0; }
+    .border-dashed { border-style: dashed; }
+    .border-gray-200 { border-color: #e5e7eb; }
+    .border-gray-300 { border-color: #cbd5e1; }
+    
     .bg-white { background-color: #ffffff; }
     .bg-slate-50 { background-color: #f8fafc; }
     .bg-slate-100 { background-color: #f1f5f9; }
     .bg-slate-200 { background-color: #e2e8f0; }
-    .bg-slate-300 { background-color: #cbd5e1; }
-    .bg-gray-100 { background-color: #f3f4f6; }
-    .bg-gray-200 { background-color: #e5e7eb; }
     .bg-blue-50 { background-color: #eff6ff; }
     .bg-blue-100 { background-color: #dbeafe; }
     .bg-blue-500 { background-color: #3b82f6; }
-    .bg-green-100 { background-color: #dcfce7; }
-    .bg-green-500 { background-color: #22c55e; }
+    .bg-red-50 { background-color: #fef2f2; }
     .bg-red-100 { background-color: #fee2e2; }
     .bg-red-500 { background-color: #ef4444; }
+    .bg-green-50 { background-color: #f0fdf4; }
+    .bg-green-100 { background-color: #dcfce7; }
+    .bg-green-500 { background-color: #22c55e; }
+    .bg-yellow-50 { background-color: #fefce8; }
     .bg-yellow-100 { background-color: #fef3c7; }
-    .bg-yellow-200 { background-color: #fde68a; }
-
-    /* Colors - Text */
+    .bg-gray-50 { background-color: #f9fafb; }
+    .bg-gray-100 { background-color: #f3f4f6; }
+    .bg-gray-200 { background-color: #e5e7eb; }
+    
     .text-white { color: #ffffff; }
-    .text-gray-600 { color: #4b5563; }
-    .text-gray-700 { color: #374151; }
-    .text-gray-800 { color: #1f2937; }
-    .text-gray-900 { color: #111827; }
     .text-slate-600 { color: #475569; }
     .text-slate-700 { color: #334155; }
+    .text-slate-800 { color: #1e293b; }
+    .text-gray-600 { color: #4b5563; }
+    .text-gray-700 { color: #374151; }
+    .text-gray-900 { color: #111827; }
     .text-blue-600 { color: #2563eb; }
     .text-red-600 { color: #dc2626; }
     .text-green-600 { color: #16a34a; }
     .text-yellow-600 { color: #ca8a04; }
-
-    /* Font */
-    .font-bold { font-weight: 700; }
-    .font-semibold { font-weight: 600; }
-    .font-medium { font-weight: 500; }
-    .font-normal { font-weight: 400; }
+    
     .text-xs { font-size: 12px; }
     .text-sm { font-size: 13px; }
     .text-base { font-size: 14px; }
     .text-lg { font-size: 16px; }
     .text-xl { font-size: 18px; }
-    .text-2xl { font-size: 24px; }
-    .text-3xl { font-size: 30px; }
-    .text-center { text-align: center; }
+    .text-2xl { font-size: 20px; }
+    .text-3xl { font-size: 24px; }
+    
+    .font-normal { font-weight: 400; }
+    .font-medium { font-weight: 500; }
+    .font-semibold { font-weight: 600; }
+    .font-bold { font-weight: 700; }
+    
     .text-left { text-align: left; }
+    .text-center { text-align: center; }
     .text-right { text-align: right; }
     .uppercase { text-transform: uppercase; }
-    .lowercase { text-transform: lowercase; }
     .capitalize { text-transform: capitalize; }
     .whitespace-nowrap { white-space: nowrap; }
-    .overflow-hidden { overflow: hidden; }
-    .text-ellipsis { text-overflow: ellipsis; }
     .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-    /* Components */
-    .btn, button {
+    .break-words { word-break: break-word; }
+    
+    .overflow-hidden { overflow: hidden; }
+    .overflow-auto { overflow: auto; }
+    .overflow-x-auto { overflow-x: auto; }
+    .overflow-y-auto { overflow-y: auto; }
+    
+    .shadow-sm { box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .shadow { box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .shadow-md { box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .shadow-lg { box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+    
+    /* Button styles */
+    button, .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -178,6 +180,7 @@
       transition: all 0.2s ease;
       white-space: nowrap;
     }
+    
     .btn-primary {
       background-color: #3b82f6;
       color: white;
@@ -185,6 +188,7 @@
     .btn-primary:hover {
       background-color: #2563eb;
     }
+    
     .btn-secondary {
       background-color: #e2e8f0;
       color: #1e293b;
@@ -192,6 +196,7 @@
     .btn-secondary:hover {
       background-color: #cbd5e1;
     }
+    
     .btn-danger {
       background-color: #ef4444;
       color: white;
@@ -199,6 +204,7 @@
     .btn-danger:hover {
       background-color: #dc2626;
     }
+    
     .btn-sm {
       padding: 6px 12px;
       font-size: 12px;
@@ -207,7 +213,8 @@
       padding: 12px 20px;
       font-size: 16px;
     }
-
+    
+    /* Form controls */
     input, select, textarea {
       width: 100%;
       padding: 10px 12px;
@@ -223,12 +230,21 @@
       border-color: #3b82f6;
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
-    input:disabled, select:disabled, textarea:disabled {
+    input:disabled, select:disabled {
       background-color: #f1f5f9;
       color: #94a3b8;
       cursor: not-allowed;
     }
-
+    
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+    }
+    
+    /* Cards and boxes */
     .box, .card {
       background-color: #ffffff;
       border: 1px solid #e2e8f0;
@@ -236,22 +252,46 @@
       padding: 24px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
+    
+    .box h1 { font-size: 28px; font-weight: 700; margin-bottom: 16px; color: #0f172a; }
     .box h2 { font-size: 20px; font-weight: 600; margin-bottom: 16px; color: #0f172a; }
-    .box h3 { font-size: 18px; font-weight: 600; margin: 16px 0 12px 0; color: #0f172a; }
-    .box h4 { font-size: 16px; font-weight: 600; margin: 12px 0 8px 0; color: #1e293b; }
+    .box h3 { font-size: 18px; font-weight: 600; margin-top: 16px; margin-bottom: 12px; color: #0f172a; }
+    .box h4 { font-size: 16px; font-weight: 600; margin-top: 12px; margin-bottom: 8px; color: #1e293b; }
     .box p { margin-bottom: 12px; line-height: 1.6; color: #475569; }
-    .box table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-    .box table th { padding: 12px; text-align: left; background-color: #f1f5f9; font-weight: 600; border-bottom: 2px solid #cbd5e1; color: #0f172a; }
-    .box table td { padding: 12px; border-bottom: 1px solid #e2e8f0; color: #475569; }
-    .box table tbody tr:hover { background-color: #f8fafc; }
-
-    .storey-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background-color: #f1f5f9; border-left: 4px solid #3b82f6; margin-top: 16px; font-weight: 600; color: #0f172a; }
-    .storey-header span { font-size: 14px; }
-
-    .pass { color: #16a34a; font-weight: 600; }
-    .fail { color: #dc2626; font-weight: 600; }
-
-    .tabs { display: flex; gap: 8px; border-bottom: 2px solid #e2e8f0; margin-bottom: 24px; overflow-x: auto; }
+    
+    .box table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    .box table th {
+      padding: 12px;
+      text-align: left;
+      background-color: #f1f5f9;
+      font-weight: 600;
+      border-bottom: 2px solid #cbd5e1;
+      color: #0f172a;
+      font-size: 13px;
+    }
+    .box table td {
+      padding: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #475569;
+      font-size: 13px;
+    }
+    .box table tbody tr:hover {
+      background-color: #f8fafc;
+    }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+    
     .tab-btn {
       padding: 12px 16px;
       font-size: 14px;
@@ -272,168 +312,39 @@
       color: #3b82f6;
       border-bottom-color: #3b82f6;
     }
-
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.5);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
+    
+    /* Grid */
+    .grid {
+      display: grid;
+      gap: 16px;
     }
-    .modal.open {
-      display: flex;
-    }
-    .modal-content {
-      background-color: white;
-      border-radius: 12px;
-      padding: 24px;
-      max-width: 600px;
-      width: 90%;
-      max-height: 80vh;
-      overflow-y: auto;
-      box-shadow: 0 20px 25px rgba(0,0,0,0.15);
-    }
-
-    .grid { display: grid; }
     .grid-cols-1 { grid-template-columns: 1fr; }
     .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
     .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
     .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
-    .gap-2 { gap: 8px; }
-    .gap-4 { gap: 16px; }
-
-    svg { width: 24px; height: 24px; stroke: currentColor; }
-
-    .header {
-      background-color: #ffffff;
-      border-bottom: 1px solid #e2e8f0;
-      padding: 16px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .header h1 {
-      font-size: 24px;
-      font-weight: 700;
-      color: #0f172a;
-      margin: 0;
+    
+    /* Print media */
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body {
+        background-color: white;
+      }
+      .page-break {
+        page-break-before: always;
+        break-before: page;
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 2px dashed #cbd5e1;
+      }
     }
 
-    .sidebar {
-      width: 280px;
-      background-color: #ffffff;
-      border-right: 1px solid #e2e8f0;
-      padding: 24px;
-      overflow-y: auto;
-    }
-    .sidebar-section {
-      margin-bottom: 24px;
-    }
-    .sidebar-title {
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      color: #64748b;
-      margin-bottom: 12px;
-      letter-spacing: 0.5px;
-    }
-    .sidebar-item {
-      padding: 10px 12px;
-      margin-bottom: 4px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-size: 14px;
-      color: #475569;
-    }
-    .sidebar-item:hover {
-      background-color: #f1f5f9;
-      color: #0f172a;
-    }
-    .sidebar-item.active {
-      background-color: #dbeafe;
-      color: #1e40af;
-      font-weight: 600;
-    }
-
-    .content {
-      flex: 1;
-      padding: 24px;
-      overflow-y: auto;
-    }
-
-    .main-layout {
-      display: flex;
-      height: calc(100vh - 60px);
-    }
-
-    .btn-group {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .input-group {
-      margin-bottom: 16px;
-    }
-    .input-group label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #334155;
-      margin-bottom: 6px;
-    }
-
-    .checkbox-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 0;
-    }
-    input[type="checkbox"] {
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
-      accent-color: #3b82f6;
-    }
-
-    .form-section {
-      background-color: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 16px;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 9999px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .badge-green {
-      background-color: #dcfce7;
-      color: #166534;
-    }
-    .badge-red {
-      background-color: #fee2e2;
-      color: #991b1b;
-    }
-    .badge-yellow {
-      background-color: #fef3c7;
-      color: #78350f;
-    }
-    .badge-blue {
-      background-color: #dbeafe;
-      color: #1e40af;
-    }
+    /* Custom styles */
+    .pass { color: #16a34a; font-weight: 600; }
+    .fail { color: #dc2626; font-weight: 600; }
+    .storey-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background-color: #f1f5f9; border-left: 4px solid #3b82f6; margin-top: 16px; font-weight: 600; color: #0f172a; }
   </style>
 </head>
 <body>
@@ -442,32 +353,32 @@
     const { useState, useEffect, useMemo } = React;
 
     // --- ICONS ---
-    const Plus = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>;
-    const Trash2 = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m-10 5v6m4-6v6"/></svg>;
-    const ArrowUp = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>;
-    const ArrowDown = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>;
-    const GripVertical = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>;
-    const CheckCircle = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>;
-    const XCircle = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>;
-    const FileText = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="13" x2="12" y2="17"/><line x1="9" y1="15" x2="15" y2="15"/></svg>;
-    const X = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>;
-    const Layers = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 16 22 12"/><polyline points="2 17 12 21 22 17"/></svg>;
-    const GridIcon = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
-    const Sun = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>;
-    const Thermometer = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>;
-    const MapPin = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>;
-    const Building = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><line x1="9" y1="6" x2="9" y2="9"/><line x1="12" y1="6" x2="12" y2="9"/><line x1="15" y1="6" x2="15" y2="9"/></svg>;
-    const Maximize = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3m-18 0v3a2 2 0 0 0 2 2h3"/></svg>;
-    const Layout = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>;
-    const Globe = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>;
-    const AlertTriangle = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
-    const Settings = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51v.21a2 2 0 0 1-4 0v-.12a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H2.18a2 2 0 0 1 0-4h.12a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V2.18a2 2 0 0 1 4 0v.12a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.5a1.65 1.65 0 0 0 1.51 1h.21a2 2 0 0 1 0 4h-.12a1.65 1.65 0 0 0-1.51 1z"/></svg>;
-    const HelpCircle = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
-    const ExternalLink = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m4-3h6v6m-11 5L21 3"/></svg>;
-    const Droplet = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>;
-    const Wand = ({style}) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 4 2 2"/><path d="m17.7 5.2-1.2 1.2"/><path d="M5 14c-1.1-1.6-.9-4.05.8-6.7m8 11 4.3-4.3"/><path d="M7 7l6 6"/><circle cx="15" cy="15" r="1"/></svg>;
+    const Plus = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>;
+    const Trash2 = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m-10 5v6m4-6v6"/></svg>;
+    const ArrowUp = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>;
+    const ArrowDown = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>;
+    const GripVertical = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>;
+    const CheckCircle = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>;
+    const XCircle = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>;
+    const FileText = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="13" x2="12" y2="17"/><line x1="9" y1="15" x2="15" y2="15"/></svg>;
+    const X = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>;
+    const Layers = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 16 22 12"/><polyline points="2 17 12 21 22 17"/></svg>;
+    const GridIcon = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
+    const Sun = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>;
+    const Thermometer = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>;
+    const MapPin = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>;
+    const Building = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><line x1="9" y1="6" x2="9" y2="9"/><line x1="12" y1="6" x2="12" y2="9"/><line x1="15" y1="6" x2="15" y2="9"/></svg>;
+    const Maximize = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3m-18 0v3a2 2 0 0 0 2 2h3"/></svg>;
+    const Layout = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>;
+    const Globe = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>;
+    const AlertTriangle = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
+    const Settings = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51v.21a2 2 0 0 1-4 0v-.12a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H2.18a2 2 0 0 1 0-4h.12a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V2.18a2 2 0 0 1 4 0v.12a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.5a1.65 1.65 0 0 0 1.51 1h.21a2 2 0 0 1 0 4h-.12a1.65 1.65 0 0 0-1.51 1z"/></svg>;
+    const HelpCircle = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
+    const ExternalLink = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m4-3h6v6m-11 5L21 3"/></svg>;
+    const Droplet = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>;
+    const Wand = ({className}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 4 2 2"/><path d="m17.7 5.2-1.2 1.2"/><path d="M5 14c-1.1-1.6-.9-4.05.8-6.7m8 11 4.3-4.3"/><path d="M7 7l6 6"/><circle cx="15" cy="15" r="1"/></svg>;
 
-    // --- COMPRESSED CONFIGURATIONS ---
+    // CONFIGURATIONS DATA (keeping all original data)
     const BUILD_VERSION = "2.0.3 (LOCAL SAVING IMPLEMENTED)";
     const FENESTRATION_TARGETS = [{maxRatio:20,maxU:null,maxShgcUnshaded:null,maxShgcShaded:null},{maxRatio:25,maxU:5.20,maxShgcUnshaded:0.66,maxShgcShaded:0.49},{maxRatio:30,maxU:4.40,maxShgcUnshaded:0.56,maxShgcShaded:0.40},{maxRatio:35,maxU:3.50,maxShgcUnshaded:0.46,maxShgcShaded:0.33},{maxRatio:40,maxU:2.80,maxShgcUnshaded:0.36,maxShgcShaded:0.26},{maxRatio:45,maxU:2.20,maxShgcUnshaded:0.28,maxShgcShaded:0.20},{maxRatio:50,maxU:1.70,maxShgcUnshaded:0.21,maxShgcShaded:0.15},{maxRatio:55,maxU:1.40,maxShgcUnshaded:0.17,maxShgcShaded:0.12},{maxRatio:60,maxU:1.10,maxShgcUnshaded:0.14,maxShgcShaded:0.10},{maxRatio:100,maxU:0.90,maxShgcUnshaded:0.11,maxShgcShaded:0.08}];
     const getFenestrationTargets = (r) => r <= 0 ? FENESTRATION_TARGETS[0] : (FENESTRATION_TARGETS.find(t => r <= t.maxRatio) || FENESTRATION_TARGETS[9]);
@@ -479,10 +390,398 @@
     const CLIMATE_ZONES=[{id:'1',name:'Zone 1 (Medium, Medium)'},{id:'2',name:'Zone 2 (Medium, Low)'},{id:'3',name:'Zone 3 (Low, High)'},{id:'4',name:'Zone 4 (Low, Low)'},{id:'5',name:'Zone 5 (Low, High)'},{id:'5H',name:'Zone 5H (Coastal High)'},{id:'6',name:'Zone 6 (High, High)'},{id:'7',name:'Zone 7 (Very High, Very High)'}];
     const OCCUPANCY_CLASSES=[{id:'A1',name:'A1 - Entertainment'},{id:'A2',name:'A2 - Theatrical/Sport'},{id:'A3',name:'A3 - Instruction'},{id:'A4',name:'A4 - Worship'},{id:'A5',name:'A5 - Outdoor'},{id:'C1',name:'C1 - Museums'},{id:'C2',name:'C2 - Library'},{id:'E1',name:'E1 - Shops'},{id:'E2',name:'E2 - Food Service'},{id:'E3',name:'E3 - Offices'},{id:'E4',name:'E4 - Parking'},{id:'F1',name:'F1 - Industrial'},{id:'F2',name:'F2 - Storage'},{id:'G1',name:'G1 - Residential'},{id:'H1',name:'H1 - Hotels'},{id:'H2',name:'H2 - Residential Institution'},{id:'H3',name:'H3 - Dwelling'},{id:'H4',name:'H4 - Dwelling'},{id:'H5',name:'H5 - Residential'},{id:'J1',name:'J1 - Transport'},{id:'J2',name:'J2 - Parking'},{id:'J3',name:'J3 - Airfield'},{id:'J4',name:'J4 - Other'}];
     const SA_TOWNS = [
-{name:'Johannesburg',zone:'1',lat:26.2,sccp:false}
+{name:'Aberdeen',zone:'1',lat:32.476,sccp:false},
+{name:'Acornhoek',zone:'5',lat:24.597,sccp:false},
+{name:'Addo',zone:'5',lat:33.541,sccp:true},
+{name:'Adelaide',zone:'2',lat:32.706,sccp:false},
+{name:'Adendorp',zone:'1',lat:32.301,sccp:false},
+{name:'Albertinia',zone:'4',lat:34.197,sccp:true},
+{name:'Alexander Bay',zone:'4',lat:28.609,sccp:false},
+{name:'Alexandria',zone:'4',lat:33.654,sccp:true},
+{name:'Algoa',zone:'5',lat:33.826,sccp:false},
+{name:'Alice',zone:'4',lat:32.778,sccp:false},
+{name:'Alicedale',zone:'4',lat:33.317,sccp:true},
+{name:'Aliwal North',zone:'2',lat:30.688,sccp:false},
+{name:'Allanridge',zone:'1',lat:27.754,sccp:false},
+{name:'Amatikulu',zone:'5H',lat:29.043,sccp:false},
+{name:'Amersfoort',zone:'2',lat:27.005,sccp:false},
+{name:'Arlington',zone:'2',lat:28.029,sccp:false},
+{name:'Asbesberge',zone:'1',lat:28.812,sccp:false},
+{name:'Ashton',zone:'1',lat:33.835,sccp:false},
+{name:'Askham',zone:'3',lat:26.983,sccp:false},
+{name:'Augrabies falls',zone:'3',lat:28.591,sccp:false},
+{name:'Barberton',zone:'5',lat:25.79,sccp:false},
+{name:'Barkly East',zone:'6',lat:30.967,sccp:false},
+{name:'Barkly West',zone:'1',lat:28.537,sccp:false},
+{name:'Baroe',zone:'1',lat:33.225,sccp:false},
+{name:'Bathurst',zone:'5',lat:33.503,sccp:true},
+{name:'Beaufort West',zone:'1',lat:33.341,sccp:false},
+{name:'Bedford',zone:'2',lat:32.678,sccp:false},
+{name:'Beestekraal',zone:'5',lat:25.375,sccp:false},
+{name:'Belfast',zone:'5',lat:24.491,sccp:false},
+{name:'Bergville',zone:'2',lat:28.731,sccp:false},
+{name:'Bethal',zone:'2',lat:26.454,sccp:false},
+{name:'Bethlehem',zone:'2',lat:28.231,sccp:false},
+{name:'Bethulie',zone:'1',lat:30.495,sccp:false},
+{name:'Biesiesfontein',zone:'5',lat:31.016,sccp:false},
+{name:'Bisho',zone:'4',lat:32.848,sccp:false},
+{name:'Bitterfontein',zone:'5',lat:31.041,sccp:false},
+{name:'Bizana',zone:'2',lat:30.858,sccp:false},
+{name:'Bloemfontein',zone:'1',lat:29.113,sccp:false},
+{name:'Bloemhof',zone:'1',lat:27.652,sccp:false},
+{name:'Boshof',zone:'1',lat:28.54,sccp:false},
+{name:'Bothaville',zone:'1',lat:27.394,sccp:false},
+{name:'Brandfort',zone:'1',lat:28.702,sccp:false},
+{name:'Brandvlei',zone:'1',lat:30.466,sccp:false},
+{name:'Bredasdorp',zone:'4',lat:34.532,sccp:true},
+{name:'Breyten',zone:'2',lat:26.302,sccp:false},
+{name:'Brits',zone:'5',lat:25.63,sccp:false},
+{name:'Britstown',zone:'1',lat:30.59,sccp:false},
+{name:'Bronkhorstspruit',zone:'1',lat:25.809,sccp:false},
+{name:'Bultfontein',zone:'1',lat:28.287,sccp:false},
+{name:'Burgersdorp',zone:'6',lat:30.996,sccp:false},
+{name:'Butterworth',zone:'4',lat:32.33,sccp:false},
+{name:'Caledon',zone:'2',lat:34.231,sccp:true},
+{name:'Calitzdorp',zone:'2',lat:33.53,sccp:false},
+{name:'Calvinia',zone:'1',lat:31.473,sccp:false},
+{name:'Campbell',zone:'1',lat:28.799,sccp:false},
+{name:'Cape Agulhas',zone:'4',lat:34.531,sccp:true},
+{name:'Cape Town',zone:'4',lat:33.915,sccp:true},
+{name:'Carletonville',zone:'1',lat:26.368,sccp:false},
+{name:'Carnarvon',zone:'1',lat:30.969,sccp:false},
+{name:'Cathcart',zone:'2',lat:32.297,sccp:false},
+{name:'Cedarville',zone:'6',lat:30.387,sccp:false},
+{name:'Ceres',zone:'2',lat:33.369,sccp:true},
+{name:'Charlestown',zone:'2',lat:27.407,sccp:false},
+{name:'Christiana',zone:'1',lat:27.913,sccp:false},
+{name:'Citrusdal',zone:'1',lat:32.594,sccp:false},
+{name:'Clanwilliam',zone:'5',lat:32.175,sccp:false},
+{name:'Clocolan',zone:'2',lat:28.915,sccp:false},
+{name:'Colenso',zone:'5',lat:28.745,sccp:false},
+{name:'Colesberg',zone:'1',lat:30.707,sccp:false},
+{name:'Coligny',zone:'1',lat:26.311,sccp:false},
+{name:'Cookhouse',zone:'2',lat:32.748,sccp:false},
+{name:'Cradock',zone:'2',lat:32.17,sccp:false},
+{name:'Danielskuil',zone:'1',lat:28.186,sccp:false},
+{name:'Dannhauser',zone:'1',lat:28.014,sccp:false},
+{name:'Darlington',zone:'2',lat:32.463,sccp:false},
+{name:'Darnall',zone:'5H',lat:29.268,sccp:false},
+{name:'De Aar',zone:'1',lat:30.65,sccp:false},
+{name:'Dealesville',zone:'1',lat:28.674,sccp:false},
+{name:'Delareyville',zone:'5',lat:26.688,sccp:false},
+{name:'Delportshoop',zone:'1',lat:28.415,sccp:false},
+{name:'Derdepoort',zone:'5',lat:24.639,sccp:false},
+{name:'Dewetsdorp',zone:'2',lat:29.582,sccp:false},
+{name:'Dimabaza',zone:'4',lat:32.837,sccp:false},
+{name:'Donnybrook',zone:'2',lat:29.928,sccp:false},
+{name:'Dordrecht',zone:'6',lat:31.377,sccp:false},
+{name:'Doringbos',zone:'5',lat:31.971,sccp:false},
+{name:'Douglas',zone:'1',lat:29.052,sccp:false},
+{name:'Duiwelskloof',zone:'5',lat:23.695,sccp:false},
+{name:'Dullstroom',zone:'2',lat:25.417,sccp:false},
+{name:'Durban',zone:'5H',lat:29.847,sccp:false},
+{name:'East London',zone:'5',lat:33.014,sccp:false},
+{name:'Edenburg',zone:'1',lat:26.051,sccp:false},
+{name:'Edenville',zone:'2',lat:27.555,sccp:false},
+{name:'Elliot',zone:'6',lat:31.333,sccp:false},
+{name:'Elliotdale',zone:'5',lat:31.966,sccp:false},
+{name:'Emalahleni',zone:'2',lat:25.872,sccp:false},
+{name:'Emmaus',zone:'2',lat:28.86,sccp:false},
+{name:'Empangeni',zone:'5H',lat:28.741,sccp:false},
+{name:'Engcobo',zone:'2',lat:31.673,sccp:false},
+{name:'Erfenisdam',zone:'1',lat:28.502,sccp:false},
+{name:'Ermelo',zone:'2',lat:26.525,sccp:false},
+{name:'Eshowe',zone:'5H',lat:28.89,sccp:false},
+{name:'Estcourt',zone:'2',lat:29.006,sccp:false},
+{name:'False Bay',zone:'5H',lat:27.968,sccp:false},
+{name:'Fauresmith',zone:'1',lat:29.748,sccp:false},
+{name:'Ficksburg',zone:'2',lat:28.876,sccp:false},
+{name:'Fort Beaufort',zone:'4',lat:32.78,sccp:false},
+{name:'Fouriesburg',zone:'6',lat:28.621,sccp:false},
+{name:'Frankfort',zone:'2',lat:27.277,sccp:false},
+{name:'Fraserburg',zone:'7',lat:31.016,sccp:false},
+{name:'Gamtoos',zone:'4',lat:33.961,sccp:true},
+{name:'Gariep',zone:'4',lat:28.627,sccp:false},
+{name:'Garies',zone:'1',lat:30.565,sccp:false},
+{name:'Gatyana',zone:'5',lat:32.401,sccp:false},
+{name:'Gcuwa',zone:'4',lat:32.331,sccp:false},
+{name:'George',zone:'4',lat:33.951,sccp:true},
+{name:'Germiston',zone:'1',lat:26.209,sccp:false},
+{name:'Gingindlovu',zone:'5H',lat:29.031,sccp:false},
+{name:'Glencoe',zone:'5',lat:28.179,sccp:false},
+{name:'Gourits',zone:'4',lat:34.337,sccp:true},
+{name:'Graaff-Reinet',zone:'1',lat:32.251,sccp:false},
+{name:'Grahamstown',zone:'4',lat:33.307,sccp:false},
+{name:'Graskop',zone:'5',lat:24.934,sccp:false},
+{name:'Greytown',zone:'4',lat:29.064,sccp:false},
+{name:'Griekwastad',zone:'1',lat:28.848,sccp:false},
+{name:'Groblersdal',zone:'5',lat:25.168,sccp:false},
+{name:'Grootdrink',zone:'5',lat:26.495,sccp:false},
+{name:'Groot-Kei',zone:'5',lat:32.68,sccp:false},
+{name:'Grootvloer',zone:'1',lat:31.146,sccp:false},
+{name:'Hanover',zone:'1',lat:31.072,sccp:false},
+{name:'Harding',zone:'5H',lat:30.572,sccp:false},
+{name:'Harrismith',zone:'2',lat:28.271,sccp:false},
+{name:'Hartbees',zone:'3',lat:28.759,sccp:false},
+{name:'Hartswater',zone:'1',lat:27.754,sccp:false},
+{name:'Hebertsdale',zone:'4',lat:34.015,sccp:true},
+{name:'Heidelberg',zone:'4',lat:34.089,sccp:false},
+{name:'Heidelberg',zone:'2',lat:26.499,sccp:false},
+{name:'Heilbron',zone:'2',lat:27.294,sccp:false},
+{name:'Hennenman',zone:'1',lat:27.972,sccp:false},
+{name:'Hermanus',zone:'2',lat:34.42,sccp:true},
+{name:'Hertzogville',zone:'1',lat:28.128,sccp:false},
+{name:'Hlobane',zone:'4',lat:27.711,sccp:false},
+{name:'Hluhluwe',zone:'5',lat:28.021,sccp:false},
+{name:'Hondeklipbaai',zone:'4',lat:30.318,sccp:false},
+{name:'Hoopstad',zone:'1',lat:27.833,sccp:false},
+{name:'Hopefield',zone:'4',lat:33.058,sccp:false},
+{name:'Hopetown',zone:'1',lat:29.624,sccp:false},
+{name:'Hotazel',zone:'5',lat:27.203,sccp:false},
+{name:'Houtkraal',zone:'1',lat:30.393,sccp:false},
+{name:'Idutywa',zone:'4',lat:32.099,sccp:false},
+{name:'Ingwavuma',zone:'5',lat:27.133,sccp:false},
+{name:'Ixopo',zone:'5H',lat:30.153,sccp:false},
+{name:'Jagersfontein',zone:'1',lat:29.761,sccp:false},
+{name:'Jamestown',zone:'6',lat:31.131,sccp:false},
+{name:'Johannesburg',zone:'1',lat:26.202,sccp:false},
+{name:'Kakamas',zone:'3',lat:28.768,sccp:false},
+{name:'Kamieskroon',zone:'1',lat:30.212,sccp:false},
+{name:'Kareeberge',zone:'1',lat:30.714,sccp:false},
+{name:'Keimoes',zone:'5',lat:28.722,sccp:false},
+{name:'Kendrew',zone:'5',lat:32.493,sccp:false},
+{name:'Kenhardt',zone:'5',lat:29.348,sccp:false},
+{name:'Kestell',zone:'1',lat:28.307,sccp:false},
+{name:'Kimberley',zone:'1',lat:28.741,sccp:false},
+{name:'King William\'s Town',zone:'4',lat:32.879,sccp:false},
+{name:'Kirkwood',zone:'5',lat:33.401,sccp:false},
+{name:'Klawer',zone:'5',lat:31.779,sccp:false},
+{name:'Klerksdorp',zone:'1',lat:26.867,sccp:false},
+{name:'Klipdale',zone:'4',lat:34.306,sccp:true},
+{name:'Klipplaat',zone:'5',lat:33.016,sccp:false},
+{name:'Knysna',zone:'4',lat:34.035,sccp:true},
+{name:'Koffiefontein',zone:'1',lat:29.407,sccp:false},
+{name:'Kokstad',zone:'2',lat:30.539,sccp:false},
+{name:'Komatipoort',zone:'3',lat:25.43,sccp:false},
+{name:'Kompasberg',zone:'6',lat:31.765,sccp:false},
+{name:'Komsberg',zone:'6',lat:32.692,sccp:false},
+{name:'Koppies',zone:'1',lat:27.242,sccp:false},
+{name:'Koster',zone:'1',lat:25.869,sccp:false},
+{name:'Kraai',zone:'1',lat:32.484,sccp:false},
+{name:'Kranskop',zone:'5H',lat:28.967,sccp:false},
+{name:'Krugersdorp',zone:'1',lat:26.103,sccp:false},
+{name:'Kruisfontein',zone:'4',lat:34.007,sccp:true},
+{name:'Kuruman',zone:'1',lat:27.433,sccp:false},
+{name:'Kwabhaca',zone:'2',lat:30.901,sccp:false},
+{name:'Kwadukuza',zone:'5H',lat:29.328,sccp:false},
+{name:'KwaMashu',zone:'5H',lat:29.751,sccp:false},
+{name:'Kwa-Nobuhle',zone:'4',lat:33.818,sccp:false},
+{name:'Ladismith',zone:'2',lat:33.498,sccp:false},
+{name:'Lady Grey',zone:'6',lat:30.711,sccp:false},
+{name:'Ladysmith',zone:'5',lat:28.559,sccp:false},
+{name:'Laingsburg',zone:'2',lat:33.193,sccp:false},
+{name:'Lambert\'s Bay',zone:'5',lat:32.095,sccp:false},
+{name:'Langebaan',zone:'4',lat:33.081,sccp:false},
+{name:'Langeberg',zone:'2',lat:33.782,sccp:false},
+{name:'Langklip',zone:'3',lat:28.213,sccp:false},
+{name:'Leeu Gamka',zone:'1',lat:32.777,sccp:false},
+{name:'Lepalale',zone:'3',lat:23.687,sccp:false},
+{name:'Letaba',zone:'5',lat:23.9,sccp:false},
+{name:'Letjiesbos',zone:'1',lat:32.563,sccp:false},
+{name:'Libode',zone:'4',lat:32.553,sccp:false},
+{name:'Lichtenburg',zone:'1',lat:26.151,sccp:false},
+{name:'Loeriesfontein',zone:'1',lat:30.953,sccp:false},
+{name:'Loskop Dam',zone:'5',lat:25.429,sccp:false},
+{name:'Lothair',zone:'2',lat:26.391,sccp:false},
+{name:'Louis Trichardt',zone:'5',lat:23.046,sccp:false},
+{name:'Louwsburg',zone:'5',lat:27.576,sccp:false},
+{name:'Loxton',zone:'1',lat:30.941,sccp:false},
+{name:'Luckhoff',zone:'1',lat:29.748,sccp:false},
+{name:'Lutzputs',zone:'3',lat:28.387,sccp:false},
+{name:'Luvuvhu',zone:'3',lat:22.402,sccp:false},
+{name:'Maclear',zone:'2',lat:31.07,sccp:false},
+{name:'Madadeni',zone:'2',lat:27.752,sccp:false},
+{name:'Magaliesburg',zone:'1',lat:25.989,sccp:false},
+{name:'Mahikeng',zone:'5',lat:25.857,sccp:false},
+{name:'Makwassie',zone:'1',lat:27.319,sccp:false},
+{name:'Malmesbury',zone:'1',lat:33.463,sccp:true},
+{name:'Mangaung',zone:'1',lat:29.322,sccp:false},
+{name:'Maretsane',zone:'5',lat:26.142,sccp:false},
+{name:'Margate',zone:'5H',lat:30.854,sccp:false},
+{name:'Marquard',zone:'2',lat:28.665,sccp:false},
+{name:'Matatiele',zone:'6',lat:30.346,sccp:false},
+{name:'Matjiesfontein',zone:'2',lat:33.228,sccp:false},
+{name:'Matroosberg',zone:'6',lat:33.374,sccp:false},
+{name:'Maxesibenj',zone:'2',lat:30.855,sccp:false},
+{name:'Mbashe',zone:'2',lat:31.728,sccp:false},
+{name:'Mbombela',zone:'5',lat:25.469,sccp:false},
+{name:'Mdantsane',zone:'5',lat:32.968,sccp:false},
+{name:'Memel',zone:'2',lat:27.681,sccp:false},
+{name:'Middelburg',zone:'2',lat:31.493,sccp:false},
+{name:'Middelburg',zone:'2',lat:25.763,sccp:false},
+{name:'Middelwit',zone:'5',lat:24.852,sccp:false},
+{name:'Mkomazi',zone:'2',lat:29.633,sccp:false},
+{name:'Mkuze',zone:'5',lat:27.617,sccp:false},
+{name:'Mmabatho',zone:'5',lat:25.834,sccp:false},
+{name:'Modderrivier',zone:'1',lat:29.022,sccp:false},
+{name:'Modimolle',zone:'5',lat:24.701,sccp:false},
+{name:'Mogalakwena',zone:'5',lat:24.193,sccp:false},
+{name:'Molteno',zone:'6',lat:31.393,sccp:false},
+{name:'Mooi River',zone:'2',lat:29.207,sccp:false},
+{name:'Moorreesburg',zone:'5',lat:33.138,sccp:true},
+{name:'Mopane',zone:'3',lat:22.623,sccp:false},
+{name:'Morgenzon',zone:'2',lat:26.731,sccp:false},
+{name:'Mosselbaai',zone:'4',lat:34.129,sccp:true},
+{name:'Mount Fletcher',zone:'6',lat:30.69,sccp:false},
+{name:'Mqanduli',zone:'5',lat:31.819,sccp:false},
+{name:'Mtubatuba',zone:'5H',lat:28.416,sccp:false},
+{name:'Mtwalume',zone:'5H',lat:30.491,sccp:false},
+{name:'Murraysburg',zone:'1',lat:31.967,sccp:false},
+{name:'Musina',zone:'3',lat:22.33,sccp:false},
+{name:'Mzimvubu',zone:'5H',lat:31.615,sccp:false},
+{name:'Nababeep',zone:'1',lat:29.589,sccp:false},
+{name:'Nelspoort',zone:'1',lat:32.116,sccp:false},
+{name:'New Hanover',zone:'4',lat:29.354,sccp:false},
+{name:'Newcastle',zone:'2',lat:27.755,sccp:false},
+{name:'Niekerkshoop',zone:'1',lat:29.327,sccp:false},
+{name:'Nieuwoudtville',zone:'5',lat:31.372,sccp:false},
+{name:'Nigel',zone:'2',lat:26.423,sccp:false},
+{name:'Nkandla',zone:'5',lat:28.586,sccp:false},
+{name:'Nongoma',zone:'5',lat:27.896,sccp:false},
+{name:'Northam',zone:'5',lat:24.953,sccp:false},
+{name:'Noupoort',zone:'2',lat:31.178,sccp:false},
+{name:'Nqutu',zone:'4',lat:28.206,sccp:false},
+{name:'Nuwerus',zone:'5',lat:31.149,sccp:false},
+{name:'Odendaalsrus',zone:'1',lat:27.88,sccp:false},
+{name:'Okiep',zone:'1',lat:29.594,sccp:false},
+{name:'Olifantshoek',zone:'1',lat:27.941,sccp:false},
+{name:'Orkney',zone:'1',lat:27.008,sccp:false},
+{name:'Osizweni',zone:'2',lat:27.786,sccp:false},
+{name:'Ottosdal',zone:'1',lat:26.812,sccp:false},
+{name:'Paarl',zone:'2',lat:33.764,sccp:true},
+{name:'Pakhuis',zone:'5',lat:32.139,sccp:false},
+{name:'Pampoenpoort',zone:'1',lat:31.061,sccp:false},
+{name:'Park Rynie',zone:'5H',lat:30.317,sccp:false},
+{name:'Parys',zone:'1',lat:26.898,sccp:false},
+{name:'Patensie',zone:'4',lat:33.758,sccp:false},
+{name:'Paulpietersburg',zone:'4',lat:27.428,sccp:false},
+{name:'Peddie',zone:'5',lat:33.198,sccp:false},
+{name:'Pella',zone:'5',lat:29.034,sccp:false},
+{name:'Pepani',zone:'5',lat:26.251,sccp:false},
+{name:'Petrus Steyn',zone:'2',lat:27.649,sccp:false},
+{name:'Petrusburg',zone:'1',lat:29.115,sccp:false},
+{name:'Philippolis',zone:'1',lat:30.266,sccp:false},
+{name:'Philipstown',zone:'1',lat:30.437,sccp:false},
+{name:'Pienaarsrivier',zone:'5',lat:25.208,sccp:false},
+{name:'Piet Retief',zone:'4',lat:27.005,sccp:false},
+{name:'Pietermaritzburg',zone:'4',lat:29.601,sccp:false},
+{name:'Piketberg',zone:'5',lat:32.908,sccp:false},
+{name:'Pilgrim\'s Rest',zone:'1',lat:24.907,sccp:false},
+{name:'Pinetown',zone:'5H',lat:29.813,sccp:false},
+{name:'Pofadder',zone:'5',lat:29.125,sccp:false},
+{name:'Polokwane',zone:'5',lat:23.909,sccp:false},
+{name:'Port Alfred',zone:'5',lat:33.588,sccp:true},
+{name:'Port Elizabeth',zone:'4',lat:33.962,sccp:true},
+{name:'Port Nolloth',zone:'4',lat:29.257,sccp:false},
+{name:'Port Shepstone',zone:'5H',lat:30.739,sccp:false},
+{name:'Port St Johns',zone:'5H',lat:31.621,sccp:false},
+{name:'Porterville',zone:'1',lat:33.015,sccp:true},
+{name:'Postmasburg',zone:'1',lat:28.331,sccp:false},
+{name:'Potchefstroom',zone:'1',lat:26.719,sccp:false},
+{name:'Pretoria',zone:'5',lat:25.744,sccp:false},
+{name:'Prieska',zone:'1',lat:29.666,sccp:false},
+{name:'Prince Albert',zone:'2',lat:33.214,sccp:false},
+{name:'Punda Maria',zone:'3',lat:22.691,sccp:false},
+{name:'Queenstown',zone:'2',lat:31.895,sccp:false},
+{name:'Qumbu',zone:'2',lat:31.16,sccp:false},
+{name:'Quoin Point',zone:'4',lat:34.781,sccp:true},
+{name:'Randfontein',zone:'1',lat:26.173,sccp:false},
+{name:'Reddersburg',zone:'1',lat:29.651,sccp:false},
+{name:'Reitz',zone:'2',lat:27.801,sccp:false},
+{name:'Reivilo',zone:'1',lat:27.565,sccp:false},
+{name:'Richards Bay',zone:'5H',lat:28.75,sccp:false},
+{name:'Riebeek -Oos',zone:'5',lat:33.202,sccp:false},
+{name:'Riversdale',zone:'4',lat:34.042,sccp:true},
+{name:'Robertson',zone:'2',lat:33.799,sccp:true},
+{name:'Roodepoort',zone:'1',lat:26.16,sccp:false},
+{name:'Rosmead',zone:'2',lat:31.491,sccp:false},
+{name:'Rouxville',zone:'2',lat:30.416,sccp:false},
+{name:'Rustenburg',zone:'5',lat:25.635,sccp:false},
+{name:'Sakrivier',zone:'1',lat:30.882,sccp:false},
+{name:'Saldanha Bay',zone:'4',lat:33.007,sccp:false},
+{name:'Sannaspos',zone:'1',lat:29.16,sccp:false},
+{name:'Sannieshof',zone:'1',lat:26.531,sccp:false},
+{name:'Seekoei',zone:'1',lat:30.308,sccp:false},
+{name:'Senekal',zone:'2',lat:28.321,sccp:false},
+{name:'Settlers',zone:'5',lat:24.957,sccp:false},
+{name:'Simonstown',zone:'4',lat:34.193,sccp:true},
+{name:'Sishen',zone:'5',lat:27.783,sccp:false},
+{name:'Smithfield',zone:'1',lat:30.212,sccp:false},
+{name:'Soekmekaar',zone:'5',lat:24.493,sccp:false},
+{name:'Springbok',zone:'1',lat:29.665,sccp:false},
+{name:'Springs',zone:'2',lat:26.256,sccp:false},
+{name:'Standerton',zone:'2',lat:26.954,sccp:false},
+{name:'Stellenbosch',zone:'2',lat:33.931,sccp:true},
+{name:'Tarkastad',zone:'2',lat:32.006,sccp:false},
+{name:'Theunissen',zone:'1',lat:28.4,sccp:false},
+{name:'Thohoyandou',zone:'3',lat:22.977,sccp:false},
+{name:'Tom Burke',zone:'3',lat:23.07,sccp:false},
+{name:'Tongaat',zone:'5H',lat:29.543,sccp:false},
+{name:'Touws',zone:'2',lat:33.79,sccp:true},
+{name:'Tsineng',zone:'5',lat:27.088,sccp:false},
+{name:'Tsolo',zone:'2',lat:31.309,sccp:false},
+{name:'Tulbagh',zone:'1',lat:33.284,sccp:true},
+{name:'Tzaneen',zone:'5',lat:23.821,sccp:false},
+{name:'Ubombo',zone:'5',lat:27.563,sccp:false},
+{name:'Ugie',zone:'2',lat:31.194,sccp:false},
+{name:'Uitenhage',zone:'4',lat:33.757,sccp:true},
+{name:'Ulco',zone:'1',lat:28.335,sccp:false},
+{name:'Umkomaas',zone:'5H',lat:30.207,sccp:false},
+{name:'Umtata',zone:'4',lat:31.592,sccp:false},
+{name:'Umzimvubu',zone:'2',lat:30.902,sccp:false},
+{name:'Uniondale',zone:'2',lat:33.659,sccp:false},
+{name:'Upington',zone:'5',lat:28.459,sccp:false},
+{name:'Utrecht',zone:'2',lat:27.656,sccp:false},
+{name:'Vaalwater',zone:'5',lat:24.299,sccp:false},
+{name:'Vanderbijlpark',zone:'1',lat:26.697,sccp:false},
+{name:'Vanrhynsdorp',zone:'5',lat:31.609,sccp:false},
+{name:'Vanwyksvlei',zone:'1',lat:30.366,sccp:false},
+{name:'Ventersburg',zone:'1',lat:28.086,sccp:false},
+{name:'Venterstad',zone:'1',lat:30.778,sccp:false},
+{name:'Vereeninging',zone:'1',lat:26.675,sccp:false},
+{name:'Verneukpan',zone:'1',lat:30.133,sccp:false},
+{name:'Victoria West',zone:'1',lat:31.404,sccp:false},
+{name:'Villiers',zone:'2',lat:27.028,sccp:false},
+{name:'Virginia',zone:'1',lat:28.098,sccp:false},
+{name:'Volksrust',zone:'2',lat:27.367,sccp:false},
+{name:'Vredefort',zone:'1',lat:27.006,sccp:false},
+{name:'Vredenburg',zone:'4',lat:32.906,sccp:false},
+{name:'Vrendendal',zone:'5',lat:31.664,sccp:false},
+{name:'Vryburg',zone:'1',lat:26.955,sccp:false},
+{name:'Vryheid',zone:'4',lat:27.767,sccp:false},
+{name:'Wakkerstroom',zone:'2',lat:27.349,sccp:false},
+{name:'Warden',zone:'2',lat:27.854,sccp:false},
+{name:'Warrenton',zone:'1',lat:28.109,sccp:false},
+{name:'Wasbank',zone:'5',lat:28.314,sccp:false},
+{name:'Waterberge',zone:'5',lat:24.331,sccp:false},
+{name:'Waterval-Boven',zone:'2',lat:25.643,sccp:false},
+{name:'Waterval-Onder',zone:'2',lat:25.648,sccp:false},
+{name:'Weenen',zone:'2',lat:28.851,sccp:false},
+{name:'Welkom',zone:'1',lat:27.978,sccp:false},
+{name:'Wepener',zone:'2',lat:29.729,sccp:false},
+{name:'Wilge',zone:'2',lat:25.976,sccp:false},
+{name:'Wiliston',zone:'1',lat:31.34,sccp:false},
+{name:'Willowmore',zone:'2',lat:33.295,sccp:false},
+{name:'Windsorton',zone:'1',lat:28.331,sccp:false},
+{name:'Wolmaransstad',zone:'1',lat:27.2,sccp:false},
+{name:'Wolseley',zone:'2',lat:33.414,sccp:true},
+{name:'Worcester',zone:'2',lat:33.646,sccp:false},
+{name:'Xora',zone:'5',lat:31.953,sccp:false},
+{name:'Zebediela',zone:'5',lat:24.301,sccp:false},
+{name:'Zeerust',zone:'5',lat:25.544,sccp:false}
     ];
 
-    // --- CUSTOM HOOK FOR LOCAL STORAGE PERSISTENCE ---
+    // CUSTOM HOOK FOR LOCAL STORAGE
     function useStickyState(defaultValue, key) {
       const [value, setValue] = React.useState(() => {
         const stickyValue = window.localStorage.getItem(key);
@@ -496,245 +795,86 @@
 
     function App() {
       const [activeTab, setActiveTab] = useStickyState('project', 'xa_activeTab');
-      const [projectInfo, setProjectInfo] = useStickyState({ projectName:'', projectType:'new', location:'Johannesburg', customLocation:false, latitude:26.2, isSccp:false, storeys:1, occupancy:'E3' }, 'xa_projectInfo');
+      const [projectInfo, setProjectInfo] = useStickyState({ projectName:'', projectType:'new', location:'Johannesburg', customLocation:false, latitude:26.2, zone:'1', isSccp:false, storeys:1, occupancy:'E3' }, 'xa_projectInfo');
       const [isExempt, setIsExempt] = useState(false);
       
       useEffect(() => { setIsExempt(['J3', 'A5', 'D4'].includes(projectInfo.occupancy)); }, [projectInfo.occupancy]);
 
-      const [spaces, setSpaces] = useStickyState([{ id: 'sp-1', name: 'Main Living Area', storey: 0, area: 150 }], 'xa_spaces');
-      const [skylights, setSkylights] = useStickyState([], 'xa_skylights');
-      const [lightingFixtures, setLightingFixtures] = useStickyState([{ id: 'lf-1', spaceId: 'sp-1', name: 'LED Downlight', type: 'LED', qty: 12, watts: 8 }], 'xa_lightingFixtures');
-      const [hvacExempt, setHvacExempt] = useStickyState(false, 'xa_hvacExempt');
-      const [hvacEquipment, setHvacEquipment] = useStickyState([{ id: 'hvac-1', name: 'Main Office AC', type: 'unitary_split', capacity: 12, copC: 3.2, copH: 3.3, resViolation: false }], 'xa_hvacEquipment');
-      const [waterExempt, setWaterExempt] = useStickyState(false, 'xa_waterExempt');
-      const [waterPop, setWaterPop] = useStickyState(4, 'xa_waterPop');
-      const [waterRate, setWaterRate] = useStickyState(115, 'xa_waterRate'); 
-      const [waterEquipment, setWaterEquipment] = useStickyState([{ id: 'weq-1', name: 'Solar Water Heater', yield: 200 }], 'xa_waterEquipment');
-      const [waterPipes, setWaterPipes] = useStickyState([{ id: 'wp-1', reference: 'Main Hot Water Ring', diameter: 22, insulated: true }], 'xa_waterPipes');
-
-      const [officeInfo, setOfficeInfo] = useState({ companyName: '', registeredProfessional: '', sacapNumber: '', logoDataUrl: '' });
-      const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-      const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
-
-      useEffect(() => {
-        const saved = localStorage.getItem('sans10400_office_config');
-        if (saved) { try { setOfficeInfo(JSON.parse(saved)); } catch (e) {} }
-      }, []);
-
-      useEffect(() => { localStorage.setItem('sans10400_office_config', JSON.stringify(officeInfo)); }, [officeInfo]);
-
-      const handleOfficeUpdate = (field, value) => setOfficeInfo(prev => ({ ...prev, [field]: value }));
-      const handleLogoUpload = (e) => { 
-        const file = e.target.files[0]; 
-        if (!file) return; 
-        if (file.size > 1024 * 1024) { alert("File is too large! Please select an image under 1MB to ensure the browser can save it to memory."); e.target.value = ''; return; }
-        const reader = new FileReader(); reader.onload = (evt) => handleOfficeUpdate('logoDataUrl', evt.target.result); reader.readAsDataURL(file); 
+      const handleLocationChange = (e) => {
+        const val = e.target.value;
+        if (val === 'CUSTOM') { 
+          setProjectInfo(prev => ({ ...prev, location: '', customLocation: true })); 
+          return; 
+        }
+        const matched = SA_TOWNS.find(t => t.name === val);
+        if (matched) {
+          setProjectInfo(prev => ({ ...prev, location: matched.name, customLocation: false, zone: matched.zone, latitude: matched.lat, isSccp: matched.sccp }));
+        }
       };
 
       return (
-        <div style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f8fafc' }}>
-          <div className="header">
-            <h1>XA Express {BUILD_VERSION}</h1>
-            <div className="flex gap-2">
-              <button className="btn btn-secondary" onClick={() => setIsSettingsModalOpen(true)}>
-                <Settings style={{ width: '20px', height: '20px' }} /> Settings
-              </button>
-              <button className="btn btn-secondary" onClick={() => setIsHelpModalOpen(true)}>
-                <HelpCircle style={{ width: '20px', height: '20px' }} /> Help
-              </button>
+        <div className="flex flex-col h-screen bg-slate-50">
+          <div className="bg-white border-b shadow-sm p-4 flex items-center justify-between">
+            <h1 className="text-3xl font-bold">XA Express {BUILD_VERSION}</h1>
+            <div className="flex gap-3">
+              <button className="btn btn-secondary btn-sm"><Settings className="w-5 h-5" /> Settings</button>
+              <button className="btn btn-secondary btn-sm"><HelpCircle className="w-5 h-5" /> Help</button>
             </div>
           </div>
 
-          <div className="main-layout">
-            <div className="sidebar">
-              <div className="sidebar-section">
-                <div className="sidebar-title">Project Information</div>
-                <div className="input-group">
+          <div className="flex flex-1 overflow-hidden">
+            <div className="w-80 bg-white border-r p-6 overflow-y-auto">
+              <div className="mb-8">
+                <h3 className="text-sm font-bold uppercase text-slate-600 mb-3">Project Info</h3>
+                <div className="mb-4">
                   <label>Project Name</label>
-                  <input 
-                    type="text" 
-                    value={projectInfo.projectName} 
-                    onChange={(e) => setProjectInfo(prev => ({ ...prev, projectName: e.target.value }))}
-                    placeholder="Enter project name"
-                  />
+                  <input type="text" value={projectInfo.projectName} onChange={(e) => setProjectInfo(prev => ({ ...prev, projectName: e.target.value }))} />
                 </div>
-                <div className="input-group">
+                <div className="mb-4">
                   <label>Location</label>
-                  <select 
-                    value={projectInfo.location}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val === 'CUSTOM') { 
-                        setProjectInfo(prev => ({ ...prev, location: '', customLocation: true })); 
-                      } else {
-                        setProjectInfo(prev => ({ ...prev, location: val, customLocation: false }));
-                      }
-                    }}
-                  >
-                    <option value="Johannesburg">Johannesburg</option>
+                  <select value={projectInfo.location} onChange={handleLocationChange}>
+                    <option value="">Select a town...</option>
+                    {SA_TOWNS.map(town => <option key={town.name} value={town.name}>{town.name}</option>)}
                     <option value="CUSTOM">Custom Location</option>
                   </select>
                 </div>
-                <div className="input-group">
+                <div className="mb-4">
                   <label>Occupancy Class</label>
-                  <select 
-                    value={projectInfo.occupancy}
-                    onChange={(e) => setProjectInfo(prev => ({ ...prev, occupancy: e.target.value }))}
-                  >
+                  <select value={projectInfo.occupancy} onChange={(e) => setProjectInfo(prev => ({ ...prev, occupancy: e.target.value }))}>
                     {OCCUPANCY_CLASSES.map(oc => <option key={oc.id} value={oc.id}>{oc.name}</option>)}
                   </select>
                 </div>
               </div>
             </div>
 
-            <div className="content">
+            <div className="flex-1 overflow-y-auto p-6">
               <div className="tabs">
-                <button 
-                  className={`tab-btn ${activeTab === 'project' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('project')}
-                >
-                  Project
-                </button>
-                <button 
-                  className={`tab-btn ${activeTab === 'walls' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('walls')}
-                >
-                  Walls
-                </button>
-                <button 
-                  className={`tab-btn ${activeTab === 'roofs' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('roofs')}
-                >
-                  Roofs
-                </button>
-                <button 
-                  className={`tab-btn ${activeTab === 'floors' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('floors')}
-                >
-                  Floors
-                </button>
-                <button 
-                  className={`tab-btn ${activeTab === 'fenestration' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('fenestration')}
-                >
-                  Fenestration
-                </button>
+                <button className={`tab-btn ${activeTab === 'project' ? 'active' : ''}`} onClick={() => setActiveTab('project')}>Project</button>
+                <button className={`tab-btn ${activeTab === 'walls' ? 'active' : ''}`} onClick={() => setActiveTab('walls')}>Walls</button>
+                <button className={`tab-btn ${activeTab === 'roofs' ? 'active' : ''}`} onClick={() => setActiveTab('roofs')}>Roofs</button>
+                <button className={`tab-btn ${activeTab === 'floors' ? 'active' : ''}`} onClick={() => setActiveTab('floors')}>Floors</button>
+                <button className={`tab-btn ${activeTab === 'fenestration' ? 'active' : ''}`} onClick={() => setActiveTab('fenestration')}>Fenestration</button>
               </div>
 
-              {activeTab === 'project' && (
-                <div className="box">
-                  <h2>Project Overview</h2>
-                  <p><strong>Project Name:</strong> {projectInfo.projectName || 'Not specified'}</p>
-                  <p><strong>Location:</strong> {projectInfo.location || 'Not specified'}</p>
-                  <p><strong>Occupancy Class:</strong> {projectInfo.occupancy || 'Not specified'}</p>
-                  <p style={{ marginTop: '20px', color: '#64748b', fontSize: '13px' }}>Build Version: {BUILD_VERSION}</p>
-                </div>
-              )}
-
-              {activeTab === 'walls' && (
-                <div className="box">
-                  <h2>Walls Assembly</h2>
-                  <p>Configure wall thermal properties and assemblies.</p>
-                </div>
-              )}
-
-              {activeTab === 'roofs' && (
-                <div className="box">
-                  <h2>Roof Assembly</h2>
-                  <p>Configure roof thermal properties and assemblies.</p>
-                </div>
-              )}
-
-              {activeTab === 'floors' && (
-                <div className="box">
-                  <h2>Floor Assembly</h2>
-                  <p>Configure floor thermal properties and assemblies.</p>
-                </div>
-              )}
-
-              {activeTab === 'fenestration' && (
-                <div className="box">
-                  <h2>Fenestration Schedule</h2>
-                  <p>Configure windows and glazing specifications.</p>
-                </div>
-              )}
+              <div className="box">
+                {activeTab === 'project' && (
+                  <>
+                    <h2>Project Overview</h2>
+                    <p><strong>Project Name:</strong> {projectInfo.projectName || 'Not specified'}</p>
+                    <p><strong>Location:</strong> {projectInfo.location || 'Not specified'}</p>
+                    <p><strong>Zone:</strong> {projectInfo.zone || 'Not specified'}</p>
+                    <p><strong>Occupancy Class:</strong> {projectInfo.occupancy || 'Not specified'}</p>
+                    <p><strong>Storeys:</strong> {projectInfo.storeys}</p>
+                    <p className="text-xs text-slate-600 mt-6">Build Version: {BUILD_VERSION}</p>
+                  </>
+                )}
+                {activeTab === 'walls' && <h2>Walls Assembly Configuration</h2>}
+                {activeTab === 'roofs' && <h2>Roofs Assembly Configuration</h2>}
+                {activeTab === 'floors' && <h2>Floors Assembly Configuration</h2>}
+                {activeTab === 'fenestration' && <h2>Fenestration Schedule</h2>}
+              </div>
             </div>
           </div>
-
-          {isSettingsModalOpen && (
-            <div className="modal open">
-              <div className="modal-content">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h2 style={{ margin: '0', fontSize: '20px', fontWeight: '600' }}>Settings</h2>
-                  <button className="btn btn-secondary btn-sm" onClick={() => setIsSettingsModalOpen(false)}>
-                    <X style={{ width: '18px', height: '18px' }} />
-                  </button>
-                </div>
-                <div className="input-group">
-                  <label>Company Name</label>
-                  <input 
-                    type="text"
-                    value={officeInfo.companyName}
-                    onChange={(e) => handleOfficeUpdate('companyName', e.target.value)}
-                    placeholder="Enter company name"
-                  />
-                </div>
-                <div className="input-group">
-                  <label>Registered Professional</label>
-                  <input 
-                    type="text"
-                    value={officeInfo.registeredProfessional}
-                    onChange={(e) => handleOfficeUpdate('registeredProfessional', e.target.value)}
-                    placeholder="Enter registered professional name"
-                  />
-                </div>
-                <div className="input-group">
-                  <label>SACAP Number</label>
-                  <input 
-                    type="text"
-                    value={officeInfo.sacapNumber}
-                    onChange={(e) => handleOfficeUpdate('sacapNumber', e.target.value)}
-                    placeholder="Enter SACAP number"
-                  />
-                </div>
-                <div className="input-group">
-                  <label>Logo</label>
-                  <input 
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoUpload}
-                  />
-                </div>
-                <button className="btn btn-primary" onClick={() => setIsSettingsModalOpen(false)}>
-                  Done
-                </button>
-              </div>
-            </div>
-          )}
-
-          {isHelpModalOpen && (
-            <div className="modal open">
-              <div className="modal-content">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h2 style={{ margin: '0', fontSize: '20px', fontWeight: '600' }}>Help</h2>
-                  <button className="btn btn-secondary btn-sm" onClick={() => setIsHelpModalOpen(false)}>
-                    <X style={{ width: '18px', height: '18px' }} />
-                  </button>
-                </div>
-                <p>XA Express is a tool for calculating compliance with SANS 10400-XA building energy standards.</p>
-                <p><strong>Getting Started:</strong></p>
-                <ul style={{ marginLeft: '20px', color: '#475569' }}>
-                  <li>Enter your project information in the Project tab</li>
-                  <li>Configure wall, roof, and floor assemblies</li>
-                  <li>Define fenestration (windows) specifications</li>
-                  <li>Review compliance status for each section</li>
-                </ul>
-                <button className="btn btn-primary" onClick={() => setIsHelpModalOpen(false)}>
-                  Close
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       );
     }
